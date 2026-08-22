@@ -1,0 +1,848 @@
+/* ==========================================================================
+   Reset — minimal, chosen not to fight the spec's own html/body rules below.
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box; /* load-bearing for §3.1 fit-math: .content's
+    padding must be counted INSIDE its 1fr grid-row height, not added on
+    top of it, or the row overflows its track at the 320px floor case. */
+}
+* {
+  margin: 0;
+}
+ul,
+ol {
+  list-style: none;
+}
+
+/* ==========================================================================
+   Design tokens — §2
+   ========================================================================== */
+:root {
+  /* 2.1 Color — palette v3: accent swapped to Warm Persimmon (#FF5A36),
+     chosen from four candidates offered (Electric Cobalt, Warm
+     Persimmon, Hyper-Mint, Modern Violet). Cobalt/Violet sit close in
+     hue to the skybox imagery itself (mostly blue/navy) — an accent
+     that near-matches its own background loses contrast, which this
+     system has spent real effort protecting. Hyper-Mint sits too close
+     to the logo's green, which "The One Green Rule" keeps off the site
+     palette entirely. Persimmon is blue's complement (real contrast
+     against every current skybox), and isn't the generic-SaaS
+     blue/violet/teal default. Background/neutrals unchanged — the
+     candidates were all accent-role colors, not backgrounds. Variable
+     names below still say "amber"/"cursor-flash" from the original
+     phosphor system; ponytail: functionally correct as-is (everything
+     routes through these tokens). The logo's green is no longer a CSS
+     token at all — it used to drive the "online" LED (--color-led-*,
+     removed with that element); now it only ever appears via the real
+     logo image asset itself, still independent of the site palette. */
+  --color-pane-bg: #222831;
+  --color-amber-bright: #ff5a36; /* Primary Accent (Warm Persimmon) — used
+    selectively now, per direct hierarchy request: "Designers", the
+    headline cursor, and the Contact link only, not every accent role */
+  --color-amber-dim: #94a3b8; /* Muted Text (Slate Grey) — was an
+    off-white alpha tint before this pass; redefined to the spec's exact
+    named slate for the tagline and footer metadata */
+  --color-cursor-flash: #f8fafc; /* Base Light (Crisp Off-White) — hover
+    highlight AND now the resting color for high-identity elements
+    (wordmark, "Creative", the email at rest) */
+  --color-ui-muted: #64748b; /* UI/Muted Links — footer flags and the
+    skybox switcher at rest, hover to Primary Accent */
+  --color-ui-muted-underline: rgba(100, 115, 139, 0.35);
+  --color-amber-tint-08: rgba(255, 90, 54, 0.08);
+  --color-amber-tint-14: rgba(255, 90, 54, 0.14);
+  --color-underline-rest: rgba(255, 90, 54, 0.35);
+
+  /* Per-glyph legibility halo for text sitting directly over the open
+     sky — every text element on the page now, chrome/status bars
+     included since their glass background was removed by direct
+     request. Layered: a tight sharp ring first (crisp edge right at
+     the glyph), a wider soft glow next (absorbs busy sky texture a few
+     px out), then a slight downward drop (a hint of "in front of," not
+     just "on top of"). */
+  --text-halo: 0 0 2px var(--color-pane-bg), 0 0 2px var(--color-pane-bg),
+    0 0 6px rgba(34, 40, 49, 0.9), 0 0 14px rgba(34, 40, 49, 0.75),
+    0 1px 2px rgba(34, 40, 49, 0.85);
+  /* Legibility halo for background-clip:text gradient fills, as a
+     filter instead of text-shadow. text-shadow on a gradient-clipped
+     element paints from the PRE-clip glyph shape, which — even at
+     reduced opacity — visibly muddies the light fill underneath
+     (measured directly: any text-shadow value here dulled "Creative"
+     to grey; only removing text-shadow entirely gave a crisp white
+     gradient). filter: drop-shadow() operates on the already-clipped,
+     post-composite pixels instead, so it shadows behind the visible
+     glyph without touching its fill color. */
+  --text-halo-filter: drop-shadow(0 0 5px rgba(34, 40, 49, 0.7))
+    drop-shadow(0 1px 3px rgba(34, 40, 49, 0.6));
+
+  /* 2.2 Type */
+  --font-mono-stack: var(--font-mono), "IBM Plex Mono", ui-monospace,
+    "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono",
+    monospace;
+
+  --fs-headline: clamp(1.0625rem, 6dvmin, 3.5rem); /* narrow/short-viewport
+    formula. Slope/ceiling trimmed from 7dvmin/4rem — direct request,
+    read as too big. Floor unchanged: it's the safety-critical end
+    (320px fit), and shrinking the ceiling/slope only ever reduces
+    overflow risk, never adds it. Real dominance lives in the >=700px
+    override below. */
+  --fs-cta: clamp(0.9375rem, 2.2dvmin, 1.75rem);
+  --fs-position: clamp(0.8125rem, 2dvmin, 1.5rem);
+  --fs-chrome: clamp(0.8125rem, 1.8dvmin, 1.125rem); /* raised from
+    0.6875rem/1.4dvmin/0.9375rem (11px→15px) — direct request, chrome
+    bar text read as "really small." Re-verify narrow-viewport fit if
+    raised further; nowrap nav/wordmark text has less slack now. */
+  --fs-status: clamp(0.75rem, 1.6dvmin, 1rem); /* raised from
+    0.625rem/1.2dvmin/0.8125rem (10px→13px) — same request, status bar */
+
+  --lh-tight: 1.3;
+  --lh-relaxed: 1.5;
+
+  /* 2.3 Spacing */
+  --space-1: clamp(4px, 1dvmin, 8px);
+  --space-2: clamp(8px, 1.8dvmin, 16px);
+  --space-3: clamp(14px, 2.6dvmin, 28px);
+  --space-4: clamp(16px, 5dvmin, 64px);
+  --space-5: clamp(20px, 4dvmin, 48px);
+
+  /* 2.4 Size / radius / motion */
+  --chrome-h: clamp(40px, 8dvmin, 56px);
+  --status-h: clamp(36px, 7dvmin, 48px);
+  --focus-outline-w: 2px;
+  --focus-outline-offset: 2px;
+}
+
+/* Reference-scale headline: only where there's confirmed room for it.
+   Below this width, --fs-headline keeps the safe narrow-viewport
+   formula defined above. dvw here, not dvmin: dvmin was tried first and
+   clipped "Creative Designers" at 768x1024 — a tall-narrow viewport
+   where dvmin resolves to the width (768) but the earlier multiplier
+   still overshot it, because dvmin doesn't know this text's overflow
+   axis is specifically width. dvw ties the size directly to the
+   dimension that actually constrains a nowrap line. */
+@media (min-width: 700px) {
+  :root {
+    --fs-headline: clamp(1.0625rem, 5.5dvw, 7.5rem); /* slope/ceiling
+      trimmed from 6.5dvw/9rem — direct request, read as too big */
+  }
+}
+
+::selection {
+  background: var(--color-amber-tint-14);
+  color: var(--color-cursor-flash);
+}
+
+/* ==========================================================================
+   Layout — §3, 3-row grid + zero-scroll backstop
+   ========================================================================== */
+html,
+body {
+  height: 100%;
+  overflow: hidden; /* belt-and-suspenders: the fit-math guarantees no
+    overflow, this is the hard backstop */
+  overscroll-behavior: none; /* kills iOS Safari rubber-band bounce */
+  background: var(--color-pane-bg);
+}
+
+body {
+  font-family: var(--font-mono-stack);
+}
+
+/* The skybox renders behind everything as a fixed full-viewport WebGL
+   canvas; .page and its rows go transparent/translucent (below) so it
+   actually shows through instead of being painted over. */
+.skybox-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none; /* the sky is a backdrop, never a click target */
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr); /* without this, the implicit
+    auto column sizes to children's max-content contribution (flex rows
+    with nowrap text), which can exceed .page's own fixed width —
+    "grid blowout." Caught at 320x568: chrome-bar/content/status-bar
+    all measured 336px in a 320px viewport even though no individual
+    child actually needed the extra space; .page's own overflow:hidden
+    clipped the paint silently instead of scrolling, invisible to a
+    scrollWidth check. minmax(0, 1fr) floors the column at 0 instead of
+    content size, so the real 320px width wins. */
+  grid-template-rows: var(--chrome-h) 1fr var(--status-h);
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh; /* vh is the fallback line; dvh overrides where supported */
+  overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: transparent;
+}
+
+.chrome-bar {
+  grid-row: 1;
+  display: flex; /* was a 3-column grid (dots | wordmark | LED) — the
+    decorative traffic-light dots were removed (no function, and the
+    wordmark took their top-left slot instead), leaving a plain
+    2-item left/right layout like .status-bar already uses */
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-4);
+  /* No bar background — text floats directly on the skybox, by direct
+     request. Legibility now comes from --text-halo on the text below
+     (the same per-glyph technique .content already used), not a glass
+     strip. */
+}
+
+.hero-row {
+  grid-row: 2;
+  display: flex;
+  align-items: stretch;
+  gap: clamp(24px, 8dvw, 140px); /* sits the reel next to the headline
+    with real breathing room, not flush against it — the gap plus the
+    reel's own width is what lands it toward the screen's middle third
+    rather than pinned to either edge, per direct request/reference */
+  min-height: 0; /* flex analog of .page's own minmax(0,1fr) fix above —
+    without it a stretched child's intrinsic content height can inflate
+    this row past its grid track, the same overflow family as the Grid
+    Blowout Lesson below */
+  overflow: hidden;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start; /* top-left, matching the reference —
+    was vertically centered; the reference's hero block sits right at
+    the top of the page, not mid-viewport */
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  overflow: hidden;
+  text-align: left;
+  /* No panel behind the text — the sky shows through everywhere,
+     including directly behind every glyph. Legibility instead comes
+     from --text-halo on each text element below: a per-glyph dark
+     halo (the video-subtitle technique), not a measurable flat-color
+     WCAG ratio like the scrim it replaced. Checked visually against
+     all five skyboxes, not contrast-computed — flag if any skybox
+     added later reads as illegible and this needs revisiting. */
+}
+
+.status-bar {
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: var(--space-4);
+  /* No bar background — same as .chrome-bar above: text floats on the
+     skybox, legibility comes from --text-halo on the text itself. */
+}
+
+/* ==========================================================================
+   Components — §5
+   ========================================================================== */
+
+/* 5.1 Chrome bar */
+.wordmark {
+  color: var(--color-cursor-flash); /* Base Light — the studio identity
+    mark, not a muted/secondary role, per direct hierarchy request */
+  font-size: var(--fs-chrome);
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow: var(--text-halo);
+}
+/* "online" LED status was removed by direct request; the actual studio
+   logo (real green, from the source asset) takes over as the site's
+   one green touchpoint instead — the LED was always a stand-in for
+   this, per "The One Green Rule". */
+.chrome-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.chrome-logo {
+  display: inline-block;
+  aspect-ratio: 1 / 1; /* source asset is 1024x1024 */
+  height: clamp(14px, 2.4dvmin, 22px);
+  width: auto;
+  background-color: var(--color-amber-bright); /* the recolor — masked
+    to the logo's shape below, so this fill only shows where the source
+    PNG's alpha channel is opaque */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.chrome-nav-text {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-chrome);
+  font-weight: 400;
+  white-space: nowrap;
+  text-shadow: var(--text-halo);
+  text-decoration: underline; /* matches "Contact" beside it, per direct
+    request — muted underline color here (not persimmon) since this
+    text is non-interactive, same pairing .flag's own muted state uses */
+  text-decoration-color: var(--color-ui-muted-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+.chrome-nav-link {
+  color: var(--color-amber-bright); /* same accent as the headline, per
+    direct request — the one nav element meant to draw the eye */
+  font-weight: 500;
+  font-size: var(--fs-chrome);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline-rest);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo);
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    text-decoration-color 120ms ease;
+}
+.chrome-nav-link:hover,
+.chrome-nav-link:focus-visible {
+  color: var(--color-cursor-flash);
+  text-decoration-color: var(--color-cursor-flash);
+  background-color: var(--color-amber-tint-08);
+}
+.chrome-nav-link:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-cursor-flash);
+  outline-offset: var(--focus-outline-offset);
+}
+.chrome-nav-link:active {
+  color: var(--color-cursor-flash);
+  text-decoration-color: var(--color-cursor-flash);
+  background-color: var(--color-amber-tint-14);
+}
+
+/* 5.2 Content (terminal pane) */
+.headline {
+  color: var(--color-cursor-flash); /* Base Light — "Creative" (the
+    inherited default). "Designers" overrides to Primary Accent below;
+    splitting the two words is the hierarchy request's own example. */
+  font-size: var(--fs-headline);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  white-space: nowrap; /* per line — an explicit <br> below still forces
+    the 2-line break regardless of nowrap on the container */
+  text-shadow: var(--text-halo);
+}
+/* Two-line headline: "Creative" / "Designers", stacked to match the
+   reference. No "$" prefix (removed by direct request) — both lines
+   start flush at .headline's own left edge, no indent needed. The
+   entrance is now a JS-driven scramble/decode (ScrambleText.tsx), not
+   a CSS width-reveal or fade — reduced-motion is handled inside that
+   component (skips straight to final text), so no reduced-motion
+   override is needed here for either word anymore. */
+.type-target {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 1.25em; /* bigger than the cursor after it — the typed word
+    reads as the emphasized part */
+  vertical-align: bottom;
+}
+/* Vertical gradient fill, per direct request: white at top fading to
+   slate off-white at bottom. Targets ScrambleText's inner span, not
+   .type-target itself — background/background-clip don't inherit the
+   way color does, so setting them on the outer wrapper left the actual
+   glyphs (in the inner span) with only an inherited color:transparent
+   and no fill at all, rendering as near-invisible dark ghosts (only
+   the inherited text-halo shadow was visible). text-shadow (the halo)
+   still renders correctly under a background-clip:text fill. */
+.type-target .scramble-glyphs {
+  background: linear-gradient(to bottom, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none; /* clears the inherited --text-halo from
+    .headline — see --text-halo-filter's comment for why */
+  filter: var(--text-halo-filter);
+}
+.headline-line2 {
+  display: inline-block;
+  color: var(--color-amber-bright); /* Primary Accent — the one
+    selectively-highlighted word in the headline, per direct request */
+  font-size: 1.25em; /* matches .type-target — both lines are the
+    emphasized typed content, same weight */
+  vertical-align: bottom;
+  /* The dark legibility halo stays (still needed against bright skies —
+     the added glow is warm/persimmon, same hue as the text, and can't
+     substitute for contrast the way the dark ring does); the ambient
+     phosphor glow is layered on top of it, per direct request. */
+  text-shadow: var(--text-halo), 0 0 35px rgba(255, 90, 54, 0.35),
+    0 0 70px rgba(255, 90, 54, 0.15);
+}
+.cursor {
+  color: var(--color-amber-bright); /* Primary Accent, per direct
+    request — was Base Light; the only .cursor left on the page now is
+    the headline's, since the CTA's was removed earlier */
+  text-shadow: var(--text-halo);
+  animation: cursor-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* smooth
+    fade, per direct request — replaces the earlier hard step-end blink */
+}
+.headline .cursor {
+  font-size: 1.1em; /* smaller than the 1.25em words it follows, per
+    direct request — still visibly larger than the un-scaled base size,
+    just not matching the words 1:1 anymore */
+  animation-delay: 650ms; /* right as the scramble settles (150ms
+    stagger + 450ms reveal for "Designers", the later of the two words) */
+}
+
+.position {
+  color: var(--color-amber-dim); /* Muted Text (Slate Grey) — doesn't
+    fight the H1 for attention, per direct request */
+  font-size: var(--fs-position);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  text-shadow: var(--text-halo);
+  margin-top: clamp(8px, 2dvmin, 20px); /* extra breathing room below
+    the headline, on top of .content's own gap — "mt-5" (~20px) per
+    direct request, raised from an earlier 16px ceiling */
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 700ms both;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* WCAG 2.5.5/2.5.8 target size, held even at the
+    smallest font floor — kept via padding alone now there's no border
+    to imply a hit area */
+  padding: 0.4em 0;
+  color: var(--color-cursor-flash); /* Base Light at rest — reads as
+    distinctly clickable against the surrounding muted tagline, per
+    direct request (brackets/$ framing were removed earlier instead) */
+  font-size: var(--fs-cta);
+  font-weight: 600;
+  text-decoration: none; /* affordance is the background/color shift on
+    hover/focus below, not a drawn box */
+  text-shadow: var(--text-halo);
+  transition:
+    color 120ms ease,
+    background-color 120ms ease; /* subtle hover transition, per direct
+    request — was an instant snap before */
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; /* follows
+    .position directly now the manifest step is gone */
+}
+.cta:hover,
+.cta:focus-visible {
+  background-color: var(--color-amber-tint-08);
+  color: var(--color-amber-bright); /* Primary Accent on interaction —
+    inverse of the rest state, so hover reads as a real state change */
+}
+.cta:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.cta:active {
+  background-color: var(--color-amber-tint-14);
+  color: var(--color-amber-bright);
+}
+
+/* Project reel — a vertically auto-looping column of project thumbnails,
+   sitting beside the hero text in the open sky space. Placeholders only
+   (see ProjectReel.tsx) until real project screenshots exist; the loop
+   mechanics below don't change when real images replace them.
+   Autoplay-only, matching the reference exactly — a real user-scroll
+   version (overflow-y:auto, scroll-snap) was tried in between, then
+   reverted by direct choice once direct testing confirmed segerman.dev
+   itself doesn't respond to scroll/wheel input either; see
+   ProjectReel.tsx. Hidden below 700px — the same tier the headline's
+   dvw formula switches on — there isn't real room for a second column
+   next to the hero text at narrower widths without either one breaking
+   the zero-scroll fit budget, so the narrow layout stays the
+   single-column hero it already was rather than risking a new clip
+   class of bug. */
+.project-reel {
+  display: none;
+  width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
+    20dvw, 320px) — direct request */
+  height: 100%;
+  overflow: hidden;
+  flex-shrink: 0;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    black 10%,
+    black 90%,
+    transparent 100%
+  ); /* fades the loop's cut edges instead of a hard clip line, so it
+    reads as a continuous reel rather than a truncated frame */
+}
+@media (min-width: 700px) {
+  .project-reel {
+    display: block;
+  }
+}
+.project-reel-track {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  animation: reel-scroll 26s linear infinite;
+}
+.project-reel-item {
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-pane-bg); /* edge-to-edge, like
+    the reference's own stacked thumbnails — the seam is the only gap */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-pane-bg),
+    var(--color-pane-bg) 10px,
+    var(--color-amber-tint-08) 10px,
+    var(--color-amber-tint-08) 20px
+  ); /* a deliberate placeholder pattern, not a flat panel standing in
+    for a photo — reads as "content goes here," not as a finished tile */
+}
+.project-reel-label {
+  font-size: var(--fs-status);
+  color: var(--color-ui-muted);
+  text-shadow: var(--text-halo);
+}
+@keyframes reel-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%); /* exactly half the track, since the
+      item list is duplicated once — lands back on an identical frame */
+  }
+}
+
+/* Project index — the reference's far-right project name list,
+   matched to its position (top-right, below the nav, right-aligned).
+   Same 700px reveal tier as the reel beside it: no room for a third
+   column at narrower widths. */
+.project-index {
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center; /* vertically centered in the row — direct
+    request, was top-aligned (padding-top) to sit under the nav like
+    the reference; now centered in the right-middle of the page instead */
+  margin-left: auto; /* pushes it to the row's far edge, same technique
+    the reel used before it was moved inward */
+  margin-right: var(--space-4); /* matches the inset every other bar's
+    right-edge content sits at (chrome-nav, status-right) */
+  flex-shrink: 0;
+}
+@media (min-width: 700px) {
+  .project-index {
+    display: flex;
+  }
+}
+.project-index-label {
+  font-size: var(--fs-status);
+  color: var(--color-ui-muted);
+  text-shadow: var(--text-halo);
+}
+.project-index-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+.project-index-item {
+  /* real <button> now (was a plain span) — reset to a text-only look */
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0.2em 0.4em;
+  margin-right: -0.4em; /* the padding above only exists to give the
+    hover/focus wash some breathing room — cancel its effect on layout
+    so the list still lines up flush with everything else's right edge */
+  font: inherit;
+  cursor: pointer;
+  font-size: var(--fs-status);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--color-amber-dim);
+  text-shadow: var(--text-halo);
+  transition: color 300ms ease, font-weight 150ms ease, background-color 120ms ease;
+}
+.project-index-item.is-active {
+  color: var(--color-cursor-flash);
+  font-weight: 600;
+}
+.project-index-item:hover,
+.project-index-item:focus-visible {
+  color: var(--color-amber-bright);
+  background-color: var(--color-amber-tint-08);
+}
+.project-index-item:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.project-index-item:active {
+  background-color: var(--color-amber-tint-14);
+}
+
+/* 5.3 Status bar */
+.status-left,
+.status-text,
+.flag {
+  white-space: nowrap;
+}
+.status-left,
+.status-right {
+  font-size: var(--fs-status);
+  color: var(--color-amber-dim);
+  font-weight: 400;
+  text-shadow: var(--text-halo);
+}
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.status-tz,
+.status-copyright,
+.flag-linkedin,
+.flag-github,
+.flag-x {
+  display: none;
+}
+@media (min-width: 380px) {
+  /* the narrowest tier: raising --fs-status (direct request — the
+     footer text read as "really small") made the previous 320px
+     content set (switcher + github + x) overflow the row, invisible
+     to a scrollbar check since .page's overflow:hidden clips it
+     silently. github/x now join the same progressive-disclosure
+     ladder tz/copyright/linkedin already used — narrowest phones show
+     only the functional skybox switcher, verified with real
+     getBoundingClientRect checks down to 320px. */
+  .flag-github,
+  .flag-x {
+    display: inline;
+  }
+}
+@media (min-width: 480px) {
+  .status-copyright {
+    display: inline;
+  }
+}
+@media (min-width: 720px) {
+  .status-tz {
+    display: inline;
+  }
+  .flag-linkedin {
+    display: inline;
+  }
+}
+
+.flag {
+  color: var(--color-ui-muted); /* UI/Muted Links at rest — github, x,
+    linkedin, and the skybox switcher; transitions to Primary Accent on
+    hover/focus, per direct request */
+  font-weight: 500;
+  font-size: var(--fs-status);
+  text-decoration: underline;
+  text-decoration-color: var(--color-ui-muted-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo);
+  transition:
+    color 120ms ease,
+    background-color 120ms ease,
+    text-decoration-color 120ms ease;
+}
+.flag:hover,
+.flag:focus-visible {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+  background-color: var(--color-amber-tint-08);
+}
+.flag:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.flag:active {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+  background-color: var(--color-amber-tint-14);
+}
+
+.skybox-switcher {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Loading screen — see LoadingScreen.tsx for the reference and reasoning. */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10; /* above .page's z-index:1 and the skybox canvas */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--color-pane-bg); /* fallback: shows if WebGL fails
+    outright — the ::before drift below is the real first frame now */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 400ms ease, visibility 0s linear 0s;
+}
+/* A pure-CSS placeholder, painted from the very first frame (no JS,
+   no hydration wait) — direct request: the WebGL shader only starts
+   once React mounts and compiles it, which on a cold dev-server
+   compile or a slow device can take a perceptible moment, during
+   which the screen previously just sat on a flat color. This drifts
+   softly in the same palette so there's motion and color immediately,
+   and the real canvas (opaque once it draws) naturally paints over it
+   the instant it's ready — no crossfade needed, no flash. */
+.loading-screen::before {
+  content: "";
+  position: absolute;
+  inset: -15%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 32% 34%, var(--color-amber-bright) 0%, transparent 46%),
+    radial-gradient(circle at 68% 62%, var(--color-amber-dim) 0%, transparent 52%),
+    var(--color-pane-bg);
+  filter: blur(70px) brightness(0.45);
+  animation: loading-preshader-drift 5s ease-in-out infinite alternate;
+}
+@keyframes loading-preshader-drift {
+  from {
+    transform: translate(-3%, -2%) scale(1);
+  }
+  to {
+    transform: translate(3%, 2%) scale(1.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen::before {
+    animation: none;
+  }
+}
+.loading-shader-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.loading-screen-done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 400ms ease, visibility 0s linear 400ms;
+}
+.loading-screen-logo {
+  position: relative;
+  z-index: 1; /* above .loading-shader-canvas */
+  display: inline-block;
+  aspect-ratio: 1 / 1;
+  width: clamp(40px, 7dvmin, 80px);
+  height: auto;
+  background-color: var(--color-amber-bright); /* same masked-persimmon
+    treatment as .chrome-logo — one recolored brand mark, not a second
+    rendering of it. A solid silhouette, so the shader behind it can
+    never actually reduce its own legibility — only the percent text
+    below needs the halo. */
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  filter: drop-shadow(0 0 10px rgba(34, 40, 49, 0.6)); /* a soft dark
+    halo behind the mark itself, same drop-shadow technique
+    --text-halo-filter uses on gradient text, so the shape's edge
+    reads clearly against a bright patch of shader too */
+}
+.loading-screen-percent {
+  position: relative;
+  z-index: 1; /* above .loading-shader-canvas */
+  font-size: var(--fs-status);
+  font-weight: 600;
+  color: var(--color-cursor-flash);
+  letter-spacing: 0.05em;
+  text-shadow: var(--text-halo); /* the same over-imagery legibility
+    technique every other text element on the page already uses — the
+    shader is exactly the kind of busy, unpredictable background it
+    was built for */
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen,
+  .loading-screen-done {
+    transition: none; /* still functional (hides the loading skybox
+      texture), just no animated fade — pops instead */
+  }
+}
+
+/* ==========================================================================
+   Motion — §7
+   ========================================================================== */
+@keyframes cursor-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* .type-target / .headline-line2 need no entry here anymore — their
+     entrance is JS-driven (ScrambleText.tsx), which checks this same
+     media query itself and skips straight to final text. */
+  .cursor {
+    animation: none;
+    opacity: 1;
+  }
+  .position,
+  .cta {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .project-reel-track {
+    animation: none;
+  }
+  /* .project-index-item needs no override here — it's JS-driven now
+     (ProjectIndex.tsx checks the same media query itself and skips
+     starting the auto-advance interval, leaving item 1 statically
+     active via the is-active class), not a CSS animation to cancel. */
+}

@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-22T00:00:00Z",
+  "title": "Design System: Voltair Studio",
+  "extensions": {
+    "colorMeta": {
+      "pane-bg": { "role": "neutral", "displayName": "Pane Black", "canonical": "#100E0B" },
+      "chrome-bg": { "role": "neutral", "displayName": "Chrome Black", "canonical": "#17140F" },
+      "amber-bright": { "role": "primary", "displayName": "Phosphor Amber Bright", "canonical": "#FFB300" },
+      "amber-dim": { "role": "secondary", "displayName": "Phosphor Amber Dim", "canonical": "#B98A3A" },
+      "cursor-flash": { "role": "tertiary", "displayName": "Cursor Flash", "canonical": "#FFF3DC" },
+      "led-green": { "role": "accent", "displayName": "LED Green (logo-sampled)", "canonical": "#45A947" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Headline only — the one typed line." },
+      "body": { "displayName": "Body", "purpose": "Position statement." },
+      "label": { "displayName": "Label", "purpose": "Chrome bar, status bar, manifest micro-text." }
+    },
+    "shadows": [
+      { "name": "led-glow", "value": "0 0 4px 1px rgba(69,169,71,0.55)", "purpose": "The online LED's own light output — the system's only shadow use." }
+    ],
+    "motion": [
+      { "name": "type-in", "value": "800ms steps(23, end)", "purpose": "One-shot headline boot animation." },
+      { "name": "cursor-blink", "value": "1000ms step-end infinite", "purpose": "Terminal cursor blink, hard-cut not fade." },
+      { "name": "fade-in", "value": "200ms ease-out", "purpose": "Staggered reveal of position/manifest/CTA after the headline types." },
+      { "name": "led-pulse", "value": "2400ms ease-in-out infinite", "purpose": "Subtle breathing glow on the online LED." }
+    ],
+    "breakpoints": [
+      { "name": "status-copyright", "value": "480px" },
+      { "name": "status-tz-and-third-flag", "value": "720px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "CTA Prompt",
+      "kind": "button",
+      "refersTo": "cta-prompt",
+      "description": "The single bordered, button-like element — the contact mailto link, styled as a live shell prompt with a blinking cursor.",
+      "html": "<a class=\"ds-cta\" href=\"mailto:hello@voltairstudio.dev\"><span class=\"ds-cta-text\"><span aria-hidden=\"true\">$ </span>hello@voltairstudio.dev</span><span class=\"ds-cursor\" aria-hidden=\"true\">█</span></a>",
+      "css": ".ds-cta { display: inline-flex; align-items: center; min-height: 44px; padding: 0.4em 0.7em; border: 1.5px solid rgba(255,179,0,0.50); border-radius: 4px; color: #FFB300; font-family: 'IBM Plex Mono', monospace; font-size: 1.25rem; font-weight: 600; text-decoration: none; } .ds-cta:hover, .ds-cta:focus-visible { border-color: #FFB300; background-color: rgba(255,179,0,0.08); color: #FFF3DC; } .ds-cta:focus-visible { outline: 2px solid #FFF3DC; outline-offset: 2px; } .ds-cta:active { border-color: #FFF3DC; background-color: rgba(255,179,0,0.14); color: #FFF3DC; } .ds-cursor { color: #FFF3DC; animation: ds-blink 1000ms step-end infinite; } @keyframes ds-blink { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }"
+    },
+    {
+      "name": "Status Flag Link",
+      "kind": "custom",
+      "refersTo": "flag-link",
+      "description": "Status-bar social/contact links, styled as CLI flags (--github, --x).",
+      "html": "<a class=\"ds-flag\" href=\"#\">--github</a>",
+      "css": ".ds-flag { color: #FFB300; font-family: 'IBM Plex Mono', monospace; font-weight: 500; text-decoration: underline; text-decoration-color: rgba(255,179,0,0.35); text-decoration-thickness: 1px; text-underline-offset: 0.15em; transition: color 120ms ease, background-color 120ms ease, text-decoration-color 120ms ease; } .ds-flag:hover, .ds-flag:focus-visible, .ds-flag:active { color: #FFF3DC; text-decoration-color: #FFF3DC; background-color: rgba(255,179,0,0.08); } .ds-flag:focus-visible { outline: 2px solid #FFF3DC; outline-offset: 2px; }"
+    },
+    {
+      "name": "Terminal Manifest",
+      "kind": "custom",
+      "refersTo": "manifest",
+      "description": "The 3-line service list, styled as a CLI flag/description key-value listing.",
+      "html": "<dl class=\"ds-manifest\"><dt>--design</dt><dd>brand-true UI, from scratch</dd><dt>--build</dt><dd>production Next.js front-end</dd><dt>--ship</dt><dd>live in days, launch-ready</dd></dl>",
+      "css": ".ds-manifest { display: grid; grid-template-columns: 9ch 1fr; column-gap: 12px; row-gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 1rem; } .ds-manifest dt, .ds-manifest dd { color: #B98A3A; line-height: 1.5; white-space: nowrap; text-align: left; } .ds-manifest dt { font-weight: 500; } .ds-manifest dd { font-weight: 400; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Deploy Console",
+    "overview": "The whole page is staged as one live terminal pane — the studio's own daily material, not a category-default scrolling agency portfolio. A visitor reads it the way a developer reads a CI log: a boot line, a status line, a short manifest, a live prompt. The zero-scroll constraint isn't a limitation routed around; it's the concept. Color is monochrome-phosphor, not accent-on-neutral: nearly all text renders in one amber family, the way a real CRT terminal only ever has one phosphor color. The brand mark's green is confined to a single literal \"online\" LED — never a background, never a second theme color.",
+    "keyCharacteristics": [
+      "Monochrome amber-on-near-black, not accent-over-neutral",
+      "Single monospace type family end to end, no display/body split",
+      "Three-row bounded grid (chrome bar / content / status bar), never a scrolling page",
+      "Motion is a one-shot boot sequence plus a persistent cursor blink, not scattered hover flourishes"
+    ],
+    "rules": [
+      { "name": "The One Green Rule", "body": "The logo's green never becomes a site color. Its entire on-page budget is the chrome-bar \"online\" LED dot.", "section": "colors" },
+      { "name": "The One Phosphor Rule", "body": "All text on the page is a shade of amber (bright or dim) or the warm cursor-flash white. No blue, no gray-as-neutral-text.", "section": "colors" },
+      { "name": "The dvmin Rule", "body": "Every fluid size is clamp(floor, N·dvmin, ceiling), never a vw-only or vh-only formula — the mechanism that keeps the zero-scroll constraint safe on both portrait and landscape viewports.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "Depth is never simulated with box-shadow except the literal LED glow. Framing comes from the two-tone background split, not from elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep all body/label text in the amber family (bright or dim) — never introduce a gray neutral for \"de-emphasized\" text.",
+      "Do compute any ch-based grid track in the same font-size context as the text it sizes for.",
+      "Do hold interactive touch targets at a real 44px min-height, not just adequate padding.",
+      "Do theme browser-default surfaces (::selection, focus rings) rather than leaving them at browser defaults."
+    ],
+    "donts": [
+      "Don't let the logo's green leave the \"online\" LED.",
+      "Don't add a second type family for \"contrast\" or \"hierarchy\".",
+      "Don't add drop shadows, gradients, or rounded cards to extend this system.",
+      "Don't let any new element grow the page past 100dvh/100dvw."
+    ]
+  }
+}
