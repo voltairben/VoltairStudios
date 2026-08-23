@@ -1,66 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-const PLACEHOLDER_COUNT = 6;
-// Matches .project-reel-track's own 26s loop / 6 items — see the CSS
-// comment history; kept as the auto-advance pace now that it's JS-driven.
-const AUTO_ADVANCE_MS = 26_000 / PLACEHOLDER_COUNT;
+import Link from "next/link";
+import { useProjectShowcase } from "./project-showcase-context";
+import { PROJECTS } from "../data/projects";
 
 // Mirrors ProjectReel's placeholder reasoning: no real project names
 // exist yet, so this lists generic, clearly-labeled placeholders rather
-// than inventing project names. Swap in real names (and real links) the
-// same day the reel gets real thumbnails.
+// than inventing project names. Swap in real names (and the same real
+// links stay, just pointed at real case studies) the same day the reel
+// gets real thumbnails.
 //
-// Clickable by direct request: each item is a real button — sets itself
-// as the highlighted one and restarts the auto-advance cycle from
-// there, so a click actually sticks instead of being overridden a
-// moment later. There's no real per-project destination yet (no case
-// pages exist), so a click's payoff is the highlight state itself, not
-// navigation — the honest amount of interactivity available until real
-// project content exists to link to.
+// Real navigation, matching the reference's own project-title links
+// (confirmed by inspecting segerman.dev's DOM directly, not assumed).
+// Still visually synced with the reel via ProjectShowcaseContext: the
+// active item here tracks the reel's own continuous CSS auto-loop (see
+// ProjectReel.tsx — both derive activeIndex from the same shared
+// elapsed-time formula, not a scroll position, since the reel doesn't
+// have one anymore).
 export default function ProjectIndex() {
-  const items = Array.from(
-    { length: PLACEHOLDER_COUNT },
-    (_, i) => `Placeholder ${i + 1}`,
-  );
-  const [activeIndex, setActiveIndex] = useState(0);
-  const intervalRef = useRef<number | null>(null);
-
-  const startAutoAdvance = () => {
-    if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    intervalRef.current = window.setInterval(() => {
-      setActiveIndex((i) => (i + 1) % PLACEHOLDER_COUNT);
-    }, AUTO_ADVANCE_MS);
-  };
-
-  useEffect(() => {
-    startAutoAdvance();
-    return () => {
-      if (intervalRef.current !== null) window.clearInterval(intervalRef.current);
-    };
-  }, []);
-
-  const handleClick = (index: number) => {
-    setActiveIndex(index);
-    startAutoAdvance(); // restart the cycle from here rather than let
-    // the next automatic tick immediately override the click
-  };
+  const { activeIndex } = useProjectShowcase();
 
   return (
-    <aside className="project-index">
+    <aside className="project-index" role="region" aria-label="Project index">
       <span className="project-index-label">Index</span>
       <div className="project-index-list">
-        {items.map((label, i) => (
-          <button
-            key={label}
-            type="button"
+        {PROJECTS.map((project, i) => (
+          <Link
+            href={`/work/${project.slug}`}
+            key={project.slug}
             className={`project-index-item${i === activeIndex ? " is-active" : ""}`}
-            onClick={() => handleClick(i)}
+            aria-current={i === activeIndex ? "true" : undefined}
           >
-            {label}
-          </button>
+            {project.name}
+          </Link>
         ))}
       </div>
     </aside>

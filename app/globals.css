@@ -64,6 +64,22 @@ ol {
   --text-halo: 0 0 2px var(--color-pane-bg), 0 0 2px var(--color-pane-bg),
     0 0 6px rgba(34, 40, 49, 0.9), 0 0 14px rgba(34, 40, 49, 0.75),
     0 1px 2px rgba(34, 40, 49, 0.85);
+  /* Scaled down for every text element smaller than the headline (chrome
+     bar, status bar, tagline, CTA, index/reel labels). --text-halo's 6px
+     and 14px blur radii were tuned by eye against the headline's ~90-140px
+     glyphs; at 12-28px text with normal monospace letter-spacing, those
+     same radii are wide enough to bridge the gap between adjacent
+     letters, so every glyph's own halo overlaps its neighbors' and the
+     whole word/sentence blends into one solid-looking box instead of a
+     per-glyph ring — reported directly as "black/tinted boxes behind
+     texts," reproduced live against the bright "morning" skybox specif-
+     ically (confirmed by disabling text-shadow on one flag and comparing
+     it to its siblings — the box vanished only there). Same layer
+     structure (tight ring, soft glow, slight drop), radii roughly
+     quartered so they stay inside a single glyph's own footprint. */
+  --text-halo-small: 0 0 1px var(--color-pane-bg), 0 0 1px var(--color-pane-bg),
+    0 0 2px rgba(34, 40, 49, 0.85), 0 0 4px rgba(34, 40, 49, 0.65),
+    0 1px 1px rgba(34, 40, 49, 0.8);
   /* Legibility halo for background-clip:text gradient fills, as a
      filter instead of text-shadow. text-shadow on a gradient-clipped
      element paints from the PRE-clip glyph shape, which — even at
@@ -139,10 +155,13 @@ ol {
 html,
 body {
   height: 100%;
-  overflow: hidden; /* belt-and-suspenders: the fit-math guarantees no
-    overflow, this is the hard backstop */
-  overscroll-behavior: none; /* kills iOS Safari rubber-band bounce */
   background: var(--color-pane-bg);
+  /* No overflow:hidden here anymore — it used to be a "belt and
+     suspenders" backstop for the homepage, but .page below already
+     fully self-contains at a fixed 100dvw/100dvh with its own
+     overflow:hidden, so it was pure redundancy, not load-bearing.
+     Case-study sub-pages (/work/[slug]) need real, normal scrolling —
+     this rule being global would have silently broken that. */
 }
 
 body {
@@ -182,6 +201,9 @@ body {
   height: 100vh;
   height: 100dvh; /* vh is the fallback line; dvh overrides where supported */
   overflow: hidden;
+  overscroll-behavior: none; /* kills iOS Safari rubber-band bounce —
+    moved here from the global html/body rule, which would otherwise
+    have broken normal scrolling on /work/[slug] sub-pages */
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
   background: transparent;
@@ -258,7 +280,7 @@ body {
   font-size: var(--fs-chrome);
   font-weight: 500;
   white-space: nowrap;
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
 }
 /* "online" LED status was removed by direct request; the actual studio
    logo (real green, from the source asset) takes over as the site's
@@ -289,7 +311,7 @@ body {
   font-size: var(--fs-chrome);
   font-weight: 400;
   white-space: nowrap;
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   text-decoration: underline; /* matches "Contact" beside it, per direct
     request — muted underline color here (not persimmon) since this
     text is non-interactive, same pairing .flag's own muted state uses */
@@ -307,7 +329,7 @@ body {
   text-decoration-color: var(--color-underline-rest);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   transition:
     color 120ms ease,
     background-color 120ms ease,
@@ -391,7 +413,13 @@ body {
   color: var(--color-amber-bright); /* Primary Accent, per direct
     request — was Base Light; the only .cursor left on the page now is
     the headline's, since the CTA's was removed earlier */
-  text-shadow: var(--text-halo);
+  text-shadow: none; /* explicitly cancels the --text-halo inherited
+    from .headline — the halo's blur layers are tuned for thin letter
+    strokes; traced around this glyph's own large solid block (▌) they
+    read as a visible dark box instead of a legibility ring. A solid
+    saturated persimmon block is already highly visible against the
+    sky on its own, unlike thin text strokes, so no halo is needed
+    here — direct request, other text elements' halos are unchanged. */
   animation: cursor-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* smooth
     fade, per direct request — replaces the earlier hard step-end blink */
 }
@@ -409,7 +437,7 @@ body {
   font-size: var(--fs-position);
   font-weight: 500;
   line-height: var(--lh-tight);
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   margin-top: clamp(8px, 2dvmin, 20px); /* extra breathing room below
     the headline, on top of .content's own gap — "mt-5" (~20px) per
     direct request, raised from an earlier 16px ceiling */
@@ -430,7 +458,7 @@ body {
   font-weight: 600;
   text-decoration: none; /* affordance is the background/color shift on
     hover/focus below, not a drawn box */
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   transition:
     color 120ms ease,
     background-color 120ms ease; /* subtle hover transition, per direct
@@ -455,24 +483,40 @@ body {
 
 /* Project reel — a vertically auto-looping column of project thumbnails,
    sitting beside the hero text in the open sky space. Placeholders only
-   (see ProjectReel.tsx) until real project screenshots exist; the loop
-   mechanics below don't change when real images replace them.
-   Autoplay-only, matching the reference exactly — a real user-scroll
-   version (overflow-y:auto, scroll-snap) was tried in between, then
-   reverted by direct choice once direct testing confirmed segerman.dev
-   itself doesn't respond to scroll/wheel input either; see
-   ProjectReel.tsx. Hidden below 700px — the same tier the headline's
-   dvw formula switches on — there isn't real room for a second column
-   next to the hero text at narrower widths without either one breaking
-   the zero-scroll fit budget, so the narrow layout stays the
-   single-column hero it already was rather than risking a new clip
-   class of bug. */
+   (see ProjectReel.tsx) until real project screenshots exist.
+
+   This has been through several states — a CSS auto-loop, a plain
+   user-scroll region, a scroll-snap carousel with an
+   IntersectionObserver/keyboard/drag, a version of that carousel that
+   auto-wrapped at the end, a pure CSS auto-loop with no interaction at
+   all (matching the reference exactly — checked directly, its own image
+   column has no CSS animation, no scrollable container, and doesn't
+   respond to any input at all, near-certainly canvas/WebGL-rendered), a
+   version that layered native `overflow-y: auto` on top of that CSS
+   loop (composed for free, but had a real bug: the animation's own
+   translateY range and a real scrollTop are two independent, unbounded
+   offsets, and their combined worst case could exceed the track's
+   actual duplicated height — a hard cutoff, not a smooth fade,
+   screenshotted directly by the user) — before landing here: the
+   `transform` is now set entirely by JS (see ProjectReel.tsx), which
+   owns one position for auto-advance, wheel, and drag alike and keeps
+   it safely wrapped, so there's no more CSS `animation` on the track at
+   all. Hidden below 700px — the same tier the headline's dvw formula
+   switches on — there isn't real room for a second column next to the
+   hero text at narrower widths without either one breaking the
+   zero-scroll fit budget, so the narrow layout stays the single-column
+   hero it already was rather than risking a new clip class of bug. */
 .project-reel {
   display: none;
   width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
     20dvw, 320px) — direct request */
   height: 100%;
-  overflow: hidden;
+  overflow: hidden; /* no native scroll anymore — JS owns position
+    directly (see ProjectReel.tsx), touch/wheel/drag all route through
+    it instead of the browser's own scroll handling */
+  touch-action: none; /* stops the browser's own touch-pan/scroll from
+    fighting the manual pointer-drag handling below */
+  cursor: grab;
   flex-shrink: 0;
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -490,6 +534,9 @@ body {
   ); /* fades the loop's cut edges instead of a hard clip line, so it
     reads as a continuous reel rather than a truncated frame */
 }
+.project-reel:active {
+  cursor: grabbing;
+}
 @media (min-width: 700px) {
   .project-reel {
     display: block;
@@ -499,39 +546,54 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  animation: reel-scroll 26s linear infinite;
+  will-change: transform; /* JS updates this every frame during
+    auto-advance/drag — hints the browser to keep it on its own
+    compositor layer rather than re-evaluating layout each time */
 }
 .project-reel-item {
+  /* a real next/link <a> — each tile is a real link to its /work/[slug]
+     case study, matching how the reference's own project tiles work
+     (confirmed via its DOM, not assumed) — the motion is ambient/
+     autoplay, but the destinations underneath are still real. */
   flex: 0 0 auto;
   width: 100%;
   aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid var(--color-pane-bg); /* edge-to-edge, like
-    the reference's own stacked thumbnails — the seam is the only gap */
+  text-decoration: none;
+  /* No divider between tiles — direct request, matching the reference
+     exactly: its own stacked photos touch with zero seam, no border
+     line at all (a 1px pane-bg border, tried first, still read as a
+     visible interruption against the diagonal pattern). Tiles are
+     told apart by their label text, not a drawn line between them. */
   background: repeating-linear-gradient(
     135deg,
     var(--color-pane-bg),
-    var(--color-pane-bg) 10px,
-    var(--color-amber-tint-08) 10px,
-    var(--color-amber-tint-08) 20px
+    var(--color-pane-bg) 14px,
+    var(--color-amber-tint-08) 14px,
+    var(--color-amber-tint-08) 24px
   ); /* a deliberate placeholder pattern, not a flat panel standing in
-    for a photo — reads as "content goes here," not as a finished tile */
+    for a photo — reads as "content goes here," not as a finished tile.
+    Wider/quieter stripes than the original 10px/20px, closer to the
+    reference's own calm, understated tone. */
+  transition: background-color 150ms ease;
+}
+.project-reel-item:hover,
+.project-reel-item:focus-visible {
+  background-color: var(--color-amber-tint-14); /* a real hover/focus
+    cue — the tiles keep moving underneath, but they're still real,
+    clickable links */
+}
+.project-reel-item:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: calc(-1 * var(--focus-outline-w)); /* inset — an
+    outer offset would get clipped by the reel's own overflow/mask */
 }
 .project-reel-label {
   font-size: var(--fs-status);
   color: var(--color-ui-muted);
-  text-shadow: var(--text-halo);
-}
-@keyframes reel-scroll {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-50%); /* exactly half the track, since the
-      item list is duplicated once — lands back on an identical frame */
-  }
+  text-shadow: var(--text-halo-small);
 }
 
 /* Project index — the reference's far-right project name list,
@@ -559,7 +621,7 @@ body {
 .project-index-label {
   font-size: var(--fs-status);
   color: var(--color-ui-muted);
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
 }
 .project-index-list {
   display: flex;
@@ -569,10 +631,12 @@ body {
   margin-top: var(--space-2);
 }
 .project-index-item {
-  /* real <button> now (was a plain span) — reset to a text-only look */
+  /* a real next/link <a> now (was a plain span, then a <button> before
+     that) — reset to a text-only look, same as .chrome-nav-link/.flag */
   display: inline-block;
   background: none;
   border: none;
+  text-decoration: none;
   padding: 0.2em 0.4em;
   margin-right: -0.4em; /* the padding above only exists to give the
     hover/focus wash some breathing room — cancel its effect on layout
@@ -583,7 +647,7 @@ body {
   font-weight: 500;
   white-space: nowrap;
   color: var(--color-amber-dim);
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   transition: color 300ms ease, font-weight 150ms ease, background-color 120ms ease;
 }
 .project-index-item.is-active {
@@ -614,7 +678,7 @@ body {
   font-size: var(--fs-status);
   color: var(--color-amber-dim);
   font-weight: 400;
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
 }
 .status-right {
   display: flex;
@@ -666,7 +730,7 @@ body {
   text-decoration-color: var(--color-ui-muted-underline);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
   transition:
     color 120ms ease,
     background-color 120ms ease,
@@ -789,7 +853,7 @@ body {
   font-weight: 600;
   color: var(--color-cursor-flash);
   letter-spacing: 0.05em;
-  text-shadow: var(--text-halo); /* the same over-imagery legibility
+  text-shadow: var(--text-halo-small); /* the same over-imagery legibility
     technique every other text element on the page already uses — the
     shader is exactly the kind of busy, unpredictable background it
     was built for */
@@ -838,11 +902,80 @@ body {
     opacity: 1;
     transform: none;
   }
-  .project-reel-track {
-    animation: none;
-  }
-  /* .project-index-item needs no override here — it's JS-driven now
-     (ProjectIndex.tsx checks the same media query itself and skips
-     starting the auto-advance interval, leaving item 1 statically
-     active via the is-active class), not a CSS animation to cancel. */
+  /* .project-reel-track needs no entry here anymore — there's no CSS
+     animation on it to cancel; ProjectReel.tsx checks this same media
+     query itself and skips starting the rAF loop that drives
+     auto-advance, leaving wheel/drag still fully functional.
+     .project-index-item needs no entry either — its highlight is a
+     plain color/font-weight class toggle (.is-active), not a CSS
+     animation. */
+}
+
+/* ==========================================================================
+   Case study pages (/work/[slug]) — §8
+   Real sub-pages, deliberately outside .page's zero-scroll layout: a
+   case study is exactly the kind of content a normal scrolling page
+   suits, not a single fixed viewport. No hero chrome (skybox, loading
+   screen) — those are homepage-only, see app/page.tsx. Same tokens,
+   same monospace identity, no over-imagery legibility concern since
+   there's a flat pane-bg behind the text here, not open sky — no
+   --text-halo needed.
+   ========================================================================== */
+.case-study {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+}
+.case-study-back {
+  color: var(--color-ui-muted);
+  font-size: var(--fs-chrome);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--color-ui-muted-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.case-study-back:hover,
+.case-study-back:focus-visible {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+}
+.case-study-back:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.case-study-title {
+  color: var(--color-amber-bright);
+  font-size: clamp(2rem, 6dvw, 4.5rem);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+.case-study-body {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-position);
+  max-width: 60ch;
+}
+.case-study-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-cta);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+.case-study-cta:hover,
+.case-study-cta:focus-visible {
+  color: var(--color-amber-bright);
+  background-color: var(--color-amber-tint-08);
+}
+.case-study-cta:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
 }

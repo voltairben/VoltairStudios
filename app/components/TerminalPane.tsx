@@ -1,6 +1,7 @@
 import ScrambleText from "./ScrambleText";
 import ProjectReel from "./ProjectReel";
 import ProjectIndex from "./ProjectIndex";
+import { ProjectShowcaseProvider } from "./project-showcase-context";
 
 export default function TerminalPane() {
   return (
@@ -23,8 +24,10 @@ export default function TerminalPane() {
 
       </main>
 
-      <ProjectReel />
-      <ProjectIndex />
+      <ProjectShowcaseProvider>
+        <ProjectReel />
+        <ProjectIndex />
+      </ProjectShowcaseProvider>
     </div>
 
   );
