@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-view-transitions";
+import { flushSync } from "react-dom";
+import { useState } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
 import { PROJECTS } from "../data/projects";
 
@@ -18,7 +20,14 @@ import { PROJECTS } from "../data/projects";
 // elapsed-time formula, not a scroll position, since the reel doesn't
 // have one anymore).
 export default function ProjectIndex() {
-  const { activeIndex } = useProjectShowcase();
+  const { activeIndex, morphSource, setMorphSource } = useProjectShowcase();
+  // Which project (by slug) this list should tag for the card-to-page
+  // morph — unlike ProjectReel there's no duplicate-instance problem
+  // here (PROJECTS.map renders each project exactly once), but the same
+  // project is also always visible in the reel at the same time, so
+  // morphSource still gates which of the two surfaces owns the name —
+  // see project-showcase-context.tsx.
+  const [morphSlug, setMorphSlug] = useState<string | null>(null);
 
   return (
     <aside className="project-index" role="region" aria-label="Project index">
@@ -30,6 +39,20 @@ export default function ProjectIndex() {
             key={project.slug}
             className={`project-index-item${i === activeIndex ? " is-active" : ""}`}
             aria-current={i === activeIndex ? "true" : undefined}
+            onClick={() => {
+              // See ProjectReel.tsx's identical comment — flushSync is
+              // required so the tag is actually painted before
+              // next-view-transitions calls document.startViewTransition.
+              flushSync(() => {
+                setMorphSlug(project.slug);
+                setMorphSource("index");
+              });
+            }}
+            style={
+              project.slug === morphSlug && morphSource === "index"
+                ? { viewTransitionName: `project-title-${project.slug}` }
+                : undefined
+            }
           >
             {project.name}
           </Link>

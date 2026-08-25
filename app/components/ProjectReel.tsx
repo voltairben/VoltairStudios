@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "next-view-transitions";
+import { flushSync } from "react-dom";
 import {
   useEffect,
   useRef,
+  useState,
   type WheelEvent as ReactWheelEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -53,9 +55,16 @@ const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
   // clientHeight instead of assuming it). Doubled for real margin.
 
 export default function ProjectReel() {
-  const { reportActiveIndex } = useProjectShowcase();
+  const { reportActiveIndex, morphSource, setMorphSource } = useProjectShowcase();
   const reelRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  // Card-to-page morph target: PROJECTS repeats REPEAT_COUNT times in the
+  // DOM at once (see `looped` below), so a shared view-transition-name
+  // can't just live on every copy's label — the browser rejects duplicate
+  // names within one document snapshot. Only the one physical <span> the
+  // user actually clicked gets tagged; every other copy renders a plain
+  // untagged span. `morphIndex` is an index into `looped`, not PROJECTS.
+  const [morphIndex, setMorphIndex] = useState<number | null>(null);
   const offsetRef = useRef(0); // current translateY in px, always <= 0
   const singleSetHeightRef = useRef(0);
   const speedPxPerMsRef = useRef(0);
@@ -150,6 +159,23 @@ export default function ProjectReel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Reverse-direction morph: the case-study page's back link encodes
+  // which project it came from as a URL hash (`/#slug`) since a fresh
+  // mount here has no other way to know which tile the browser should
+  // pair against the case-study's outgoing <h1>. Mount-only — matches
+  // the "start in the middle copy" offset above (copy index 1), so the
+  // tagged instance is the one actually on screen at mount.
+  useEffect(() => {
+    const slug = window.location.hash.slice(1);
+    if (!slug) return;
+    const projectIndex = PROJECTS.findIndex((p) => p.slug === slug);
+    if (projectIndex === -1) return;
+    setMorphIndex(PROJECTS.length + projectIndex);
+    setMorphSource("reel");
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleWheel = (e: ReactWheelEvent<HTMLElement>) => {
     e.preventDefault();
     offsetRef.current -= e.deltaY;
@@ -208,8 +234,35 @@ export default function ProjectReel() {
     >
       <div className="project-reel-track" ref={trackRef}>
         {looped.map((project, i) => (
-          <Link href={`/work/${project.slug}`} className="project-reel-item" key={i}>
-            <span className="project-reel-label">{project.name}</span>
+          <Link
+            href={`/work/${project.slug}`}
+            className="project-reel-item"
+            key={i}
+            onClick={() => {
+              // next-view-transitions' Link calls our onClick, THEN
+              // synchronously calls document.startViewTransition — a
+              // plain setState here wouldn't paint until after that
+              // (React defers commits from event handlers), so the
+              // browser would snapshot the "old" DOM with nothing
+              // tagged yet and the morph would silently degrade to a
+              // plain fade. flushSync forces the commit to happen
+              // before this handler returns.
+              flushSync(() => {
+                setMorphIndex(i);
+                setMorphSource("reel");
+              });
+            }}
+          >
+            <span
+              className="project-reel-label"
+              style={
+                i === morphIndex && morphSource === "reel"
+                  ? { viewTransitionName: `project-title-${project.slug}` }
+                  : undefined
+              }
+            >
+              {project.name}
+            </span>
           </Link>
         ))}
       </div>

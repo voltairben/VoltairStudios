@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { PROJECTS, getProject } from "../../data/projects";
 
@@ -30,10 +30,19 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
 
   return (
     <main className="case-study">
-      <Link href="/" className="case-study-back">
+      {/* Hash carries which project this was so ProjectReel (a fresh
+          mount on "/") knows which of its 6 duplicated copies to tag
+          with the matching view-transition-name for the reverse morph —
+          see ProjectReel.tsx's hash-read effect. */}
+      <Link href={`/#${project.slug}`} className="case-study-back">
         ← voltair_studio
       </Link>
-      <h1 className="case-study-title">{project.name}</h1>
+      <h1
+        className="case-study-title"
+        style={{ viewTransitionName: `project-title-${project.slug}` }}
+      >
+        {project.name}
+      </h1>
       <p className="case-study-body">
         Case study in progress — check back soon.
       </p>

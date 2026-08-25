@@ -15,22 +15,36 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 // activeIndex from the same shared elapsed-time formula in
 // ProjectReel.tsx instead, so they stay genuinely in lockstep with the
 // CSS loop rather than needing a two-way request/response.
+type MorphSource = "reel" | "index" | null;
+
 type ProjectShowcaseContextValue = {
   activeIndex: number;
   reportActiveIndex: (i: number) => void;
+  /** Which surface currently owns the card-to-page view-transition-name —
+   *  ProjectReel and ProjectIndex both render every project (reel: 6x
+   *  duplicated for the infinite-scroll illusion, index: once each), so
+   *  without this gate, clicking a reel tile would leave the index's own
+   *  copy of that same project statically tagged too — two DOM elements
+   *  sharing one view-transition-name, which the browser rejects. Only
+   *  the surface that was actually clicked tags its element. */
+  morphSource: MorphSource;
+  setMorphSource: (source: MorphSource) => void;
 };
 
 const ProjectShowcaseContext = createContext<ProjectShowcaseContextValue | null>(null);
 
 export function ProjectShowcaseProvider({ children }: { children: ReactNode }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [morphSource, setMorphSource] = useState<MorphSource>(null);
 
   const reportActiveIndex = useCallback((i: number) => {
     setActiveIndex(i);
   }, []);
 
   return (
-    <ProjectShowcaseContext.Provider value={{ activeIndex, reportActiveIndex }}>
+    <ProjectShowcaseContext.Provider
+      value={{ activeIndex, reportActiveIndex, morphSource, setMorphSource }}
+    >
       {children}
     </ProjectShowcaseContext.Provider>
   );

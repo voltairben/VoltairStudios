@@ -518,9 +518,14 @@ body {
   width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
     20dvw, 320px) — direct request */
   height: 100%;
-  overflow: hidden; /* no native scroll anymore — JS owns position
+  overflow-y: hidden; /* no native scroll anymore — JS owns position
     directly (see ProjectReel.tsx), touch/wheel/drag all route through
-    it instead of the browser's own scroll handling */
+    it instead of the browser's own scroll handling. Split from a plain
+    overflow:hidden so the hover-pop's sideways shift below isn't
+    clipped on the X axis too — vertical masking (hiding the duplicated
+    copies above/below the visible window) is the only axis that's
+    actually load-bearing here. */
+  overflow-x: visible;
   touch-action: none; /* stops the browser's own touch-pan/scroll from
     fighting the manual pointer-drag handling below */
   cursor: grab;
@@ -593,13 +598,26 @@ body {
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   border: 1px solid var(--color-glass-border);
-  transition: background-color 150ms ease;
+  transition: background-color 150ms ease, transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .project-reel-item:hover,
 .project-reel-item:focus-visible {
   background-color: var(--color-amber-tint-14); /* a real hover/focus
     cue — the tiles keep moving underneath, but they're still real,
     clickable links */
+  transform: scale(1.32) translateX(-28px); /* bumped twice more —
+    direct request, more pop each time (1.06 → 1.16 → 1.32). translateX
+    adds the sideways motion — shifts left, into the gap toward the
+    headline (the open side), away from the Index list on the reel's
+    other side. cubic-bezier above gives it a slight overshoot snap on
+    the way in instead of a flat ease, reading more like a pop than a
+    slow grow. the "grow" cue — flex items respect z-index without
+    needing position:relative, so this raises the hovered tile above
+    its still-moving neighbors instead of getting covered by them.
+    .project-reel's overflow-x is visible specifically so this sideways
+    shift isn't clipped at the column's own edge — verified at every
+    width the reel appears at (700-2560px), zero page overflow. */
+  z-index: 1;
 }
 .project-reel-item:focus-visible {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
@@ -994,5 +1012,19 @@ body {
 .case-study-cta:focus-visible {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
+}
+
+/* Card-to-page morph (project reel/index -> case study, see
+   ProjectReel.tsx / ProjectIndex.tsx). The browser's View Transitions API
+   doesn't check prefers-reduced-motion on its own -- every other motion
+   feature in this file gets its own reduced-motion override, so this
+   does too: content still swaps instantly and correctly, it just stops
+   growing/sliding into place. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
