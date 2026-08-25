@@ -41,10 +41,16 @@ import { PROJECTS } from "../data/projects";
 // native scroll alone can't do both at once.
 const CYCLE_MS = 26_000; // time for auto-advance alone to move through
   // one full copy's height — matches the previous CSS animation's pace
-const REPEAT_COUNT = 3; // duplicated copies of the item list — starting
-  // in the middle one leaves a full copy's worth of slack above AND
-  // below before a wrap is ever needed, room enough for any realistic
-  // combination of auto-advance drift plus a user's own scroll/drag
+const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
+  // sized assuming a single copy's own height would always comfortably
+  // exceed the reel's visible height — true at normal aspect ratios,
+  // but the reel's width (and so each tile's aspect-ratio height)
+  // scales with viewport *width* while its visible height scales with
+  // viewport *height*, independently — a narrow-but-tall window can
+  // shrink one copy's height below the reel's own visible height,
+  // which the old fixed "-2 * single" wrap bound didn't account for
+  // at all (see wrapAndApply below, which now checks the real
+  // clientHeight instead of assuming it). Doubled for real margin.
 
 export default function ProjectReel() {
   const { reportActiveIndex } = useProjectShowcase();
@@ -62,12 +68,22 @@ export default function ProjectReel() {
 
   const wrapAndApply = () => {
     const track = trackRef.current;
+    const reel = reelRef.current;
     const single = singleSetHeightRef.current;
-    if (!track || !single) return;
-    // Keep offset within (-2 * single, 0] — jump a whole copy-height at
-    // a time when it drifts past either edge, invisible since every
-    // copy renders identically.
-    while (offsetRef.current <= -single * 2) offsetRef.current += single;
+    if (!track || !reel || !single) return;
+    // The true safety bound, not an assumption about it: the visible
+    // window is [-offset, -offset + clientHeight], and it must stay
+    // within [0, trackTotalHeight] at all times, or there's real
+    // content missing from view (a gap). An earlier version wrapped at
+    // a fixed "-2 * single", implicitly assuming clientHeight is
+    // always comfortably smaller than a single copy's own height —
+    // true most of the time, but not guaranteed (see REPEAT_COUNT's
+    // comment above). Computing the bound from the actual measured
+    // clientHeight closes that gap outright instead of hoping the
+    // margin is wide enough.
+    const trackTotalHeight = single * REPEAT_COUNT;
+    const minOffset = reel.clientHeight - trackTotalHeight;
+    while (offsetRef.current < minOffset) offsetRef.current += single;
     while (offsetRef.current > 0) offsetRef.current -= single;
     track.style.transform = `translateY(${offsetRef.current}px)`;
 
@@ -82,16 +98,40 @@ export default function ProjectReel() {
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    const singleSetHeight = track.scrollHeight / REPEAT_COUNT;
-    singleSetHeightRef.current = singleSetHeight;
-    speedPxPerMsRef.current = singleSetHeight / CYCLE_MS;
-    offsetRef.current = -singleSetHeight; // start in the middle copy
+
+    const measure = () => {
+      const singleSetHeight = track.scrollHeight / REPEAT_COUNT;
+      if (singleSetHeight <= 0) return; // not laid out yet
+      singleSetHeightRef.current = singleSetHeight;
+      speedPxPerMsRef.current = singleSetHeight / CYCLE_MS;
+    };
+    measure();
+    offsetRef.current = -singleSetHeightRef.current; // start in the middle copy
     wrapAndApply();
 
+    // Re-measure whenever the track's real rendered height changes —
+    // a window resize, browser zoom, DPI change, or a font-load reflow
+    // can all shift each tile's height (it's aspect-ratio-derived from
+    // the reel's own width), and this was previously measured ONCE at
+    // mount with nothing keeping it current afterward. A stale cached
+    // height desyncs wrapAndApply()'s safe-range math from what's
+    // actually on screen — the likely cause of a real "cut off, sent
+    // back to the start" report; this closes the whole class of bug
+    // rather than one specific reproduction of it.
+    const resizeObserver = new ResizeObserver(() => {
+      measure();
+      wrapAndApply(); // re-normalize the current offset into the
+        // (possibly changed) safe range immediately, not next frame
+    });
+    resizeObserver.observe(track);
+
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reducedMotion) return; // drag/wheel handlers below still call
-      // wrapAndApply() directly, so manual input keeps working — only
-      // the ambient per-frame auto-advance is skipped
+    if (reducedMotion) {
+      return () => resizeObserver.disconnect();
+      // drag/wheel handlers below still call wrapAndApply() directly,
+      // so manual input keeps working — only the ambient per-frame
+      // auto-advance is skipped
+    }
 
     let raf = 0;
     let last = performance.now();
@@ -103,7 +143,10 @@ export default function ProjectReel() {
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

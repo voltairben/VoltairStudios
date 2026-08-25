@@ -53,6 +53,13 @@ ol {
   --color-amber-tint-08: rgba(255, 90, 54, 0.08);
   --color-amber-tint-14: rgba(255, 90, 54, 0.14);
   --color-underline-rest: rgba(255, 90, 54, 0.35);
+  --color-glass-fill: rgba(34, 40, 49, 0.35); /* --color-pane-bg at 35%
+    — "Terminal Glass" fill for the project reel tiles */
+  --color-glass-fill-faint: rgba(255, 255, 255, 0.03); /* alternating
+    stripe tint within the glass fill, kept as a faint placeholder
+    signal rather than a flat panel */
+  --color-glass-border: rgba(248, 250, 252, 0.1); /* --color-cursor-flash
+    at 10% — the glass edge */
 
   /* Per-glyph legibility halo for text sitting directly over the open
      sky — every text element on the page now, chrome/status bars
@@ -562,21 +569,30 @@ body {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  /* No divider between tiles — direct request, matching the reference
-     exactly: its own stacked photos touch with zero seam, no border
-     line at all (a 1px pane-bg border, tried first, still read as a
-     visible interruption against the diagonal pattern). Tiles are
-     told apart by their label text, not a drawn line between them. */
+  /* "Terminal Glass" — direct request, retargeted from the hero text
+     container (see the comment on .project-reel above) to these tiles
+     instead: they already carry their own background, so making that
+     background glass is a real upgrade with no conflict, unlike
+     putting glass behind bare text over open sky would be. The fill
+     is translucent specifically so backdrop-filter has something to
+     show through — the rotating skybox behind the reel now visibly
+     blurs/refracts through each tile as it drifts. Still a diagonal
+     placeholder pattern, not a flat panel — same "content goes here"
+     signal as before, just glass instead of opaque. This does
+     reintroduce a visible per-tile edge (the earlier explicit "no
+     divider, zero seam" choice) — a real, small tension, accepted
+     here since a pane of glass having a defined edge is inherent to
+     what was asked for. */
   background: repeating-linear-gradient(
     135deg,
-    var(--color-pane-bg),
-    var(--color-pane-bg) 14px,
-    var(--color-amber-tint-08) 14px,
-    var(--color-amber-tint-08) 24px
-  ); /* a deliberate placeholder pattern, not a flat panel standing in
-    for a photo — reads as "content goes here," not as a finished tile.
-    Wider/quieter stripes than the original 10px/20px, closer to the
-    reference's own calm, understated tone. */
+    var(--color-glass-fill),
+    var(--color-glass-fill) 14px,
+    var(--color-glass-fill-faint) 14px,
+    var(--color-glass-fill-faint) 24px
+  );
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-glass-border);
   transition: background-color 150ms ease;
 }
 .project-reel-item:hover,
@@ -979,3 +995,4 @@ body {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
+
