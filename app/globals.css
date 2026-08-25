@@ -401,6 +401,13 @@ body {
   text-shadow: none; /* clears the inherited --text-halo from
     .headline — see --text-halo-filter's comment for why */
   filter: var(--text-halo-filter);
+  /* Kinetic weight — KineticTypography.tsx writes these vars on :root
+     from live mouse-distance, self-hosted IBM Plex Mono Variable (see
+     layout.tsx) actually has the wght axis to interpolate through. The
+     `, 700` fallback is what keeps the headline bold at rest/on load —
+     the vars stay unset until the first real mousemove. */
+  font-weight: var(--weight-creative, 700);
+  transition: font-weight 100ms ease-out;
 }
 .headline-line2 {
   display: inline-block;
@@ -415,6 +422,9 @@ body {
      phosphor glow is layered on top of it, per direct request. */
   text-shadow: var(--text-halo), 0 0 35px rgba(255, 90, 54, 0.35),
     0 0 70px rgba(255, 90, 54, 0.15);
+  font-weight: var(--weight-designers, 700); /* see .type-target
+    .scramble-glyphs above — same kinetic-weight mechanism */
+  transition: font-weight 100ms ease-out;
 }
 .cursor {
   color: var(--color-amber-bright); /* Primary Accent, per direct

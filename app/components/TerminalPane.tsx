@@ -1,4 +1,5 @@
 import ScrambleText from "./ScrambleText";
+import KineticTypography from "./KineticTypography";
 import ProjectReel from "./ProjectReel";
 import ProjectIndex from "./ProjectIndex";
 import { ProjectShowcaseProvider } from "./project-showcase-context";
@@ -7,6 +8,7 @@ export default function TerminalPane() {
   return (
 
     <div className="hero-row">
+      <KineticTypography />
       <main className="content">
         <h1 className="headline">
           <ScrambleText text="Creative" className="type-target" />

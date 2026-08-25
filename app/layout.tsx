@@ -1,11 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Self-hosted, not next/font/google: Google's hosted IBM Plex Mono is
+// static-weight-only (checked directly against next/font's own bundled
+// font-data.json — no "variable" entry, so `weight: undefined` there
+// throws "Missing weight for font" at build time, it doesn't unlock a
+// variable axis). IBM published a real IBM Plex Mono Variable font
+// three weeks before this (`@ibm/plex-mono-variable@1.0.0` on npm,
+// OFL-1.1) — extracted just the Roman woff2 from it (temp-installed,
+// copied out, uninstalled again; the package itself pulls in an IBM
+// telemetry dependency neither this site nor its build needs). `weight:
+// "100 700"` below is a CSS font-weight *range*, not a single value —
+// that's what tells the browser this one file covers the whole
+// variable axis instead of pinning it to 400. Same `variable:
+// "--font-mono"` name as before, so nothing downstream (globals.css's
+// --font-mono-stack, every component using it) needed to change.
+const plexMono = localFont({
+  src: "./fonts/IBMPlexMonoVar-Roman.woff2",
+  weight: "100 700",
+  style: "normal",
   variable: "--font-mono",
   display: "swap",
 });
