@@ -39,6 +39,11 @@ type SkyboxContextValue = {
    *  feature; direct request reverted that — the chrono-awareness
    *  stays scoped to just the *initial* choice on load, below. */
   next: () => void;
+  /** Jumps straight to a named skybox — SkyboxSwitcher only ever needs
+   *  next()'s cycle, but the terminal CLI's `skybox --skybox=<name>`
+   *  command needs to land on a specific one directly, not cycle until
+   *  it happens to match. */
+  setSkybox: (name: SkyboxName) => void;
   /** 0-100, real bytes-loaded progress of the FIRST skybox texture only —
    *  see LoadingScreen.tsx. Switching skyboxes afterward doesn't move this. */
   loadProgress: number;
@@ -75,6 +80,10 @@ export function SkyboxProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setSkybox = useCallback((name: SkyboxName) => {
+    setActive(name);
+  }, []);
+
   const [loadProgress, setLoadProgress] = useState(0);
   const [ready, setReady] = useState(false);
 
@@ -89,7 +98,7 @@ export function SkyboxProvider({ children }: { children: ReactNode }) {
 
   return (
     <SkyboxContext.Provider
-      value={{ active, next, loadProgress, ready, reportLoadProgress, reportReady }}
+      value={{ active, next, setSkybox, loadProgress, ready, reportLoadProgress, reportReady }}
     >
       {children}
     </SkyboxContext.Provider>

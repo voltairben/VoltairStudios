@@ -461,41 +461,63 @@ body {
   animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 700ms both;
 }
 
-.cta {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px; /* WCAG 2.5.5/2.5.8 target size, held even at the
-    smallest font floor — kept via padding alone now there's no border
-    to imply a hit area */
-  padding: 0.4em 0;
-  color: var(--color-cursor-flash); /* Base Light at rest — reads as
-    distinctly clickable against the surrounding muted tagline, per
-    direct request (brackets/$ framing were removed earlier instead) */
+/* Terminal CLI — replaced the static mailto .cta in this same slot
+   (see TerminalCLI.tsx), same footprint/entrance timing so the
+   zero-scroll fit-math tuned around .cta's box didn't need re-deriving.
+   .cta/.cta-text themselves are gone from the markup now — removed
+   rather than left as dead CSS. */
+.cli {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 44px; /* WCAG 2.5.5/2.5.8 target size — same floor .cta held */
   font-size: var(--fs-cta);
-  font-weight: 600;
-  text-decoration: none; /* affordance is the background/color shift on
-    hover/focus below, not a drawn box */
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; /* same
+    staged-reveal timing .cta used, follows .position directly */
+  cursor: text;
+}
+.cli-output {
+  max-height: clamp(48px, 10dvh, 120px); /* bounded + internally
+    scrollable — the page itself stays zero-scroll, only this small log
+    scrolls, same pattern as the project reel's own internal position
+    control rather than native page scroll */
+  overflow-y: auto;
+  color: var(--color-amber-dim);
+  font-size: var(--fs-position);
+  line-height: var(--lh-relaxed);
   text-shadow: var(--text-halo-small);
-  transition:
-    color 120ms ease,
-    background-color 120ms ease; /* subtle hover transition, per direct
-    request — was an instant snap before */
-  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; /* follows
-    .position directly now the manifest step is gone */
+  white-space: pre-wrap;
 }
-.cta:hover,
-.cta:focus-visible {
-  background-color: var(--color-amber-tint-08);
-  color: var(--color-amber-bright); /* Primary Accent on interaction —
-    inverse of the rest state, so hover reads as a real state change */
+.cli-line-input {
+  color: var(--color-cursor-flash);
 }
-.cta:focus-visible {
-  outline: var(--focus-outline-w) solid var(--color-amber-bright);
-  outline-offset: var(--focus-outline-offset);
-}
-.cta:active {
-  background-color: var(--color-amber-tint-14);
+.cli-line-error {
   color: var(--color-amber-bright);
+}
+.cli-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.4em 0;
+}
+.cli-prefix {
+  color: var(--color-cursor-flash);
+  text-shadow: var(--text-halo-small);
+}
+.cli-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  caret-color: transparent; /* the .cursor block below is the real,
+    bespoke blinking caret — hiding the native one avoids two cursors */
+  color: var(--color-cursor-flash);
+  font: inherit;
+  padding: 0;
+  text-shadow: var(--text-halo-small);
+}
+.cli-cursor {
+  font-size: 1em; /* .cursor's other use (the headline) sets its own
+    relative size — this one matches the prompt's own text size instead */
 }
 
 /* Project reel — a vertically auto-looping column of project thumbnails,
@@ -527,14 +549,25 @@ body {
   display: none;
   width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
     20dvw, 320px) — direct request */
+  margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
+    .project-index after it, same flex row) right of where the shared
+    .hero-row gap alone put it — direct request, on top of that gap
+    rather than replacing it */
   height: 100%;
-  overflow-y: hidden; /* no native scroll anymore — JS owns position
-    directly (see ProjectReel.tsx), touch/wheel/drag all route through
-    it instead of the browser's own scroll handling. Split from a plain
-    overflow:hidden so the hover-pop's sideways shift below isn't
-    clipped on the X axis too — vertical masking (hiding the duplicated
-    copies above/below the visible window) is the only axis that's
-    actually load-bearing here. */
+  overflow-y: clip; /* was overflow-y: hidden — clip behaves the same
+    for hiding the duplicated copies above/below the visible window
+    (still the load-bearing reason this axis clips at all; nothing here
+    ever calls .scrollTop on this element, so losing hidden's implicit
+    "still programmatically scrollable" isn't a real loss), but unlike
+    hidden it can be paired with overflow-clip-margin below to give a
+    hovered/scaled tile real room to bleed past this box's own edge
+    instead of a hard cut right at the boundary — direct report, "it
+    scopes out", screenshotted mid-hover. The margin is comfortably
+    less than one tile's own height at every width the reel renders at
+    (700px floor: ~150px tall), so it can't bleed far enough to reveal
+    a genuinely different, still-hidden duplicate copy — only gives the
+    tile nearest the edge room to actually pop past it. */
+  overflow-clip-margin: 110px;
   overflow-x: visible;
   touch-action: none; /* stops the browser's own touch-pan/scroll from
     fighting the manual pointer-drag handling below */
@@ -555,6 +588,18 @@ body {
     transparent 100%
   ); /* fades the loop's cut edges instead of a hard clip line, so it
     reads as a continuous reel rather than a truncated frame */
+}
+.project-reel:has(.project-reel-item:hover),
+.project-reel:has(.project-reel-item:focus-visible) {
+  /* The fade mask above is alpha, not clipping — it applies to
+     everything painted in this box regardless of overflow-clip-margin,
+     so a tile popping past the edge into the mask's own 10% fade zone
+     was rendering half-transparent right where it should be breaking
+     loose (the actual cause of "it scopes out", not the clip itself).
+     Dropped only while something's actually hovered/focused — the rest
+     of the time the loop-fade still does its job on the resting reel. */
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .project-reel:active {
   cursor: grabbing;
@@ -615,18 +660,22 @@ body {
   background-color: var(--color-amber-tint-14); /* a real hover/focus
     cue — the tiles keep moving underneath, but they're still real,
     clickable links */
-  transform: scale(1.32) translateX(-28px); /* bumped twice more —
-    direct request, more pop each time (1.06 → 1.16 → 1.32). translateX
-    adds the sideways motion — shifts left, into the gap toward the
-    headline (the open side), away from the Index list on the reel's
-    other side. cubic-bezier above gives it a slight overshoot snap on
-    the way in instead of a flat ease, reading more like a pop than a
-    slow grow. the "grow" cue — flex items respect z-index without
-    needing position:relative, so this raises the hovered tile above
-    its still-moving neighbors instead of getting covered by them.
-    .project-reel's overflow-x is visible specifically so this sideways
-    shift isn't clipped at the column's own edge — verified at every
-    width the reel appears at (700-2560px), zero page overflow. */
+  transform: scale(1.6) translateX(-34px); /* bumped again — "break
+    loose out of the bar its in": the real blocker wasn't the scale
+    value, it was overflow-clip-margin/the mask above having no bleed
+    room at all yet, so any further scale just hit a hard wall harder.
+    With real room to escape into now, pushed the scale up more too
+    (1.06 → 1.16 → 1.32 → 1.6). translateX adds the sideways motion —
+    shifts left, into the gap toward the headline (the open side), away
+    from the Index list on the reel's other side. cubic-bezier above
+    gives it a slight overshoot snap on the way in instead of a flat
+    ease, reading more like a pop than a slow grow. flex items respect
+    z-index without needing position:relative, so this raises the
+    hovered tile above its still-moving neighbors instead of getting
+    covered by them. .project-reel's overflow-x is visible specifically
+    so this sideways shift isn't clipped at the column's own edge —
+    verified at every width the reel appears at (700-2560px), zero page
+    overflow. */
   z-index: 1;
 }
 .project-reel-item:focus-visible {
@@ -941,7 +990,7 @@ body {
     opacity: 1;
   }
   .position,
-  .cta {
+  .cli {
     animation: none;
     opacity: 1;
     transform: none;
