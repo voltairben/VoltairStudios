@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link } from "next-view-transitions";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
@@ -43,7 +44,14 @@ export default function ChromeBar() {
             maskImage: `url(${logo.src})`,
           }}
         />
-        <span className="chrome-nav-text">About</span>
+        {/* A real route now (/about), not a local modal-open button —
+            direct request, replacing an in-page overlay this same
+            session had already built and verified (see DESIGN.md).
+            next-view-transitions' Link, so navigating here (either
+            direction) gets a real browser view transition for free. */}
+        <Link href="/about" className="chrome-nav-link">
+          About
+        </Link>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
           className="chrome-nav-link"

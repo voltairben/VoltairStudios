@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import type { Project } from "../data/projects";
 
 // Consolidates what used to be ProjectMockupCard.tsx — a carousel is a
@@ -14,11 +14,34 @@ import type { Project } from "../data/projects";
 // the image and makes the site's own text hard to read at the edges.
 const MAX_TILT_DEG = 8;
 
+// Touch-drag inertia — direct request ("smooth touch-drag inertia" for
+// carousel elements). Distance is a fraction of the card's own width
+// (not a fixed px value, so it scales correctly from a 320px phone to
+// a tablet); velocity is a real flick check so a fast short swipe
+// still advances even if it didn't cross the distance threshold,
+// matching how touch carousels actually behave elsewhere.
+const SWIPE_DISTANCE_RATIO = 0.15;
+const SWIPE_VELOCITY_PX_MS = 0.5;
+// Below this, a touch hasn't shown its direction yet — keeps a near-
+// straight-down scroll attempt from ever being misread as a tiny
+// horizontal drag.
+const AXIS_LOCK_PX = 6;
+
 export default function EstrelaCardViewer({ project }: { project: Project }) {
   const mockups = project.mockups ?? [];
   const cardRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const reducedMotionRef = useRef<boolean | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  // Kept in sync via effect, not a bare assignment during render — a
+  // ref write during render (the touch-drag effect below reads this
+  // from event callbacks, well after paint, so the effect's slightly
+  // later timing changes nothing in practice) is a real
+  // react-hooks/refs violation, this isn't just a lint-appeasing move.
+  const activeIndexRef = useRef(activeIndex);
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   const onMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     if (reducedMotionRef.current === null) {
@@ -60,6 +83,119 @@ export default function EstrelaCardViewer({ project }: { project: Project }) {
     }
   };
 
+  // Keeps the track's transform in sync with activeIndex whenever it's
+  // not mid-drag — imperative, matching how the mouse-tilt handlers
+  // above already drive this component's other transforms via a ref
+  // instead of through JSX's style prop. This is the only code path
+  // that ever writes track.style.transform (settling to an index and
+  // live-dragging both go through it below), rather than a JSX-driven
+  // value and an imperative drag override fighting over the same
+  // style property on every re-render.
+  const isDraggingRef = useRef(false);
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || isDraggingRef.current) return;
+    track.style.transform = `translateX(-${activeIndex * 100}%)`;
+  }, [activeIndex]);
+
+  // Touch-drag, attached imperatively (not JSX onTouchMove) — React
+  // registers touchstart/touchmove as passive at the root by default,
+  // which silently ignores preventDefault() inside a synthetic handler
+  // (a real, well-known gotcha for exactly this "swipe carousel inside
+  // a scrolling page" case). A manual { passive: false } listener is
+  // the only way preventDefault() actually stops page scroll once a
+  // drag is confirmed horizontal — same pattern SkyboxCanvas.tsx's own
+  // touch handling already uses for the same reason.
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || mockups.length < 2) return;
+
+    let dragAxis: "x" | "y" | null = null;
+    let startX = 0;
+    let startY = 0;
+    let lastX = 0;
+    let lastMoveTime = 0;
+    let velocity = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      lastX = touch.clientX;
+      lastMoveTime = performance.now();
+      velocity = 0;
+      dragAxis = null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      if (dragAxis === null) {
+        if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+        dragAxis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        if (dragAxis === "x") {
+          isDraggingRef.current = true;
+          card.classList.add("is-dragging");
+        }
+      }
+      if (dragAxis !== "x") return; // vertical intent — leave it to the page's own scroll
+
+      e.preventDefault(); // claims the gesture now that it's confirmed horizontal
+      const now = performance.now();
+      const dt = now - lastMoveTime;
+      if (dt > 0) velocity = (touch.clientX - lastX) / dt;
+      lastX = touch.clientX;
+      lastMoveTime = now;
+
+      const track = trackRef.current;
+      const width = card.getBoundingClientRect().width || 1;
+      if (track) {
+        const percent = (dx / width) * 100;
+        track.style.transform = `translateX(calc(-${activeIndexRef.current * 100}% + ${percent}%))`;
+      }
+    };
+
+    const settle = () => {
+      const track = trackRef.current;
+      if (track) track.style.transform = `translateX(-${activeIndexRef.current * 100}%)`;
+    };
+
+    const onTouchEnd = () => {
+      if (!isDraggingRef.current) {
+        dragAxis = null;
+        return;
+      }
+      isDraggingRef.current = false;
+      card.classList.remove("is-dragging");
+      const width = card.getBoundingClientRect().width || 1;
+      const dx = lastX - startX;
+      const distanceRatio = Math.abs(dx) / width;
+      const isFling = Math.abs(velocity) > SWIPE_VELOCITY_PX_MS;
+      if (distanceRatio > SWIPE_DISTANCE_RATIO || isFling) {
+        go(dx < 0 ? 1 : -1);
+      } else {
+        settle();
+      }
+      dragAxis = null;
+    };
+
+    card.addEventListener("touchstart", onTouchStart, { passive: true });
+    card.addEventListener("touchmove", onTouchMove, { passive: false });
+    card.addEventListener("touchend", onTouchEnd, { passive: true });
+    card.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      card.removeEventListener("touchstart", onTouchStart);
+      card.removeEventListener("touchmove", onTouchMove);
+      card.removeEventListener("touchend", onTouchEnd);
+      card.removeEventListener("touchcancel", onTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mockups.length]);
+
   return (
     <div
       ref={cardRef}
@@ -78,10 +214,7 @@ export default function EstrelaCardViewer({ project }: { project: Project }) {
         <span className="mockup-card-empty">no preview yet</span>
       ) : (
         <>
-          <div
-            className="mockup-carousel-track"
-            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-          >
+          <div ref={trackRef} className="mockup-carousel-track">
             {mockups.map((m) => (
               <Image
                 key={m.src}

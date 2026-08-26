@@ -313,19 +313,10 @@ body {
   -webkit-mask-position: center;
   mask-position: center;
 }
-.chrome-nav-text {
-  color: var(--color-amber-dim);
-  font-size: var(--fs-chrome);
-  font-weight: 400;
-  white-space: nowrap;
-  text-shadow: var(--text-halo-small);
-  text-decoration: underline; /* matches "Contact" beside it, per direct
-    request — muted underline color here (not persimmon) since this
-    text is non-interactive, same pairing .flag's own muted state uses */
-  text-decoration-color: var(--color-ui-muted-underline);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
-}
+/* .chrome-nav-text (the old static, muted "About" label) is gone — About
+   is a real link now (/about, a routed page — see app/about/page.tsx),
+   so it shares .chrome-nav-link's bright/interactive styling below
+   instead of a dimmed "non-interactive" look that would misrepresent it. */
 .chrome-nav-link {
   color: var(--color-amber-bright); /* same accent as the headline, per
     direct request — the one nav element meant to draw the eye */
@@ -357,7 +348,6 @@ body {
   text-decoration-color: var(--color-cursor-flash);
   background-color: var(--color-amber-tint-14);
 }
-
 /* 5.2 Content (terminal pane) */
 .headline {
   color: var(--color-cursor-flash); /* Base Light — "Creative" (the
@@ -496,6 +486,94 @@ body {
 .cta:active {
   background-color: var(--color-amber-tint-14);
   color: var(--color-amber-bright);
+}
+
+/* Terminal command line — direct request ("Terminal Command History &
+   Auto-Completion"). A real <input> drives it (real typing/paste/IME/
+   mobile-keyboard support, a real accessible name) but sits invisible
+   (opacity: 0) over a plain <span> that mirrors its value — editing
+   happens in the real, invisible input; its own native caret already
+   handles that, just unseen. Since the real input has no visible
+   focus ring of its own, .terminal-prompt itself shows one via
+   :focus-within. Originally also echoed the headline's .cursor glyph
+   (▌) after the mirrored text — removed by direct request, along with
+   the "$" prefix beside it (see DESIGN.md); the headline's own cursor
+   is untouched. */
+.terminal-prompt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch; /* .content is a flex column with align-items:
+    flex-start, so a flex child otherwise shrink-wraps to its own
+    content's width. .terminal-prompt-input's inset:0 sizes it off
+    THIS element's box — with no cursor glyph left to give
+    .terminal-prompt-text (its only in-flow sibling) any width when
+    the input is empty, that box collapsed to 0px, and so did the real
+    click/tap target sitting on top of it: a real, caught-live bug
+    (verified: an empty click landed nowhere), not theoretical. This
+    makes the row's width independent of whatever text is or isn't in
+    it, matching the "generous click/tap target" this was always
+    meant to be. */
+  gap: var(--space-2);
+  min-height: 44px; /* same real touch-target floor as .cta, held even
+    though the visible content is just text */
+  margin-top: var(--space-1);
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 1100ms both; /* continues
+    .position (700ms) / .cta (900ms)'s same staggered entrance */
+}
+.terminal-prompt:focus-within {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.terminal-prompt-text {
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-position);
+  font-weight: 500;
+  text-shadow: var(--text-halo-small);
+  white-space: pre;
+}
+.terminal-prompt-input {
+  /* Covers the full prompt row (a real, generous click/tap target),
+     invisible but still the actual focus/typing target — not
+     display:none, which would drop it from the tab order entirely. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+  font-size: 16px; /* real value, even though invisible — below 16px,
+    iOS Safari zooms the whole page on focus */
+  cursor: text;
+}
+.terminal-log {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-1);
+  /* No max-height/overflow needed: LOG_LIMIT caps this at 2 lines (one
+     command's echo + result) in the component itself, so it always
+     shows in full — a scrolled box with no "more above" affordance
+     read as clipped/broken text in an earlier pass at a higher cap. */
+}
+.terminal-log:empty {
+  display: none; /* kept mounted (not conditionally rendered) so the
+    aria-live region already exists in the DOM before the first
+    command runs — an aria-live container that mounts at the same time
+    as its first content isn't reliably announced by every screen
+    reader */
+  margin-top: 0;
+}
+.terminal-log-line {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-status);
+  text-shadow: var(--text-halo-small);
 }
 
 /* Project reel — a vertically auto-looping column of project thumbnails,
@@ -1023,7 +1101,8 @@ body {
     opacity: 1;
   }
   .position,
-  .cta {
+  .cta,
+  .terminal-prompt {
     animation: none;
     opacity: 1;
     transform: none;
@@ -1506,6 +1585,227 @@ body {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   About page (app/about/page.tsx) — §9
+   A real route, not a modal (see DESIGN.md for the modal-to-route
+   history). Reuses .page as-is for the outer shell (same zero-scroll
+   3-row grid the homepage uses — "screen-locked" was explicit in an
+   earlier brief for this page), so .about-page-content only needs to
+   fill .page's middle grid row and center the content, the way
+   .hero-row fills it on the homepage.
+
+   Floating text, not a boxed panel — direct request: this shipped
+   first as a "Terminal Glass" box (fill/blur/border, matching the reel
+   tiles/mockup card), then was asked to drop the box entirely in favor
+   of .content's own established technique — text sitting directly on
+   the open sky, legible via --text-halo per glyph, no panel behind it.
+   Same technique, not a new one invented for this page. */
+.about-page-content {
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0; /* same flex-overflow fix .hero-row already needs —
+    see the Grid Blowout Lesson comment on .hero-row above */
+  overflow: hidden;
+  padding: var(--space-4);
+}
+.about-float {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* left-aligned prose, matching .content —
+    centered paragraph text reads worse at this length */
+  gap: var(--space-3);
+  max-width: 60ch; /* readable line length for a real paragraph, not
+    the fixed 440px box width the panel version used */
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both; /* same
+    entrance every other floating text element in .content uses */
+}
+.about-float-title {
+  color: var(--color-amber-bright);
+  font-size: var(--fs-cta);
+  font-weight: 500;
+  text-shadow: var(--text-halo-small);
+}
+.about-float-body {
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-position);
+  line-height: 1.5;
+  text-shadow: var(--text-halo-small);
+}
+.about-float-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.about-float-meta-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--fs-status);
+}
+.about-float-meta-label {
+  color: var(--color-ui-muted);
+  text-shadow: var(--text-halo-small);
+}
+.about-float-meta-value {
+  color: var(--color-amber-dim);
+  text-shadow: var(--text-halo-small);
+}
+.about-float-meta-link {
+  color: var(--color-amber-bright);
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline-rest);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo-small);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.about-float-meta-link:hover,
+.about-float-meta-link:focus-visible {
+  color: var(--color-cursor-flash);
+  text-decoration-color: var(--color-cursor-flash);
+}
+.about-float-meta-link:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.about-float-close {
+  color: var(--color-amber-bright);
+  font-size: var(--fs-position);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline-rest);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo-small);
+  margin-top: var(--space-2);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.about-float-close:hover,
+.about-float-close:focus-visible {
+  color: var(--color-cursor-flash);
+  text-decoration-color: var(--color-cursor-flash);
+}
+.about-float-close:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-float {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   CRT overlay + power-on glitch — §10
+   Direct request: "raw-engineered terminal/console aesthetic ...
+   performance-safe CRT scanline and screen curvature ... avoiding heavy
+   canvas passes." A single body::after pseudo-element, not a new
+   component or DOM node — two stacked, static CSS gradients (scanlines,
+   vignette). No animation loop on this layer: a continuously-animating
+   full-viewport overlay would be exactly the "heavy" cost the brief
+   asked to avoid, and it doesn't need one to read as a CRT surface.
+   Genuinely thin values throughout — this is texture, not something
+   fighting the --text-halo legibility work everywhere else in this
+   file. "Screen curvature" is approximated as a vignette (darkened
+   edges); true barrel/lens distortion isn't something CSS gradients
+   can do, and a vignette is the honest equivalent, not a literal one. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* above everything else in this file (previous
+    highest was .loading-screen's 10) — a CRT's own glass sits in
+    front of its whole picture, loading state included */
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.05) 0px,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.32) 100%);
+}
+
+/* One-time "power-on" flicker, scoped to .hero-row (not the whole
+   .page) — .page is also the shell /about/page.tsx uses, and this is
+   specifically "the terminal dashboard" (headline/CTA/terminal/reel)
+   booting up, not every page that happens to share the outer grid.
+   CSS-only: animation-fill-mode defaults to none, so once it finishes
+   .hero-row cleanly has *no* active filter again — not pinned on the
+   last frame — and it needs no JS to trigger or clean up; it just
+   plays once when .hero-row enters the DOM, which is exactly "when
+   the terminal dashboard initially mounts." filter only (brightness/
+   contrast), deliberately no transform/translate: a transformed
+   element can extend past its container and create real horizontal
+   overflow on html/body (no ancestor here clips it) — this system has
+   fought that exact "Grid Blowout" class of bug before and a glitch
+   effect isn't worth reopening it. steps(1) for an actual flicker
+   (instant jumps between brightness levels), not a smooth crossfade. */
+.hero-row {
+  animation: crt-glitch-in 650ms steps(1);
+}
+@keyframes crt-glitch-in {
+  0% {
+    filter: brightness(0.3) contrast(1.5);
+  }
+  6% {
+    filter: brightness(1.7) contrast(1.6);
+  }
+  12% {
+    filter: brightness(0.25) contrast(1.3);
+  }
+  20% {
+    filter: brightness(1.4);
+  }
+  30% {
+    filter: brightness(0.55);
+  }
+  42% {
+    filter: brightness(1.15);
+  }
+  60% {
+    filter: brightness(0.92);
+  }
+  100% {
+    filter: brightness(1) contrast(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-row {
+    animation: none;
+  }
+}
+
+/* Audio toggle (StatusBar) — ties the visual "on" state directly to
+   the real aria-pressed attribute instead of a separate class, so the
+   look can never drift out of sync with what a screen reader reports. */
+.audio-toggle[aria-pressed="true"] {
+  color: var(--color-amber-bright);
+}
+
+/* Mockup carousel touch-drag (EstrelaCardViewer.tsx) — while dragging,
+   the track's transform is driven imperatively (1:1 with the finger,
+   see the component), so its own CSS transition has to step aside or
+   it fights/lags the live drag; restored the instant the drag ends so
+   the settle/snap still animates exactly as before. */
+.mockup-card.is-dragging .mockup-carousel-track {
+  transition: none;
+}
+/* Discoverability: this carousel's nav is otherwise hover-revealed
+   (opacity: 0 at rest — see .mockup-carousel-dots above), which no
+   touch device can ever trigger. Swipe now covers the actual
+   navigation, but nothing indicated multiple slides even existed on
+   a device with no hover; the dots stay visible on any device that
+   can't hover, purely as a "there are N of these, you're on #2" cue. */
+@media (hover: none) {
+  .mockup-carousel-dots {
+    opacity: 1;
   }
 }
 

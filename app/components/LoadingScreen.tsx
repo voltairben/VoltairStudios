@@ -68,6 +68,11 @@ export default function LoadingScreen() {
   // Reduced-motion path: no artificial pacing, just mirror real state.
   useEffect(() => {
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Mirrors SkyboxContext (an external provider, not a prop of this
+    // component) straight through with no pacing when reduced motion
+    // is on; the paced rAF effect above is the "real" state-owning
+    // path, this one only ever runs for the opted-out case.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayProgress(realProgress);
     if (realReady) setDismissed(true);
   }, [realProgress, realReady]);

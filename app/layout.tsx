@@ -4,6 +4,7 @@ import { ViewTransitions } from "next-view-transitions";
 import { SkyboxProvider } from "./components/skybox-context";
 import SkyboxCanvas from "./components/SkyboxCanvas";
 import LoadingScreen from "./components/LoadingScreen";
+import { AudioProvider } from "./components/audio-context";
 import "./globals.css";
 
 // Self-hosted, not next/font/google: Google's hosted IBM Plex Mono is
@@ -67,15 +68,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             which only next-view-transitions' Link/router hook trigger —
             plain next/link navigations wouldn't animate even with a
             matching viewTransitionName on both sides. */}
-        <SkyboxProvider>
-          <SkyboxCanvas />
-          <ViewTransitions>{children}</ViewTransitions>
-          <LoadingScreen />
-        </SkyboxProvider>
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js?token=5ce2e7e7-3747-4dee-a2e4-04ce45a1e1d3"></script>
-{/* impeccable-live-end */}
-</body>
+        {/* AudioProvider wraps SkyboxProvider (not the other way around)
+            — SkyboxCanvas plays a sound on real skybox switches, so it
+            needs useAudio() available; usePathname() inside
+            AudioProvider itself (the route-change sweep) works
+            anywhere under the App Router, doesn't need to be inside
+            ViewTransitions specifically. */}
+        <AudioProvider>
+          <SkyboxProvider>
+            <SkyboxCanvas />
+            <ViewTransitions>{children}</ViewTransitions>
+            <LoadingScreen />
+          </SkyboxProvider>
+        </AudioProvider>
+      </body>
     </html>
   );
 }

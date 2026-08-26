@@ -171,6 +171,10 @@ export default function ProjectReel() {
     if (!slug) return;
     const projectIndex = PROJECTS.findIndex((p) => p.slug === slug);
     if (projectIndex === -1) return;
+    // One-time read of a real external system (the URL's own hash,
+    // which doesn't exist as React state anywhere) to tag which
+    // duplicated tile owns the reverse morph; not state derived from a prop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMorphIndex(PROJECTS.length + projectIndex);
     setMorphSource("reel");
     history.replaceState(null, "", window.location.pathname + window.location.search);

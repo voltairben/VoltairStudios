@@ -65,6 +65,10 @@ export function SkyboxProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<SkyboxName>("morning");
 
   useEffect(() => {
+    // One-time correction from a real external system (the visitor's
+    // own clock, unavailable/unsafe to read during SSR — see the
+    // comment above), not state derived from a prop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActive(chronoSkyboxNow());
   }, []);
 

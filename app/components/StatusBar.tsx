@@ -1,4 +1,5 @@
 import SkyboxSwitcher from "./SkyboxSwitcher";
+import AudioToggle from "./AudioToggle";
 
 export default function StatusBar() {
   return (
@@ -9,6 +10,7 @@ export default function StatusBar() {
         <span className="status-copyright"> · © 2026</span>
       </div>
       <div className="status-right">
+        <AudioToggle />
         <SkyboxSwitcher />
         <a href="https://github.com/voltairstudio" className="flag flag-github">
           --github

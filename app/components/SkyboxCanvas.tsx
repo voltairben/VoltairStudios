@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { useSkybox } from "./skybox-context";
+import { useAudio } from "./audio-context";
 
 /** One full revolution every 150s — slow enough to read as ambient drift, never distracting. */
 const ROTATION_PERIOD_MS = 150_000;
@@ -85,6 +86,19 @@ async function loadTextureWithProgress(
 
 export default function SkyboxCanvas() {
   const { active, reportLoadProgress, reportReady } = useSkybox();
+  const { playSweep } = useAudio();
+  // playSweep's identity changes whenever the audio on/off toggle
+  // flips (see audio-context.tsx — it's memoized on `enabled`). The
+  // texture-swap effect below must NOT re-run just because someone
+  // toggled audio — that would re-fetch/re-fade the *current* texture
+  // and fire a phantom sweep on every toggle, not an actual switch. A
+  // ref always holding the latest function, updated in its own tiny
+  // effect, lets the real effect call the current playSweep without
+  // depending on it.
+  const playSweepRef = useRef(playSweep);
+  useEffect(() => {
+    playSweepRef.current = playSweep;
+  }, [playSweep]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sphereRef = useRef<THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial> | null>(null);
   const hasLoadedOnceRef = useRef(false);
@@ -128,6 +142,51 @@ export default function SkyboxCanvas() {
       mousePosRef.current.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
     if (!reduceMotion) window.addEventListener("mousemove", onMouseMove);
+
+    // Touch-drag drift — the mobile analog of the mouse-drift above,
+    // reusing the exact same mousePosRef (and so the exact same
+    // physics/lerp) rather than a second parallel implementation.
+    // .skybox-canvas itself still keeps pointer-events:none — "never a
+    // click target" is unchanged — this listens at the window level
+    // and only acts when a touch both (a) didn't start on real
+    // interactive content (a link, button, the mockup carousel, an
+    // input) and (b) isn't on a page that actually scrolls, so it can
+    // never hijack a tap meant for something real or a drag meant to
+    // scroll a case-study/about page. Only tracks mousePosRef while the
+    // finger is down; on release it simply stops updating, exactly
+    // like the mouse does when it stops moving — no separate "spring
+    // back" logic needed, the existing lerp already eases toward
+    // wherever it was last pointed.
+    let isDraggingSky = false;
+    const isPageScrollable = () =>
+      document.documentElement.scrollHeight > document.documentElement.clientHeight;
+    const onTouchStart = (e: TouchEvent) => {
+      const target = e.target as Element | null;
+      if (target?.closest('a, button, input, textarea, [role="dialog"], [role="region"]')) {
+        isDraggingSky = false;
+        return;
+      }
+      isDraggingSky = !isPageScrollable();
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDraggingSky) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      mousePosRef.current.x = (touch.clientX / window.innerWidth) * 2 - 1;
+      mousePosRef.current.y = (touch.clientY / window.innerHeight) * 2 - 1;
+    };
+    const onTouchEnd = () => {
+      isDraggingSky = false;
+    };
+    if (!reduceMotion) {
+      // passive: true throughout — this never calls preventDefault, so
+      // it can never block a real scroll or tap even on a page it
+      // decides not to act on.
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("touchend", onTouchEnd, { passive: true });
+      window.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    }
 
     let raf = 0;
     let last = performance.now();
@@ -180,6 +239,10 @@ export default function SkyboxCanvas() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       geometry.dispose();
       material.map?.dispose();
       material.dispose();
@@ -250,6 +313,11 @@ export default function SkyboxCanvas() {
       canvas.style.transition = `opacity ${SWITCH_FADE_MS}ms ease`;
       canvas.style.opacity = "0.15";
     }
+    // Right here specifically (not the first-load branch above, and
+    // not inside SkyboxSwitcher/the terminal's `skybox` command) so
+    // every real switch plays it exactly once regardless of which of
+    // the two triggers caused it — no-op silently if audio is off.
+    playSweepRef.current();
 
     const loader = new THREE.TextureLoader();
     loader.load(`/skyboxes/skybox-${active}.png`, (texture) => {

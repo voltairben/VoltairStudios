@@ -2,6 +2,7 @@ import ScrambleText from "./ScrambleText";
 import KineticTypography from "./KineticTypography";
 import ProjectReel from "./ProjectReel";
 import ProjectIndex from "./ProjectIndex";
+import TerminalInput from "./TerminalInput";
 import { ProjectShowcaseProvider } from "./project-showcase-context";
 
 export default function TerminalPane() {
@@ -24,6 +25,10 @@ export default function TerminalPane() {
           <span className="cta-text">contact@voltairstudio.com</span>
         </a>
 
+        {/* Real functional command line, direct request — reuses the
+            same skybox/about state everything else on the page already
+            shares, not a separate one-off. See TerminalInput.tsx. */}
+        <TerminalInput />
       </main>
 
       <ProjectShowcaseProvider>
