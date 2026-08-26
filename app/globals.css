@@ -461,63 +461,41 @@ body {
   animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 700ms both;
 }
 
-/* Terminal CLI — replaced the static mailto .cta in this same slot
-   (see TerminalCLI.tsx), same footprint/entrance timing so the
-   zero-scroll fit-math tuned around .cta's box didn't need re-deriving.
-   .cta/.cta-text themselves are gone from the markup now — removed
-   rather than left as dead CSS. */
-.cli {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-height: 44px; /* WCAG 2.5.5/2.5.8 target size — same floor .cta held */
-  font-size: var(--fs-cta);
-  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; /* same
-    staged-reveal timing .cta used, follows .position directly */
-  cursor: text;
-}
-.cli-output {
-  max-height: clamp(48px, 10dvh, 120px); /* bounded + internally
-    scrollable — the page itself stays zero-scroll, only this small log
-    scrolls, same pattern as the project reel's own internal position
-    control rather than native page scroll */
-  overflow-y: auto;
-  color: var(--color-amber-dim);
-  font-size: var(--fs-position);
-  line-height: var(--lh-relaxed);
-  text-shadow: var(--text-halo-small);
-  white-space: pre-wrap;
-}
-.cli-line-input {
-  color: var(--color-cursor-flash);
-}
-.cli-line-error {
-  color: var(--color-amber-bright);
-}
-.cli-prompt {
-  display: flex;
+.cta {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  min-height: 44px; /* WCAG 2.5.5/2.5.8 target size, held even at the
+    smallest font floor — kept via padding alone now there's no border
+    to imply a hit area */
   padding: 0.4em 0;
-}
-.cli-prefix {
-  color: var(--color-cursor-flash);
+  color: var(--color-cursor-flash); /* Base Light at rest — reads as
+    distinctly clickable against the surrounding muted tagline, per
+    direct request (brackets/$ framing were removed earlier instead) */
+  font-size: var(--fs-cta);
+  font-weight: 600;
+  text-decoration: none; /* affordance is the background/color shift on
+    hover/focus below, not a drawn box */
   text-shadow: var(--text-halo-small);
+  transition:
+    color 120ms ease,
+    background-color 120ms ease; /* subtle hover transition, per direct
+    request — was an instant snap before */
+  animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 900ms both; /* follows
+    .position directly now the manifest step is gone */
 }
-.cli-input {
-  background: transparent;
-  border: none;
-  outline: none;
-  caret-color: transparent; /* the .cursor block below is the real,
-    bespoke blinking caret — hiding the native one avoids two cursors */
-  color: var(--color-cursor-flash);
-  font: inherit;
-  padding: 0;
-  text-shadow: var(--text-halo-small);
+.cta:hover,
+.cta:focus-visible {
+  background-color: var(--color-amber-tint-08);
+  color: var(--color-amber-bright); /* Primary Accent on interaction —
+    inverse of the rest state, so hover reads as a real state change */
 }
-.cli-cursor {
-  font-size: 1em; /* .cursor's other use (the headline) sets its own
-    relative size — this one matches the prompt's own text size instead */
+.cta:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.cta:active {
+  background-color: var(--color-amber-tint-14);
+  color: var(--color-amber-bright);
 }
 
 /* Project reel — a vertically auto-looping column of project thumbnails,
@@ -622,6 +600,11 @@ body {
      case study, matching how the reference's own project tiles work
      (confirmed via its DOM, not assumed) — the motion is ambient/
      autoplay, but the destinations underneath are still real. */
+  position: relative; /* anchors next/image's fill + the scrim below;
+    also what .has-image relies on, though the hover-pop's own z-index
+    already worked without this (flex items respect z-index regardless
+    of position) — this is purely for the absolutely-positioned children */
+  overflow: hidden; /* clips the image to the tile's own box/aspect-ratio */
   flex: 0 0 auto;
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -655,6 +638,51 @@ body {
   border: 1px solid var(--color-glass-border);
   transition: background-color 150ms ease, transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.project-reel-item.has-image {
+  /* The diagonal pattern's entire meaning is "content goes here" — once
+     there's a real photo, showing that placeholder pattern under or
+     over it stops making sense, so tiles with a real image drop it
+     (and the blur that only existed to let the sky show through it)
+     entirely. The border stays, for the same tile-edge definition every
+     other tile has. */
+  background: var(--color-pane-bg); /* avoids a flash of the sky behind
+    the image before it decodes, matching every other opaque surface's
+    fallback in this system */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.project-reel-item.has-image .project-reel-label {
+  /* Direct request: the name overlay is redundant clutter once there's
+     a real, recognizable photo underneath — but the span itself stays
+     in the DOM exactly where it is, not display:none/removed. It's
+     both the screen-reader accessible name for this link (color alone
+     never affects that) and the card-to-page morph's source element —
+     hiding it via display:none would either break that transition or
+     make it grow from a zero-size point instead of the tile's actual
+     label position, which is what got verified working. Making the
+     glyphs themselves invisible keeps the box exactly where it was. */
+  color: transparent;
+  text-shadow: none;
+}
+.project-reel-item-image {
+  object-fit: cover;
+  z-index: 0;
+}
+.project-reel-item-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Guaranteed legibility for the label sitting on a real, busy photo —
+     the halo alone (used everywhere else text sits over imagery in this
+     system) is tuned for the skybox's soft gradients, not a high-
+     contrast gym photo with neon signage; checked the actual rendered
+     result before adding this rather than assuming the halo would carry
+     it. rgb() from --color-pane-bg (#222831) — gradients can't take a
+     var() inside rgba()'s alpha slot directly, so the value is spelled
+     out, not re-invented. */
+  background: linear-gradient(to top, rgba(34, 40, 49, 0.75), transparent 60%);
+}
 .project-reel-item:hover,
 .project-reel-item:focus-visible {
   background-color: var(--color-amber-tint-14); /* a real hover/focus
@@ -684,6 +712,11 @@ body {
     outer offset would get clipped by the reel's own overflow/mask */
 }
 .project-reel-label {
+  position: relative; /* z-index is a no-op without this — needed to
+    paint above .project-reel-item-image/-scrim, which are absolutely
+    positioned and would otherwise cover this un-positioned span
+    (positioned siblings paint after plain in-flow content by default) */
+  z-index: 2;
   font-size: var(--fs-status);
   color: var(--color-ui-muted);
   text-shadow: var(--text-halo-small);
@@ -990,7 +1023,7 @@ body {
     opacity: 1;
   }
   .position,
-  .cli {
+  .cta {
     animation: none;
     opacity: 1;
     transform: none;
@@ -1014,14 +1047,100 @@ body {
    there's a flat pane-bg behind the text here, not open sky — no
    --text-halo needed.
    ========================================================================== */
+/* ChromeBar/StatusBar, reused as-is on the case-study page — direct
+   request: a visitor should always have access to the same nav/flags/
+   skybox switcher regardless of which page they're on, in the same
+   top/bottom position as the homepage. .page positions them via
+   grid-row, which doesn't exist here (a real scrolling page, not the
+   zero-scroll grid) — fixed positioning is the equivalent for a page
+   with real scroll, and replaces the earlier one-off fixed skybox-only
+   button from the previous round: StatusBar already carries that
+   switcher, so keeping the separate button would've just duplicated it. */
+.case-study-chrome,
+.case-study-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1; /* clears .skybox-canvas's z-index:0 outright, same
+    mechanism .case-study-skybox used before it — an explicit non-auto
+    value beats a positioned sibling regardless of DOM order */
+  display: flex;
+  align-items: center; /* On .page, .chrome-bar/.status-bar get their
+    real height from the grid row (--chrome-h/--status-h) stretching
+    them, then center their own content within it — that's what put
+    "About"/"Contact" at a comfortable distance from the edge, not
+    flush against it. A bare position:fixed wrapper has no grid to
+    stretch it, so ChromeBar/StatusBar were shrinking to their own
+    unpadded content height instead and sitting right at the edge —
+    screenshotted directly. Giving the wrapper the same height and
+    centering its content reproduces the exact same result. */
+}
+.case-study-chrome {
+  top: 0;
+  height: var(--chrome-h);
+}
+.case-study-footer {
+  bottom: 0;
+  height: var(--status-h);
+}
+.case-study-chrome > .chrome-bar,
+.case-study-footer > .status-bar {
+  width: 100%; /* a flex-row child sizes to its own content width by
+    default — .chrome-bar/.status-bar's own internal
+    justify-content:space-between needs the full wrapper width to
+    actually have room to spread across, same as the grid-stretch
+    behavior it gets for free on .page */
+}
 .case-study {
+  position: relative; /* load-bearing now the skybox renders behind this
+    page too (direct request) — a plain static element paints BEHIND a
+    position:fixed sibling per CSS stacking order regardless of DOM
+    order, occluding it entirely rather than just losing contrast (this
+    genuinely wasn't visible at all, confirmed by hiding the canvas and
+    watching the text reappear). .page uses the same fix for the exact
+    same reason on the homepage. */
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   justify-content: center;
+  gap: var(--space-5);
+  /* Top/bottom padding reserves real space for the now-fixed chrome/
+     status bars, which (unlike .page's grid rows) don't occupy layout
+     space of their own — without this, the back link and the info bar
+     would render underneath them instead of below/above. */
+  padding: calc(var(--chrome-h) + var(--space-5)) var(--space-4)
+    calc(var(--status-h) + var(--space-5));
+}
+/* Text left, mockup right — stacked instead below ~900px since there's
+   no zero-scroll budget to protect here (a normal scrolling page, kept
+   that way deliberately — see the comment on /work/[slug]/page.tsx),
+   so this can just reflow like any ordinary responsive page section. */
+.case-study-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+@media (min-width: 900px) {
+  .case-study-layout {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(32px, 6dvw, 96px);
+  }
+}
+.case-study-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-5) var(--space-4);
+  flex: 1 1 50%;
+  min-width: 0; /* flex-basis-percentage overflow guard, same fix used
+    elsewhere in this system (.page/.hero-row) */
+}
+.case-study-mockup {
+  flex: 1 1 50%;
+  min-width: 0;
+  width: 100%;
 }
 .case-study-back {
   color: var(--color-ui-muted);
@@ -1031,6 +1150,10 @@ body {
   text-decoration-color: var(--color-ui-muted-underline);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo-small); /* this page used to sit on a
+    flat --color-pane-bg; now the skybox renders behind it too (direct
+    request), so it needs the same per-glyph legibility halo every
+    other text element over open sky already carries */
   transition: color 120ms ease, text-decoration-color 120ms ease;
 }
 .case-study-back:hover,
@@ -1047,11 +1170,14 @@ body {
   font-size: clamp(2rem, 6dvw, 4.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
+  text-shadow: var(--text-halo); /* headline-scale glyphs get the
+    headline-scale halo, same size-matching .headline itself uses */
 }
 .case-study-body {
   color: var(--color-amber-dim);
   font-size: var(--fs-position);
   max-width: 60ch;
+  text-shadow: var(--text-halo-small);
 }
 .case-study-cta {
   display: inline-flex;
@@ -1061,6 +1187,7 @@ body {
   font-size: var(--fs-cta);
   font-weight: 600;
   text-decoration: none;
+  text-shadow: var(--text-halo-small);
   transition: color 120ms ease, background-color 120ms ease;
 }
 .case-study-cta:hover,
@@ -1069,6 +1196,301 @@ body {
   background-color: var(--color-amber-tint-08);
 }
 .case-study-cta:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Info bar — segerman.dev reference/request: originally Year, Role,
+   Visit, Next Project underneath the hero. Visit and Year later moved
+   to StatusBar's own flag row instead (direct request — same place as
+   --skybox=/--github/etc.), leaving Role (a real Project field, unset
+   for every project so far — nothing fabricated to fill it, only
+   renders with real data) and Next Project, which always renders (even
+   a placeholder has a real next slug) and reuses Project.image for its
+   thumbnail exactly like the reel tiles do. */
+.case-study-infobar {
+  /* 2 grid columns, not a flex row — Role (the only thing left in the
+     left column, now Visit/Year moved to StatusBar) grows with the
+     row, Next Project owns the right column and stays pinned to the
+     far edge via justify-self:end below, regardless of whether Role
+     is even present to share the row with it. */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-glass-border); /* the same border
+    token the glass tiles/mockup card use — a plain rule, not a new
+    divider treatment invented for this one spot */
+}
+@media (max-width: 640px) {
+  .case-study-infobar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .case-study-infobar-next {
+    justify-self: start !important; /* overrides the end-alignment
+      below — stacked single-column, "far right" stops meaning
+      anything, everything reads left-aligned instead */
+  }
+}
+.case-study-infobar-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+.case-study-infobar-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.case-study-infobar-label {
+  color: var(--color-ui-muted);
+  font-size: var(--fs-status);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: var(--text-halo-small);
+}
+.case-study-infobar-value {
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-chrome);
+  font-weight: 500;
+  text-shadow: var(--text-halo-small);
+}
+.case-study-infobar-link {
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline-rest);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.case-study-infobar-link:hover,
+.case-study-infobar-link:focus-visible {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+}
+.case-study-infobar-link:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.case-study-infobar-next {
+  justify-self: end; /* the grid's own 3rd column, right-aligned within
+    it — matches the reference's rightmost-column placement without
+    needing a flex-specific margin trick */
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+}
+.case-study-infobar-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  /* left-aligned, not right — the thumbnail now comes first (direct
+     request: "move the referenced screenshot more to the left"), so
+     this text is the trailing/rightmost element, the same reading
+     order .case-study-infobar-left's items already use */
+}
+.case-study-infobar-thumb {
+  position: relative; /* next/image's fill prop requires this */
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-glass-border);
+}
+.case-study-infobar-thumb img {
+  object-fit: cover;
+}
+.case-study-infobar-thumb-empty {
+  position: absolute;
+  inset: 0;
+  /* same "content goes here" glass pattern the reel tiles use, scaled
+     down — a placeholder next-project thumbnail is still a placeholder,
+     not a reason to invent a different visual language for it */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-glass-fill),
+    var(--color-glass-fill) 6px,
+    var(--color-glass-fill-faint) 6px,
+    var(--color-glass-fill-faint) 10px
+  );
+}
+.case-study-infobar-next:hover .case-study-infobar-value,
+.case-study-infobar-next:focus-visible .case-study-infobar-value {
+  color: var(--color-amber-bright);
+}
+.case-study-infobar-next:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Visit/Year — own centered block at the bottom of the page, not the
+   info bar above (which is left/right-anchored) and not StatusBar's
+   flag row (tried both, direct request moved it out of each). Reuses
+   .case-study-infobar-item/-label/-value/-link as-is — the label-over-
+   value look was never the problem, only where it sat. */
+.case-study-visit-year {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+  width: 100%;
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Mockup carousel (EstrelaCardViewer.tsx) — real screenshots of the
+   live site (never fabricated, see data/projects.ts), same "Terminal
+   Glass" material .project-reel-item already uses. Sharp corners
+   throughout this system — no border-radius exists anywhere else in
+   this file, so none starts here (dots below are small filled marks,
+   not circles, for the same reason). */
+.mockup-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10; /* matches the 1440x900 screenshots' own ratio */
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-glass-fill),
+    var(--color-glass-fill) 14px,
+    var(--color-glass-fill-faint) 14px,
+    var(--color-glass-fill-faint) 24px
+  );
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-glass-border);
+  /* --tilt-x/-y/-scale are only ever written by EstrelaCardViewer.tsx's
+     own mousemove handler, which checks prefers-reduced-motion itself
+     and simply never calls setProperty when it's active — so these
+     vars stay permanently unset there and the 0deg/1 fallbacks below
+     govern instead. No separate CSS reduced-motion override needed;
+     there's no JS path left that could move this at all. */
+  transform: perspective(1000px) rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg)) scale(var(--tilt-scale, 1));
+  transition: transform 150ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.mockup-carousel-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 400ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.mockup-card-image {
+  display: block;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mockup-card-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ui-muted);
+  font-size: var(--fs-position);
+  text-shadow: var(--text-halo-small);
+}
+.mockup-card-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--shine-x, 50%) var(--shine-y, 50%),
+    rgba(248, 250, 252, 0.25),
+    transparent 55%
+  );
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.mockup-card:hover .mockup-card-shine,
+.mockup-card:focus-within .mockup-card-shine {
+  opacity: 1;
+}
+/* Hover-revealed nav — real, always-focusable <button>s (never
+   display:none/visibility:hidden, or keyboard users lose them
+   entirely); "hover-revealed" is just the opacity transition below,
+   same idea :focus-within already uses for the shine. */
+.mockup-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-glass-fill);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-glass-border);
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-position);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 150ms ease, background-color 120ms ease;
+}
+.mockup-card:hover .mockup-carousel-arrow,
+.mockup-carousel-arrow:focus-visible {
+  opacity: 1;
+}
+.mockup-carousel-arrow:hover,
+.mockup-carousel-arrow:focus-visible {
+  background-color: var(--color-amber-tint-14);
+}
+.mockup-carousel-arrow:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.mockup-carousel-arrow-prev {
+  left: var(--space-2);
+}
+.mockup-carousel-arrow-next {
+  right: var(--space-2);
+}
+.mockup-carousel-dots {
+  position: absolute;
+  bottom: var(--space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.mockup-card:hover .mockup-carousel-dots,
+.mockup-card:focus-within .mockup-carousel-dots {
+  opacity: 1;
+}
+.mockup-carousel-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  background: var(--color-glass-border);
+  border: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.mockup-carousel-dot:hover {
+  background: var(--color-amber-tint-14);
+}
+.mockup-carousel-dot[aria-current="true"] {
+  background: var(--color-amber-bright);
+}
+.mockup-carousel-dot:focus-visible {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }

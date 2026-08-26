@@ -4,7 +4,7 @@ export default function StatusBar() {
   return (
     <footer className="status-bar">
       <div className="status-left">
-        <span className="status-text">open for new projects</span>
+        <span className="status-text">Available October 2026</span>
         <span className="status-tz"> · UTC</span>
         <span className="status-copyright"> · © 2026</span>
       </div>

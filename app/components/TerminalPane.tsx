@@ -1,6 +1,5 @@
 import ScrambleText from "./ScrambleText";
 import KineticTypography from "./KineticTypography";
-import TerminalCLI from "./TerminalCLI";
 import ProjectReel from "./ProjectReel";
 import ProjectIndex from "./ProjectIndex";
 import { ProjectShowcaseProvider } from "./project-showcase-context";
@@ -21,7 +20,9 @@ export default function TerminalPane() {
         </h1>
         <p className="position">Engineering the Architecture Behind the Aesthetics.</p>
 
-        <TerminalCLI />
+        <a href="mailto:contact@voltairstudio.com" className="cta">
+          <span className="cta-text">contact@voltairstudio.com</span>
+        </a>
 
       </main>
 

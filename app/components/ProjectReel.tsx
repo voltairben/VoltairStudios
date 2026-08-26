@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "next-view-transitions";
+import Image from "next/image";
 import { flushSync } from "react-dom";
 import {
   useEffect,
@@ -236,7 +237,7 @@ export default function ProjectReel() {
         {looped.map((project, i) => (
           <Link
             href={`/work/${project.slug}`}
-            className="project-reel-item"
+            className={`project-reel-item${project.image ? " has-image" : ""}`}
             key={i}
             onClick={() => {
               // next-view-transitions' Link calls our onClick, THEN
@@ -253,6 +254,17 @@ export default function ProjectReel() {
               });
             }}
           >
+            {project.image && (
+              <Image
+                src={project.image}
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="380px"
+                className="project-reel-item-image"
+              />
+            )}
+            {project.image && <span className="project-reel-item-scrim" aria-hidden="true" />}
             <span
               className="project-reel-label"
               style={

@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ViewTransitions } from "next-view-transitions";
+import { SkyboxProvider } from "./components/skybox-context";
+import SkyboxCanvas from "./components/SkyboxCanvas";
+import LoadingScreen from "./components/LoadingScreen";
 import "./globals.css";
 
 // Self-hosted, not next/font/google: Google's hosted IBM Plex Mono is
@@ -47,17 +50,28 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={plexMono.variable}>
       <body>
-        {/* The skybox/loading-screen and the zero-scroll layout are
-            homepage-only concerns — moved into app/page.tsx itself so
-            /work/[slug] case-study pages get plain, normal document
-            flow instead of inheriting the hero's fixed-viewport chrome. */}
+        {/* Skybox now lives here, not homepage-only in app/page.tsx —
+            direct request to show it behind /work/[slug] case-study
+            pages too. Shared at root instead of duplicated per-page so
+            navigating between them doesn't reload the texture, reset
+            the active skybox, or re-run the loading screen: one
+            provider, one canvas, one loading gate for the whole app.
+            The zero-scroll .page grid stays homepage-only in
+            app/page.tsx — .skybox-canvas is position:fixed and
+            pointer-events:none (see globals.css), so it doesn't care
+            what layout sits on top of it; the case-study page keeps its
+            own plain, normal-scrolling flow untouched. */}
         {/* ViewTransitions wraps the whole tree (root layout, not just
             the reel) because the morph is cross-page: the browser's
             View Transitions API needs to see the navigation itself,
             which only next-view-transitions' Link/router hook trigger —
             plain next/link navigations wouldn't animate even with a
             matching viewTransitionName on both sides. */}
-        <ViewTransitions>{children}</ViewTransitions>
+        <SkyboxProvider>
+          <SkyboxCanvas />
+          <ViewTransitions>{children}</ViewTransitions>
+          <LoadingScreen />
+        </SkyboxProvider>
       {/* impeccable-live-start */}
 <script src="http://localhost:8400/live.js?token=5ce2e7e7-3747-4dee-a2e4-04ce45a1e1d3"></script>
 {/* impeccable-live-end */}
