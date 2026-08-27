@@ -32,6 +32,18 @@ function chronoSkyboxNow(): SkyboxName {
   return result;
 }
 
+// Persists only a *manual* choice (the switcher, or the terminal's
+// `skybox` command) — direct request ("remember their skyboxStyle
+// choice"). Reading this on mount only ever wins over the chrono-aware
+// default for a visitor who has actually touched the control once;
+// anyone who never has still gets the real time-of-day pick exactly as
+// before, not silently frozen on whatever the very first visitor's
+// clock happened to say.
+const STORAGE_KEY = "voltair-skybox";
+function isSkyboxName(value: string | null): value is SkyboxName {
+  return value !== null && (SKYBOXES as readonly string[]).includes(value);
+}
+
 type SkyboxContextValue = {
   active: SkyboxName;
   /** Cycles through all 5 SKYBOXES in order (see SkyboxSwitcher.tsx).
@@ -65,17 +77,31 @@ export function SkyboxProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<SkyboxName>("morning");
 
   useEffect(() => {
-    // One-time correction from a real external system (the visitor's
-    // own clock, unavailable/unsafe to read during SSR — see the
-    // comment above), not state derived from a prop.
+    // A stored manual choice wins outright; otherwise the same one-time
+    // chrono correction as before. Both are real external systems
+    // (localStorage, the visitor's own clock) unavailable/unsafe to
+    // read during SSR, not state derived from a prop.
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      // localStorage blocked (private mode, disabled) — falls through
+      // to the chrono default below, same as never having one saved
+    }
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setActive(chronoSkyboxNow());
+    setActive(isSkyboxName(stored) ? stored : chronoSkyboxNow());
   }, []);
 
   const next = useCallback(() => {
     setActive((current) => {
       const i = SKYBOXES.indexOf(current);
-      return SKYBOXES[(i + 1) % SKYBOXES.length];
+      const nextName = SKYBOXES[(i + 1) % SKYBOXES.length];
+      try {
+        localStorage.setItem(STORAGE_KEY, nextName);
+      } catch {
+        // not persisted this session, but the in-memory switch still works
+      }
+      return nextName;
     });
   }, []);
 

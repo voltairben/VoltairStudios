@@ -5,6 +5,7 @@ import { SkyboxProvider } from "./components/skybox-context";
 import SkyboxCanvas from "./components/SkyboxCanvas";
 import LoadingScreen from "./components/LoadingScreen";
 import { AudioProvider } from "./components/audio-context";
+import { CrtProvider } from "./components/crt-context";
 import "./globals.css";
 
 // Self-hosted, not next/font/google: Google's hosted IBM Plex Mono is
@@ -74,13 +75,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             AudioProvider itself (the route-change sweep) works
             anywhere under the App Router, doesn't need to be inside
             ViewTransitions specifically. */}
-        <AudioProvider>
-          <SkyboxProvider>
-            <SkyboxCanvas />
-            <ViewTransitions>{children}</ViewTransitions>
-            <LoadingScreen />
-          </SkyboxProvider>
-        </AudioProvider>
+        <CrtProvider>
+          <AudioProvider>
+            <SkyboxProvider>
+              <SkyboxCanvas />
+              <ViewTransitions>{children}</ViewTransitions>
+              <LoadingScreen />
+            </SkyboxProvider>
+          </AudioProvider>
+        </CrtProvider>
       </body>
     </html>
   );

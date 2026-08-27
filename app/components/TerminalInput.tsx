@@ -1,18 +1,20 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTransitionRouter } from "next-view-transitions";
 import { useSkybox, SKYBOXES } from "./skybox-context";
 import { useAudio } from "./audio-context";
+import { useCrt } from "./crt-context";
 import { PROJECTS } from "../data/projects";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
 // word set, split on whitespace and switched on directly, matching the
-// brief's own "no heavy external parser libraries" constraint. The two
-// --audio= entries are full literal tokens (no space to split on), not
-// single words like the rest — Tab-completion/help just treat them the
-// same way regardless.
+// brief's own "no heavy external parser libraries" constraint. Flag-
+// style and multi-word entries (--audio=on, theme green, ...) are full
+// literal tokens, not single words like the rest — Tab-completion/help
+// just treat them the same way regardless (COMMANDS.filter(startsWith)
+// doesn't care whether an entry has a space in it).
 const COMMANDS = [
   "about",
   "clear",
@@ -20,8 +22,14 @@ const COMMANDS = [
   "help",
   "skybox",
   "work",
+  "systeminfo",
   "--audio=on",
   "--audio=off",
+  "--crt=on",
+  "--crt=off",
+  "theme persimmon",
+  "theme green",
+  "theme amber",
 ] as const;
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const HISTORY_LIMIT = 50;
@@ -34,16 +42,80 @@ const HISTORY_LIMIT = 50;
 // is enough feedback and never needs scrolling to show in full.
 const LOG_LIMIT = 2;
 
+// theme <name> — direct request, framed as a "secret command" easter
+// egg, not a new user-facing UI control (the brief's own "no bloated
+// configuration panels" rules that out) — swaps a handful of the
+// site's real CSS custom properties via a data-palette attribute on
+// <html>; every component already reads --color-amber-* through
+// var(), so nothing else needs to change for the whole site to
+// recolor. "persimmon" is the shipped, deliberately-chosen brand
+// accent (see DESIGN.md's palette v3 history) — it's the default and
+// has no override block of its own, only green/amber do (see
+// globals.css). "green"/"amber" reuse this project's own real,
+// already-considered hex values: amber is this project's actual
+// original pre-persimmon accent (from the very first version of this
+// plan, before the persimmon pivot), not invented for this feature.
+const PALETTES = ["persimmon", "green", "amber"] as const;
+type PaletteName = (typeof PALETTES)[number];
+function isPaletteName(value: string): value is PaletteName {
+  return (PALETTES as readonly string[]).includes(value);
+}
+const PALETTE_STORAGE_KEY = "voltair-palette";
+
+// One-time boot flavor text on first-ever visit (direct request) —
+// real facts about what's actually already on screen by the time this
+// mounts (the skybox has genuinely finished loading — LoadingScreen
+// already gated on that — and this terminal genuinely is now
+// interactive), not fabricated subsystem names. Rides the same
+// LOG_LIMIT-capped log every command already uses instead of a
+// separate full-screen gate — this is NOT a second loading screen,
+// LoadingScreen.tsx already owns the real asset-loading gate; this is
+// just the terminal's own shell announcing itself, purely decorative,
+// never blocks real typing/input while it plays.
+const BOOT_SEEN_KEY = "voltair-boot-seen";
+const BOOT_LINES = [
+  "voltair_studio deploy console",
+  "skybox engine ... ready",
+  "terminal shell ... ready",
+  "type 'help' to begin",
+];
+const BOOT_LINE_DELAY_MS = 120;
+
 type LogLine = { id: number; text: string };
+
+// Best-effort real UA parse for systeminfo's "engine" row — checked in
+// order of specificity (Edge's UA also contains "Chrome/", Chrome's
+// also contains a trailing "Safari/xxx" compatibility token, so the
+// rarer/more specific tokens have to be tested first or they'd never
+// match). Not a guaranteed-precise browser ID, just an honest reading
+// of navigator.userAgent — no fabricated value if nothing matches.
+function detectEngine(ua: string): string {
+  if (ua.includes("Edg/")) return `Edge ${ua.match(/Edg\/(\d+)/)?.[1] ?? ""}`.trim();
+  if (ua.includes("Firefox/")) return `Firefox ${ua.match(/Firefox\/(\d+)/)?.[1] ?? ""}`.trim();
+  if (ua.includes("Chrome/")) return `Chrome ${ua.match(/Chrome\/(\d+)/)?.[1] ?? ""}`.trim();
+  // Real Safari UAs carry the actual browser version in "Version/x",
+  // not "Safari/x" (that's the WebKit build number instead).
+  if (ua.includes("Safari/")) return `Safari ${ua.match(/Version\/(\d+)/)?.[1] ?? ""}`.trim();
+  return "unknown";
+}
 
 export default function TerminalInput() {
   const [value, setValue] = useState("");
   const [log, setLog] = useState<LogLine[]>([]);
+  // systeminfo's own output — deliberately not routed through the
+  // regular LOG_LIMIT-capped log above. A real ~8-row diagnostic table
+  // needs more than the 2 lines that log stays bounded to on purpose
+  // (see LOG_LIMIT's own comment); rather than reopen that already-
+  // fixed clipped-log problem, this gets its own separate, fully-sized
+  // block that replaces the regular log display while it's showing,
+  // and clears on any other command (including clear itself).
+  const [systemInfo, setSystemInfo] = useState<{ key: string; value: string }[] | null>(null);
   const historyRef = useRef<string[]>([]);
   // null = live draft line; otherwise an index into historyRef.current.
   const historyCursorRef = useRef<number | null>(null);
   const draftRef = useRef("");
   const logIdRef = useRef(0);
+  const mountTimeRef = useRef(0);
   // A real, invisible mailto: link — the `contact` command clicks it
   // programmatically instead of assigning window.location.href, so
   // there's exactly one way this app ever triggers a mailto: (a real
@@ -51,8 +123,83 @@ export default function TerminalInput() {
   const mailtoLinkRef = useRef<HTMLAnchorElement>(null);
 
   const { active: activeSkybox, next: nextSkybox } = useSkybox();
-  const { setEnabled: setAudioEnabled, playClick } = useAudio();
+  const { enabled: audioEnabled, setEnabled: setAudioEnabled, playClick } = useAudio();
+  const { enabled: crtEnabled, setEnabled: setCrtEnabled } = useCrt();
   const router = useTransitionRouter();
+
+  // Real uptime (time since this terminal mounted), not a fabricated
+  // number — systeminfo reads this. useRef(performance.now()) instead
+  // of useState: this is never meant to trigger a re-render on its
+  // own, only to be read at the moment systeminfo actually runs.
+  if (mountTimeRef.current === 0) mountTimeRef.current = performance.now();
+
+  // Restores a manually-picked palette on mount — direct request
+  // ("remember their... theme choice"). A stored "persimmon" (or
+  // nothing stored) needs no action: persimmon is the CSS default,
+  // with no override block of its own.
+  useEffect(() => {
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(PALETTE_STORAGE_KEY);
+    } catch {
+      // localStorage blocked — default persimmon stands
+    }
+    if (stored && isPaletteName(stored) && stored !== "persimmon") {
+      document.documentElement.dataset.palette = stored;
+    }
+  }, []);
+
+  // One-time boot flavor text on first-ever visit — see BOOT_LINES'
+  // own comment above for why this is real, not fabricated, and why
+  // it's not a second loading screen. Skipped entirely under reduced
+  // motion (purely decorative, nothing here is essential information)
+  // and after the very first time, via the same localStorage-gate
+  // shape every other persisted preference in this file already uses.
+  //
+  // The "should this play" decision is made once here, during render,
+  // guarded the same lazy-init-ref way mountTimeRef above is — not
+  // inside the effect below. React 18 Strict Mode runs a mount effect,
+  // its cleanup, then the same effect again on every real mount (dev
+  // only) specifically to catch effects that don't survive that; an
+  // earlier version checked *and set* the localStorage flag inside the
+  // effect itself, which is exactly the shape that dance breaks: the
+  // first invocation set the flag and scheduled the timeouts, its
+  // cleanup cleared every one of them before any could fire, and the
+  // second invocation then saw the flag already set and skipped
+  // entirely — net result, the sequence never actually played, caught
+  // by reading it back live rather than assuming the effect worked
+  // once it compiled. Deciding "should play" once up front means both
+  // Strict-Mode invocations agree, so the one that actually survives
+  // still gets to schedule and finish the sequence. Confirmed this was
+  // dev-only (Strict Mode doesn't double-invoke in production — a real
+  // `next build && next start` played the sequence correctly even
+  // with the old code), but an effect that only works by accident of
+  // which environment happens to run it once isn't something worth
+  // leaving as "well, production was fine."
+  const shouldPlayBootRef = useRef<boolean | null>(null);
+  if (shouldPlayBootRef.current === null) {
+    let seen = false;
+    try {
+      seen = localStorage.getItem(BOOT_SEEN_KEY) === "1";
+    } catch {
+      // localStorage blocked — treat as unseen; worst case it can
+      // replay on a later visit too, which is harmless
+    }
+    shouldPlayBootRef.current = !seen;
+  }
+  useEffect(() => {
+    if (!shouldPlayBootRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    try {
+      localStorage.setItem(BOOT_SEEN_KEY, "1");
+    } catch {
+      // not persisted, but still plays once for this visit
+    }
+    const timeouts = BOOT_LINES.map((line, i) =>
+      setTimeout(() => pushLog(line), i * BOOT_LINE_DELAY_MS),
+    );
+    return () => timeouts.forEach(clearTimeout);
+  }, []);
 
   function pushLog(text: string) {
     // Snapshot the id into a local const *before* the updater closure —
@@ -79,7 +226,11 @@ export default function TerminalInput() {
     draftRef.current = "";
     setValue("");
 
-    const [name] = trimmed.toLowerCase().split(/\s+/);
+    const [name, arg] = trimmed.toLowerCase().split(/\s+/);
+    // Any command other than systeminfo itself drops back to the
+    // regular log display — systeminfo's own case below re-sets this
+    // right after, so it still wins when that's the command that ran.
+    setSystemInfo(null);
     pushLog(trimmed);
 
     switch (name) {
@@ -127,6 +278,48 @@ export default function TerminalInput() {
         setAudioEnabled(false);
         pushLog("→ sound: off");
         break;
+      case "--crt=on":
+        setCrtEnabled(true);
+        pushLog("→ crt: on");
+        break;
+      case "--crt=off":
+        setCrtEnabled(false);
+        pushLog("→ crt: off");
+        break;
+      case "theme":
+        if (arg && isPaletteName(arg)) {
+          if (arg === "persimmon") {
+            delete document.documentElement.dataset.palette;
+          } else {
+            document.documentElement.dataset.palette = arg;
+          }
+          try {
+            localStorage.setItem(PALETTE_STORAGE_KEY, arg);
+          } catch {
+            // not persisted this session, but the in-memory swap still works
+          }
+          pushLog(`→ palette: ${arg}`);
+        } else {
+          pushLog("usage: theme persimmon|green|amber");
+        }
+        break;
+      case "systeminfo": {
+        const uptimeSec = Math.floor((performance.now() - mountTimeRef.current) / 1000);
+        const mm = String(Math.floor(uptimeSec / 60)).padStart(2, "0");
+        const ss = String(uptimeSec % 60).padStart(2, "0");
+        const canvas = document.querySelector<HTMLCanvasElement>(".skybox-canvas");
+        setSystemInfo([
+          { key: "uptime", value: `${mm}:${ss}` },
+          { key: "viewport", value: `${window.innerWidth}×${window.innerHeight}` },
+          { key: "dpr", value: String(window.devicePixelRatio) },
+          { key: "engine", value: detectEngine(navigator.userAgent) },
+          { key: "skybox", value: activeSkybox },
+          { key: "canvas", value: canvas ? `${canvas.width}×${canvas.height}` : "n/a" },
+          { key: "audio", value: audioEnabled ? "on" : "off" },
+          { key: "crt", value: crtEnabled ? "on" : "off" },
+        ]);
+        break;
+      }
       case "clear":
         setLog([]);
         break;
@@ -213,13 +406,30 @@ export default function TerminalInput() {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
       />
-      <div className="terminal-log" role="status" aria-live="polite">
-        {log.map((entry) => (
-          <p key={entry.id} className="terminal-log-line">
-            {entry.text}
-          </p>
-        ))}
-      </div>
+      {systemInfo ? (
+        // Its own fully-sized block, not the LOG_LIMIT-capped log below
+        // — a real ~8-row table needs more than the 2 lines that cap
+        // was deliberately set to (see LOG_LIMIT's comment), and every
+        // row here is a known, fixed count, so it never needs internal
+        // scroll to show in full either.
+        <div className="terminal-systeminfo" role="status" aria-live="polite">
+          <p className="terminal-log-line">systeminfo:</p>
+          {systemInfo.map((row) => (
+            <div key={row.key} className="terminal-systeminfo-row">
+              <span className="terminal-systeminfo-key">{row.key}</span>
+              <span className="terminal-systeminfo-value">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="terminal-log" role="status" aria-live="polite">
+          {log.map((entry) => (
+            <p key={entry.id} className="terminal-log-line">
+              {entry.text}
+            </p>
+          ))}
+        </div>
+      )}
       {/* Never shown, never reachable by keyboard on its own — the
           `contact` command's only way of triggering a real mailto:
           navigation (see runCommand above). */}

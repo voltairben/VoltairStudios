@@ -136,6 +136,37 @@ ol {
   --focus-outline-offset: 2px;
 }
 
+/* theme <name> — direct request, an easter-egg terminal command (see
+   TerminalInput.tsx), not a new user-facing UI control ("no bloated
+   configuration panels" was explicit in that brief). Persimmon
+   (palette v3, see DESIGN.md's own history) is the shipped default
+   and has no override block of its own — these two only exist for the
+   other states a visitor can switch into. Every component already
+   reads --color-amber-* through var(), so nothing else needs to
+   change for the whole site to recolor; the three tint/underline
+   tokens are included explicitly too since those are hardcoded
+   rgba() literals elsewhere in this file (a gradient/rgba() can't take
+   a var() inside its own alpha slot), so they'd otherwise stay
+   persimmon-colored under a different accent. */
+:root[data-palette="green"] {
+  --color-amber-bright: #39ff14; /* classic terminal/CRT phosphor green */
+  --color-amber-dim: #2e8b22; /* same hue, darker — genuine monochrome-
+    phosphor character, unlike persimmon's own unrelated neutral-slate dim */
+  --color-amber-tint-08: rgba(57, 255, 20, 0.08);
+  --color-amber-tint-14: rgba(57, 255, 20, 0.14);
+  --color-underline-rest: rgba(57, 255, 20, 0.35);
+}
+:root[data-palette="amber"] {
+  /* This project's own real original accent, before the persimmon
+     pivot (see this project's very first design plan) — a real value
+     this site actually once shipped, not invented for this feature. */
+  --color-amber-bright: #ffb300;
+  --color-amber-dim: #b98a3a;
+  --color-amber-tint-08: rgba(255, 179, 0, 0.08);
+  --color-amber-tint-14: rgba(255, 179, 0, 0.14);
+  --color-underline-rest: rgba(255, 179, 0, 0.35);
+}
+
 /* Reference-scale headline: only where there's confirmed room for it.
    Below this width, --fs-headline keeps the safe narrow-viewport
    formula defined above. dvw here, not dvmin: dvmin was tried first and
@@ -288,6 +319,19 @@ body {
   font-weight: 500;
   white-space: nowrap;
   text-shadow: var(--text-halo-small);
+  text-decoration: none; /* real <a href="/"> now, direct request — a
+    bare anchor defaults to an underline; explicit none keeps the exact
+    look this had as a plain div */
+  transition: color 120ms ease;
+}
+.wordmark:hover,
+.wordmark:focus-visible {
+  color: var(--color-amber-bright); /* same hover accent every other
+    interactive chrome element already uses */
+}
+.wordmark:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
 }
 /* "online" LED status was removed by direct request; the actual studio
    logo (real green, from the source asset) takes over as the site's
@@ -297,6 +341,28 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+}
+.chrome-logo-link {
+  /* Real navigation now (direct request) — padding + a fully-canceling
+     negative margin gives a real, generous hit/hover area beyond the
+     icon's own small visual size without actually shifting anything
+     in .chrome-nav's own gap-spaced layout; same technique
+     .project-index-item already uses for its own hover padding. */
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+  transition: background-color 120ms ease;
+}
+.chrome-logo-link:hover,
+.chrome-logo-link:focus-visible {
+  background-color: var(--color-amber-tint-08); /* same hover wash
+    .chrome-nav-link/.flag already use, so this reads as one more
+    interactive control in the same row, not a special case */
+}
+.chrome-logo-link:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
 }
 .chrome-logo {
   display: inline-block;
@@ -574,6 +640,39 @@ body {
   color: var(--color-amber-dim);
   font-size: var(--fs-status);
   text-shadow: var(--text-halo-small);
+}
+/* systeminfo — direct request ("structured diagnostic dashboard... in
+   a clean tabular layout"). Its own fixed-size block, not the
+   LOG_LIMIT-capped .terminal-log above (see TerminalInput.tsx's own
+   comment) — a real ~8-row table needs more room than that cap was
+   deliberately set to, but every row here is a known, fixed count
+   (real data: uptime, viewport, canvas size, etc. — never open-ended),
+   so it never needs .terminal-log's own internal-scroll treatment
+   either. Same position/sizing shell as .terminal-log otherwise. */
+.terminal-systeminfo {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--space-1);
+}
+.terminal-systeminfo-row {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--fs-status);
+  text-shadow: var(--text-halo-small);
+}
+.terminal-systeminfo-key {
+  color: var(--color-ui-muted);
+  min-width: 8ch; /* the longest real key ("viewport") sets the column —
+    ch is the right unit in a monospace font specifically, a fixed
+    count of character-widths, so every row's value lines up into a
+    real column regardless of its own key's length */
+}
+.terminal-systeminfo-value {
+  color: var(--color-amber-dim);
 }
 
 /* Project reel — a vertically auto-looping column of project thumbnails,
@@ -1793,8 +1892,17 @@ body {
    fighting the --text-halo legibility work everywhere else in this
    file. "Screen curvature" is approximated as a vignette (darkened
    edges); true barrel/lens distortion isn't something CSS gradients
-   can do, and a vignette is the honest equivalent, not a literal one. */
-body::after {
+   can do, and a vignette is the honest equivalent, not a literal one.
+
+   Toggleable now (direct request) — on by default (this shipped as an
+   always-on baseline commitment, not an opt-in, so a visitor who's
+   never touched the toggle keeps seeing exactly what always rendered).
+   crt-context.tsx syncs its one boolean onto document.body's own
+   data-crt attribute; :not([data-crt="off"]) reads as "on unless
+   explicitly turned off," matching the same on-by-default shape the
+   attribute's absence (before any JS has run, or with JS disabled)
+   already implies. */
+body:not([data-crt="off"])::after {
   content: "";
   position: fixed;
   inset: 0;
@@ -1866,6 +1974,9 @@ body::after {
    the real aria-pressed attribute instead of a separate class, so the
    look can never drift out of sync with what a screen reader reports. */
 .audio-toggle[aria-pressed="true"] {
+  color: var(--color-amber-bright);
+}
+.crt-toggle[aria-pressed="true"] {
   color: var(--color-amber-bright);
 }
 

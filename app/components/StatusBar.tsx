@@ -1,5 +1,6 @@
 import SkyboxSwitcher from "./SkyboxSwitcher";
 import AudioToggle from "./AudioToggle";
+import CrtToggle from "./CrtToggle";
 
 export default function StatusBar() {
   return (
@@ -11,6 +12,7 @@ export default function StatusBar() {
       </div>
       <div className="status-right">
         <AudioToggle />
+        <CrtToggle />
         <SkyboxSwitcher />
         <a href="https://github.com/voltairstudio" className="flag flag-github">
           --github
