@@ -6,6 +6,7 @@ import { useSkybox, SKYBOXES } from "./skybox-context";
 import { useAudio } from "./audio-context";
 import { useCrt } from "./crt-context";
 import { PROJECTS } from "../data/projects";
+import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
@@ -391,6 +392,18 @@ export default function TerminalInput() {
 
   return (
     <div className="terminal-prompt">
+      {/* Marks this row as a real text box — direct request, after
+          removing the $ prefix and the cursor glyph in earlier rounds
+          left this line with zero visible affordance at rest. Same
+          masked-logo technique ChromeBar's own mark already uses
+          (recolored via the site's real accent token, so it follows a
+          `theme` change too), purely decorative — the accessible name
+          for this control is still the input's own aria-label below. */}
+      <span
+        className="terminal-prompt-logo"
+        aria-hidden="true"
+        style={{ WebkitMaskImage: `url(${logo.src})`, maskImage: `url(${logo.src})` }}
+      />
       <span className="terminal-prompt-text" aria-hidden="true">
         {value}
       </span>

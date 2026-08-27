@@ -591,6 +591,31 @@ body {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
+.terminal-prompt-logo {
+  /* Marks this row as a real text box — direct request, after
+     removing the $ prefix and the cursor glyph (see the comments
+     above) left it with zero visible affordance at rest. Same masked-
+     recolor technique .chrome-logo already uses, and the same real
+     --color-amber-bright token, so this follows a `theme` change too
+     instead of staying a fixed color. Sized off --fs-position (the
+     same token .terminal-prompt-text uses for its own font-size)
+     rather than an em value — the two are siblings, not nested, so an
+     em here would inherit .terminal-prompt's own font-size, not
+     .terminal-prompt-text's. */
+  display: inline-block;
+  flex-shrink: 0; /* never lets the row squeeze this smaller to make
+    room for typed text */
+  aspect-ratio: 1 / 1;
+  height: var(--fs-position);
+  width: auto;
+  background-color: var(--color-amber-bright);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
 .terminal-prompt-text {
   color: var(--color-cursor-flash);
   font-size: var(--fs-position);
