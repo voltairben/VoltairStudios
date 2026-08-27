@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { useSkybox } from "./skybox-context";
 import { useAudio } from "./audio-context";
 
@@ -50,16 +51,18 @@ const SWITCH_FADE_MS = 220;
 const LOGO_MODEL_URL = "/models/voltair-logo.glb";
 const LOGO_DISTANCE = 30; // world units in front of the camera (well
   // inside the 500-radius sky sphere, comfortably past the near clip plane)
-const LOGO_TARGET_RADIUS = 13; // half-extent after normalizing the
-  // model's own (unknown/arbitrary) export scale. 4.5 → 2.6 → 9 → this,
-  // each a direct follow-up. At LOGO_DISTANCE 30 and the camera's 75°
-  // vertical fov, the visible half-height there is ~23 units — 13 is
-  // close to that ceiling (fills most of the frame top-to-bottom)
-  // without the bounding sphere itself exceeding it, checked live at
-  // both a desktop and a mobile viewport rather than solved on paper
-  // (fov is vertical, so portrait width doesn't change the vertical
-  // headroom the object has to clip into). --text-halo is what keeps
-  // the paragraph legible over it at this size, the same mechanism
+const LOGO_TARGET_RADIUS = 18; // half-extent after normalizing the
+  // model's own (unknown/arbitrary) export scale. 4.5 → 2.6 → 9 → 13 →
+  // this, each a direct follow-up. At LOGO_DISTANCE 30 and the camera's
+  // 75° vertical fov, the visible half-height there is ~23 units — 18
+  // is deliberately still under that ceiling (the flame shape's own
+  // bounding sphere isn't a tight fit around a squat/wide silhouette,
+  // so its actual top-to-bottom extent has some slack below the
+  // theoretical radius-23 clip point), checked live at both a desktop
+  // and a mobile viewport rather than solved on paper (fov is vertical,
+  // so portrait width doesn't change the vertical headroom the object
+  // has to clip into). --text-halo is what keeps the paragraph legible
+  // over it at this size, the same mechanism
   // already carrying every other piece of text on the open sky.
 const LOGO_SPIN_PERIOD_MS = 40_000; // its own slower drift, distinct
   // from the sky's 150s rotation so it reads as a separate floating object
@@ -266,10 +269,40 @@ export default function SkyboxCanvas() {
     // about to show — two lights cost nothing to render against an
     // otherwise-unlit scene, and it's simpler than threading a second
     // conditional add/remove alongside the logo's own visibility toggle.
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.8);
     keyLight.position.set(4, 6, 8);
     scene.add(keyLight);
+
+    // Environment reflections — checked the logo's actual material live
+    // (metalness: 1, roughness: 1, but hasEnvMap: false) before touching
+    // this: metalness:1 means it has almost no diffuse response at all,
+    // so with nothing to reflect, direct lights alone could only ever
+    // produce one thin specular highlight sweeping across the surface —
+    // which is exactly the flat, dull look a "polish the lighting"
+    // request was about. RoomEnvironment is three.js's own standard
+    // fix for precisely this (a small procedural studio backdrop meant
+    // to light PBR/metal previews, not a real scene object) — reused
+    // as-is rather than reaching for a real HDRI asset or hand-rolling
+    // a fake environment. PMREMGenerator pre-filters it into properly
+    // blurred mip levels per roughness value, which a raw texture
+    // assigned directly to scene.environment wouldn't get. Generated
+    // once, not tied to the active skybox — a generic studio reflection
+    // reads fine regardless of which sky theme is showing, and avoids
+    // regenerating this (a real render pass) on every skybox switch.
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const envRenderTarget = pmremGenerator.fromScene(new RoomEnvironment(), 0.04);
+    scene.environment = envRenderTarget.texture;
+
+    // Filmic tone mapping — a metal:1 material leans almost entirely on
+    // its specular highlights for shape, and without this those blow out
+    // to flat white instead of rolling off. Renderer-wide by necessity
+    // (tone mapping is a renderer setting, not per-object), but the sky
+    // sphere is explicitly exempted (toneMapped = false) so its own raw
+    // texture colors — the actual skybox artwork — render exactly as
+    // before, unaffected.
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    material.toneMapped = false;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -401,6 +434,8 @@ export default function SkyboxCanvas() {
       material.map?.dispose();
       material.dispose();
       if (logoGroupRef.current) disposeObject3D(logoGroupRef.current);
+      envRenderTarget.dispose();
+      pmremGenerator.dispose();
       renderer.dispose();
       sphereRef.current = null;
       sceneRef.current = null;
