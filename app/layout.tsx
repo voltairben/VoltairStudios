@@ -6,6 +6,8 @@ import SkyboxCanvas from "./components/SkyboxCanvas";
 import LoadingScreen from "./components/LoadingScreen";
 import { AudioProvider } from "./components/audio-context";
 import { CrtProvider } from "./components/crt-context";
+import { LangProvider } from "./components/lang-context";
+import PaletteRestorer from "./components/PaletteRestorer";
 import "./globals.css";
 
 // Self-hosted, not next/font/google: Google's hosted IBM Plex Mono is
@@ -75,15 +77,31 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             AudioProvider itself (the route-change sweep) works
             anywhere under the App Router, doesn't need to be inside
             ViewTransitions specifically. */}
-        <CrtProvider>
-          <AudioProvider>
-            <SkyboxProvider>
-              <SkyboxCanvas />
-              <ViewTransitions>{children}</ViewTransitions>
-              <LoadingScreen />
-            </SkyboxProvider>
-          </AudioProvider>
-        </CrtProvider>
+        {/* Runs on every page, not just the homepage — a real bug caught
+            live: `theme` used to only restore itself from inside
+            TerminalInput.tsx, which is homepage-only content, so a
+            fresh load of /about or a case-study page always showed
+            persimmon regardless of what was actually saved. See
+            PaletteRestorer.tsx's own comment. */}
+        <PaletteRestorer />
+        {/* Wraps everything, same reason PaletteRestorer runs at root —
+            ChromeBar/StatusBar/ScrambleText need useLang() on every
+            route, not just the homepage. Its own effect corrects
+            document.documentElement.lang from localStorage after
+            mount; the static lang="en" on <html> above is the
+            SSR-safe default until then, same shape CrtProvider already
+            uses for its own body.dataset.crt correction. */}
+        <LangProvider>
+          <CrtProvider>
+            <AudioProvider>
+              <SkyboxProvider>
+                <SkyboxCanvas />
+                <ViewTransitions>{children}</ViewTransitions>
+                <LoadingScreen />
+              </SkyboxProvider>
+            </AudioProvider>
+          </CrtProvider>
+        </LangProvider>
       </body>
     </html>
   );

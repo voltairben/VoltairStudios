@@ -148,23 +148,93 @@ ol {
    rgba() literals elsewhere in this file (a gradient/rgba() can't take
    a var() inside its own alpha slot), so they'd otherwise stay
    persimmon-colored under a different accent. */
-:root[data-palette="green"] {
-  --color-amber-bright: #39ff14; /* classic terminal/CRT phosphor green */
-  --color-amber-dim: #2e8b22; /* same hue, darker — genuine monochrome-
+:root[data-palette="cobalt"] {
+  /* Was "green" (#7cff3d) — direct request to recolor it blue,
+     renamed rather than just recolored (see PALETTES' own comment in
+     app/data/palette.ts for why a command called "green" turning
+     things blue would be its own trap). "Electric Cobalt" was one of
+     this project's own real candidate accents considered before
+     persimmon won (see DESIGN.md's palette v3 history) — reused here,
+     not invented for this rename. Brightened from that history's own
+     more muted cobalt into something more vivid/electric — this
+     system's other bright accents (persimmon, the other themes) are
+     all highly saturated, and a dim navy-leaning blue would also sit
+     closer to the skybox's own real blue tones, the exact contrast
+     concern that helped rule cobalt out as the *main* brand accent
+     back then; picking a brighter, more saturated blue here keeps
+     that concern from applying to this optional theme too. */
+  --color-amber-bright: #3d8bff;
+  --color-amber-dim: #2454a8; /* same hue, darker — genuine monochrome-
     phosphor character, unlike persimmon's own unrelated neutral-slate dim */
-  --color-amber-tint-08: rgba(57, 255, 20, 0.08);
-  --color-amber-tint-14: rgba(57, 255, 20, 0.14);
-  --color-underline-rest: rgba(57, 255, 20, 0.35);
+  --color-amber-tint-08: rgba(61, 139, 255, 0.08);
+  --color-amber-tint-14: rgba(61, 139, 255, 0.14);
+  --color-underline-rest: rgba(61, 139, 255, 0.35);
 }
 :root[data-palette="amber"] {
   /* This project's own real original accent, before the persimmon
      pivot (see this project's very first design plan) — a real value
-     this site actually once shipped, not invented for this feature. */
+     this site actually once shipped, not invented for this feature.
+     "ambergris" is a real, typeable command name too (see
+     TerminalInput.tsx's PALETTES) but resolves to this exact block —
+     the requested hex was byte-identical to this one, so it doesn't
+     get a second, duplicate override for the same color. */
   --color-amber-bright: #ffb300;
   --color-amber-dim: #b98a3a;
   --color-amber-tint-08: rgba(255, 179, 0, 0.08);
   --color-amber-tint-14: rgba(255, 179, 0, 0.14);
   --color-underline-rest: rgba(255, 179, 0, 0.35);
+}
+/* Four more real named themes, direct request — accent-only, same as
+   cobalt/amber above (see TerminalInput.tsx's PALETTES comment for why
+   --color-pane-bg/the background half of each request isn't included:
+   it's load-bearing for --text-halo's legibility ring, partly
+   hardcoded rgba() rather than fully var()-driven, and safely
+   re-theming that is real, separate work). Each dim value is the same
+   hue as its own bright, darker — genuine monochrome-phosphor
+   character, matching how "cobalt" above already handles its own dim,
+   not persimmon's own unrelated neutral-slate pairing. */
+:root[data-palette="turbo-blue"] {
+  /* "Classic white paper text on... Turbo Pascal royal blue" — the
+     white half is the real, buildable part (see the comment above on
+     why the blue background half isn't); a real, well-known reference
+     (Borland's Turbo Pascal IDE), not invented for this feature. */
+  --color-amber-bright: #ffffff;
+  --color-amber-dim: #8a9bc4;
+  --color-amber-tint-08: rgba(255, 255, 255, 0.08);
+  --color-amber-tint-14: rgba(255, 255, 255, 0.14);
+  --color-underline-rest: rgba(255, 255, 255, 0.35);
+}
+:root[data-palette="phosphor-decay"] {
+  /* A real, specific reference — the DEC VT100's own phosphor green.
+     Shifted cooler, toward mint/spring-green (~155° hue) — was
+     #33ff66, originally too close to the theme then still named
+     "green"'s own hue to tell apart (both sat around 130-140°,
+     reported as indistinguishable); that theme is "cobalt" now, a
+     real blue, so the two no longer need differentiating by hue at
+     all, but the mint/spring-green stayed: "decay" is a worn, aged
+     CRT phosphor's own softer, cooler afterglow, a real character in
+     its own right, not just a color picked to avoid a collision. */
+  --color-amber-bright: #2ee6a0;
+  --color-amber-dim: #1c8a61;
+  --color-amber-tint-08: rgba(46, 230, 160, 0.08);
+  --color-amber-tint-14: rgba(46, 230, 160, 0.14);
+  --color-underline-rest: rgba(46, 230, 160, 0.35);
+}
+:root[data-palette="stealth-obsidian"] {
+  --color-amber-bright: #f9f9f9;
+  --color-amber-dim: #9a9a9a; /* neutral grey, not a hue-shifted tint —
+    "stark minimalist" is the point, unlike every other theme's own
+    colored dim */
+  --color-amber-tint-08: rgba(249, 249, 249, 0.08);
+  --color-amber-tint-14: rgba(249, 249, 249, 0.14);
+  --color-underline-rest: rgba(249, 249, 249, 0.35);
+}
+:root[data-palette="vapor-comm"] {
+  --color-amber-bright: #a2b5ff;
+  --color-amber-dim: #6b7db3;
+  --color-amber-tint-08: rgba(162, 181, 255, 0.08);
+  --color-amber-tint-14: rgba(162, 181, 255, 0.14);
+  --color-underline-rest: rgba(162, 181, 255, 0.35);
 }
 
 /* Reference-scale headline: only where there's confirmed room for it.
@@ -372,6 +442,17 @@ body {
   background-color: var(--color-amber-bright); /* the recolor — masked
     to the logo's shape below, so this fill only shows where the source
     PNG's alpha channel is opaque */
+  transition: background-color 300ms ease; /* smooth `theme` swaps
+    (direct request) — most interactive elements already transition
+    color/background-color for their own hover states, which already
+    smoothly animates a theme-triggered variable change too with zero
+    new code (a CSS transition fires on any computed-value change,
+    whatever caused it); this element and .terminal-prompt-logo below
+    are two of the few that had no transition declared at all, so
+    without this the recolor would just snap instantly on those two
+    specifically. Deliberately not a blanket `*` rule (see
+    .terminal-prompt-logo's own comment for why that's a real risk,
+    not just unnecessary here). */
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: contain;
@@ -413,6 +494,31 @@ body {
   color: var(--color-cursor-flash);
   text-decoration-color: var(--color-cursor-flash);
   background-color: var(--color-amber-tint-14);
+}
+
+/* EN/NL toggle — between the logo and About, direct request. Base
+   button reset/hover/focus behavior comes from .flag (each option is
+   className="flag lang-toggle-option"); this block only adds the
+   layout wrapper, the separating "/", the .chrome-nav-link-matching
+   font-size (.flag defaults to the smaller status-bar size), and the
+   active-language's brighter resting color so it reads as "currently
+   selected," not just "a link like any other." */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+.lang-toggle-sep {
+  color: var(--color-ui-muted);
+  font-size: var(--fs-chrome);
+  text-shadow: var(--text-halo-small);
+}
+.lang-toggle-option {
+  font-size: var(--fs-chrome);
+}
+.lang-toggle-option[aria-current="true"] {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-underline-rest);
 }
 /* 5.2 Content (terminal pane) */
 .headline {
@@ -584,6 +690,20 @@ body {
   min-height: 44px; /* same real touch-target floor as .cta, held even
     though the visible content is just text */
   margin-top: var(--space-1);
+  padding-inline: var(--space-2); /* breathing room now that a border
+    sits right at the row's edge — see below */
+  /* Always-visible border, direct request: :focus-within's outline
+     below was the row's only edge before, so it read as boxless until
+     actually clicked into. First pass reused --color-glass-border (the
+     neutral 10%-white token every other bordered surface in this
+     system already uses) — checked live against the actual sky and it
+     was nearly invisible at rest, not just subtle; the sky's own light
+     colors sit close to that same neutral white. --color-underline-rest
+     instead: the accent hue at 0.35 alpha, already the "visible but not
+     shouting" rest-state token .chrome-nav-link's own underline uses —
+     reads as a real highlight, not just an edge, and re-themes with
+     `theme <name>` for free since it's already per-palette. */
+  border: 1px solid var(--color-underline-rest);
   animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 1100ms both; /* continues
     .position (700ms) / .cta (900ms)'s same staggered entrance */
 }
@@ -591,30 +711,165 @@ body {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
+.palette-picker {
+  /* Wraps the logo trigger + its fold-out menu — direct request. Real
+     anchor for the menu's position:absolute below, and the thing
+     :hover/:focus-within actually gates on: focusing the trigger
+     button (a descendant) is what makes :focus-within true here,
+     which is also what reveals the menu, so the reveal and the
+     keyboard focus that triggers it always land in the same place.
+     z-index: 1 is load-bearing, not decorative — .terminal-prompt-input
+     is position:absolute; inset:0 covering this entire row (a real,
+     generous click target for the terminal itself), with no z-index
+     of its own (auto). Without this, that invisible input paints
+     later in DOM order and sat on top of the logo button underneath
+     it — caught live, not assumed: Playwright's own hover attempt
+     failed with "input intercepts pointer events" until this was
+     added, meaning the button was completely unreachable by a real
+     mouse despite looking perfectly clickable. */
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
 .terminal-prompt-logo {
   /* Marks this row as a real text box — direct request, after
      removing the $ prefix and the cursor glyph (see the comments
-     above) left it with zero visible affordance at rest. Same masked-
-     recolor technique .chrome-logo already uses, and the same real
-     --color-amber-bright token, so this follows a `theme` change too
-     instead of staying a fixed color. Sized off --fs-position (the
-     same token .terminal-prompt-text uses for its own font-size)
-     rather than an em value — the two are siblings, not nested, so an
-     em here would inherit .terminal-prompt's own font-size, not
-     .terminal-prompt-text's. */
+     above) left it with zero visible affordance at rest. Now also a
+     real <button> (the fold-out picker's trigger, direct request),
+     not a decorative span — border/padding/font reset below, but not
+     `background` as a shorthand: that would clobber background-color,
+     which is the actual masked-icon fill, not a button chrome property
+     here. Same masked-recolor technique .chrome-logo already uses, and
+     the same real --color-amber-bright token, so this follows a
+     `theme` change too instead of staying a fixed color. Sized off
+     --fs-position (the same token .terminal-prompt-text uses for its
+     own font-size) rather than an em value — the two are siblings, not
+     nested, so an em here would inherit .terminal-prompt's own
+     font-size, not .terminal-prompt-text's. */
   display: inline-block;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   flex-shrink: 0; /* never lets the row squeeze this smaller to make
     room for typed text */
   aspect-ratio: 1 / 1;
   height: var(--fs-position);
   width: auto;
   background-color: var(--color-amber-bright);
+  transition: background-color 300ms ease; /* smooth `theme` swaps
+    (direct request). Scoped to this one element and .chrome-logo
+    above, not a blanket `*` rule the brief's own suggested selector
+    would have been: every element with a hover state already has its
+    own tuned transition (100-300ms, individually chosen per element),
+    and a CSS transition fires on any change to a transitioning
+    property regardless of what caused it — a theme swap already
+    animates smoothly through those *existing* rules today, no new
+    code needed. Adding a second, competing transition at * would risk
+    fighting those already-tuned hover timings across dozens of
+    elements for a purely cosmetic gain on the few that already work,
+    which is exactly the kind of "sluggish" this same brief's own
+    anti-slop section warns against. This element and .chrome-logo are
+    the two real gaps — masked-icon backgrounds with no transition
+    declared at all — not a symptom of a wider problem to patch broadly. */
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-position: center;
   mask-position: center;
+}
+.terminal-prompt-logo:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+/* Fold-out theme picker menu — direct request. Hover/focus-revealed
+   via opacity + pointer-events (never display:none — the items stay
+   real, individually tabbable buttons the whole time, matching
+   .mockup-carousel-arrow/-dots' own established reveal technique
+   elsewhere in this codebase), not new JS open/close state.
+   Glass fill+blur+border, twice refined by direct follow-up: first
+   from the reel tiles' own diagonal-stripe "Terminal Glass" (read as
+   an opaque textured box, wrong precedent — that pattern's real job
+   is signaling "placeholder" on a large decorative surface, not this),
+   then from .mockup-carousel-arrow's own flat --color-glass-fill
+   (0.35 alpha — still read as a grey panel, not genuinely see-through
+   to the skybox). This is its own third, more transparent step, not
+   shared --color-glass-fill: that token is reused by several other
+   real surfaces (the reel tiles, the carousel arrows/dots), so
+   lowering it here would have quietly changed all of them along with
+   it. A scoped, much lower alpha instead — 0.12 vs the token's own
+   0.35 — plus a touch more blur to keep a real frosted definition at
+   that lower tint. Text legibility doesn't depend on the fill's own
+   opacity here: every label already carries --text-halo-small, the
+   same per-glyph legibility ring every other piece of text sitting
+   directly over the open sky on this whole site already uses, so
+   there was real room to make the panel itself this much more
+   transparent without the theme names becoming hard to read. */
+.palette-picker-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 2; /* above .terminal-log/.terminal-systeminfo, which share
+    this same top:100%/left:0 anchor one level up on .terminal-prompt —
+    without this, an open picker menu and a still-visible log line from
+    the last command could paint in the wrong order */
+  margin-top: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  min-width: 12ch;
+  padding: var(--space-1) 0;
+  background: rgba(34, 40, 49, 0.12); /* --color-pane-bg at 12% —
+    spelled out, not the shared --color-glass-fill token (0.35), so
+    this stays scoped to just this menu */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--color-glass-border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+.palette-picker:hover .palette-picker-menu,
+.palette-picker:focus-within .palette-picker-menu {
+  opacity: 1;
+  pointer-events: auto;
+}
+.palette-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  font-size: var(--fs-status);
+  color: var(--color-amber-dim);
+  text-shadow: var(--text-halo-small);
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+.palette-picker-item:hover,
+.palette-picker-item:focus-visible {
+  color: var(--color-amber-bright);
+  background-color: var(--color-amber-tint-08);
+}
+.palette-picker-item:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: calc(-1 * var(--focus-outline-w)); /* inset — an
+    outer ring on a full-width row would spill past the menu's own edge */
+}
+.palette-picker-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.8em;
+  height: 0.8em;
+  border: 1px solid var(--color-glass-border);
+}
+@media (prefers-reduced-motion: reduce) {
+  .palette-picker-menu {
+    transition: none;
+  }
 }
 .terminal-prompt-text {
   color: var(--color-cursor-flash);
@@ -1113,6 +1368,18 @@ body {
 }
 
 .flag {
+  /* Real reset, not just decoration: .flag styles both <a> tags
+     (github/x/linkedin, no native chrome to begin with) and real
+     <button>s (audio/crt toggles). Without this, the buttons keep
+     the browser's native grey/bordered button box while the anchors
+     stay invisible — exactly the "these buttons have a box" bug a
+     screenshot caught. Same reset .skybox-switcher already carries
+     on its own class; given here once so every .flag button gets it. */
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
   color: var(--color-ui-muted); /* UI/Muted Links at rest — github, x,
     linkedin, and the skybox switcher; transitions to Primary Accent on
     hover/focus, per direct request */

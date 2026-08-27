@@ -1,12 +1,15 @@
 import SkyboxSwitcher from "./SkyboxSwitcher";
 import AudioToggle from "./AudioToggle";
 import CrtToggle from "./CrtToggle";
+import T from "./T";
 
 export default function StatusBar() {
   return (
     <footer className="status-bar">
       <div className="status-left">
-        <span className="status-text">Available October 2026</span>
+        <span className="status-text">
+          <T k="status.available" />
+        </span>
         <span className="status-tz"> · UTC</span>
         <span className="status-copyright"> · © 2026</span>
       </div>

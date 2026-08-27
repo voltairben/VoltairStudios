@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { useSkybox } from "./skybox-context";
 import { useAudio } from "./audio-context";
 
@@ -34,6 +37,112 @@ const LOAD_TIMEOUT_MS = 8_000;
  *  globals.css too) so there's one source of truth, not two values
  *  that have to be kept in sync by hand. */
 const SWITCH_FADE_MS = 220;
+
+/** The About page's floating 3D logo — direct request ("in the center
+ *  of the skybox floating behind the about text"). Lives in this same
+ *  scene/renderer rather than a second canvas: .about-page-content
+ *  already centers its text over the open sky with no panel behind it
+ *  (see globals.css), and .skybox-canvas already sits at z-index 0
+ *  under everything — a world-space object here shows through exactly
+ *  the same way, with zero new stacking/layout work. Loaded on demand
+ *  (the file is ~6MB) rather than eagerly at mount — most visits never
+ *  reach /about, and this canvas is shared by every route. */
+const LOGO_MODEL_URL = "/models/voltair-logo.glb";
+const LOGO_DISTANCE = 30; // world units in front of the camera (well
+  // inside the 500-radius sky sphere, comfortably past the near clip plane)
+const LOGO_TARGET_RADIUS = 13; // half-extent after normalizing the
+  // model's own (unknown/arbitrary) export scale. 4.5 → 2.6 → 9 → this,
+  // each a direct follow-up. At LOGO_DISTANCE 30 and the camera's 75°
+  // vertical fov, the visible half-height there is ~23 units — 13 is
+  // close to that ceiling (fills most of the frame top-to-bottom)
+  // without the bounding sphere itself exceeding it, checked live at
+  // both a desktop and a mobile viewport rather than solved on paper
+  // (fov is vertical, so portrait width doesn't change the vertical
+  // headroom the object has to clip into). --text-halo is what keeps
+  // the paragraph legible over it at this size, the same mechanism
+  // already carrying every other piece of text on the open sky.
+const LOGO_SPIN_PERIOD_MS = 40_000; // its own slower drift, distinct
+  // from the sky's 150s rotation so it reads as a separate floating object
+const LOGO_BOB_AMPLITUDE = 0.6;
+const LOGO_BOB_SPEED = 0.6; // rad/s
+
+/** Recursively frees GPU resources for a loaded glTF (or any Object3D
+ *  subtree) — geometries, materials, and any textures each material
+ *  holds. Needed for the same reason the sphere's own geometry/material
+ *  are disposed in the main effect's cleanup: without this, a Strict
+ *  Mode double-invoke (dev) or a real unmount leaks GPU memory instead
+ *  of freeing it. */
+function disposeObject3D(root: THREE.Object3D) {
+  root.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    obj.geometry?.dispose();
+    const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const mat of materials) {
+      for (const value of Object.values(mat)) {
+        if (value instanceof THREE.Texture) value.dispose();
+      }
+      mat.dispose();
+    }
+  });
+}
+
+/** Centers the model on its own local origin and scales it to a fixed
+ *  target size — a GLB's export scale/pivot is never something to trust
+ *  (Blender units, arbitrary pivot points, ...), so this measures the
+ *  real geometry instead of assuming either. Returns a wrapper group
+ *  positioned in world space; the model itself only carries the
+ *  centering offset + scale. */
+/** Re-shades every mesh in the model from flat to smooth — checked live
+ *  against a close-up screenshot after the first load (direct report:
+ *  "smoothen the glb ... so it looks smoother"), which showed real
+ *  faceting: visible flat polygon patches breaking up what should be a
+ *  continuous curved surface, not a stylistic choice worth keeping.
+ *  The root cause is the export itself, not the renderer: a
+ *  flat-shaded GLB duplicates each triangle's vertices so every face
+ *  can carry its own single normal, which is exactly what defeats a
+ *  plain geometry.computeVertexNormals() call on its own — there's
+ *  nothing shared to average across yet. Normals are stripped first so
+ *  mergeVertices() welds purely on position (not also requiring the
+ *  old, deliberately-mismatched per-face normals to already agree),
+ *  then fresh smooth normals are computed from that welded topology.
+ *  flatShading on the material is the same knob from the other
+ *  direction (some exporters set it directly) — cleared too, in case
+ *  either cause is present. */
+function smoothLogoSurfaces(root: THREE.Object3D) {
+  root.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    obj.geometry.deleteAttribute("normal");
+    const smoothed = mergeVertices(obj.geometry);
+    smoothed.computeVertexNormals();
+    obj.geometry.dispose();
+    obj.geometry = smoothed;
+
+    const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const mat of materials) {
+      const standard = mat as THREE.MeshStandardMaterial;
+      if (standard.flatShading) {
+        standard.flatShading = false;
+        standard.needsUpdate = true;
+      }
+    }
+  });
+}
+
+function normalizeLogo(root: THREE.Object3D): THREE.Group {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  root.position.sub(center);
+  root.scale.setScalar((LOGO_TARGET_RADIUS * 2) / maxDim);
+
+  const group = new THREE.Group();
+  group.add(root);
+  group.position.set(0, 0, -LOGO_DISTANCE);
+  return group;
+}
 
 /** Fetches the texture manually (instead of THREE.TextureLoader, whose
  *  default ImageLoader never fires onProgress) so the loading screen can
@@ -87,6 +196,16 @@ async function loadTextureWithProgress(
 export default function SkyboxCanvas() {
   const { active, reportLoadProgress, reportReady } = useSkybox();
   const { playSweep } = useAudio();
+  const pathname = usePathname();
+  // Always the latest pathname, readable from inside the GLTFLoader's
+  // async callback below without that callback closing over a stale
+  // value from whenever the load actually started — same shape as
+  // playSweepRef just below (a ref, corrected in its own tiny effect
+  // after render, not written during render itself).
+  const pathnameRef = useRef(pathname);
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
   // playSweep's identity changes whenever the audio on/off toggle
   // flips (see audio-context.tsx — it's memoized on `enabled`). The
   // texture-swap effect below must NOT re-run just because someone
@@ -101,6 +220,14 @@ export default function SkyboxCanvas() {
   }, [playSweep]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sphereRef = useRef<THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial> | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const logoGroupRef = useRef<THREE.Group | null>(null);
+  // Guards against loading the model twice for the *same* scene — reset
+  // to false right when a scene is (re)created below, not in cleanup,
+  // so a Strict Mode double-invoke (which builds a whole new scene) still
+  // gets its own fresh load rather than skipping it because the previous,
+  // now-discarded scene's request already flipped this true.
+  const logoRequestedRef = useRef(false);
   const hasLoadedOnceRef = useRef(false);
   // Normalized (-1..1) cursor position and the camera's current lerp
   // target — refs, not state, so mousemove/animate never trigger a
@@ -115,6 +242,9 @@ export default function SkyboxCanvas() {
     if (!canvas) return;
 
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
+    logoGroupRef.current = null;
+    logoRequestedRef.current = false; // fresh scene, fresh load-once guard
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -127,6 +257,19 @@ export default function SkyboxCanvas() {
     const sphere = new THREE.Mesh(geometry, material);
     sphereRef.current = sphere;
     scene.add(sphere);
+
+    // Lighting for the About page's logo model below — harmless to the
+    // sky sphere itself (MeshBasicMaterial is unlit by design, immune to
+    // any light in the scene), but real PBR materials (what a glTF
+    // export normally carries) render solid black with none at all.
+    // Added unconditionally at scene setup, not only once the logo is
+    // about to show — two lights cost nothing to render against an
+    // otherwise-unlit scene, and it's simpler than threading a second
+    // conditional add/remove alongside the logo's own visibility toggle.
+    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    keyLight.position.set(4, 6, 8);
+    scene.add(keyLight);
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -222,6 +365,17 @@ export default function SkyboxCanvas() {
           (targetRotationRef.current.x - camera.rotation.x) * physicsConfig.lerpFactor;
         camera.rotation.y +=
           (targetRotationRef.current.y - camera.rotation.y) * physicsConfig.lerpFactor;
+
+        // About page's logo — its own slow spin (distinct period from
+        // the sky's) plus a gentle vertical bob, the "floating" the
+        // request asked for. No-op until the model's actually loaded
+        // (logoGroupRef starts null); reuses the same `time` this frame
+        // already computed above rather than a second Date.now() call.
+        const logo = logoGroupRef.current;
+        if (logo) {
+          logo.rotation.y += (dt / LOGO_SPIN_PERIOD_MS) * Math.PI * 2;
+          logo.position.y = Math.sin(time * LOGO_BOB_SPEED) * LOGO_BOB_AMPLITUDE;
+        }
       }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
@@ -246,10 +400,62 @@ export default function SkyboxCanvas() {
       geometry.dispose();
       material.map?.dispose();
       material.dispose();
+      if (logoGroupRef.current) disposeObject3D(logoGroupRef.current);
       renderer.dispose();
       sphereRef.current = null;
+      sceneRef.current = null;
+      logoGroupRef.current = null;
     };
   }, []);
+
+  // Loads the logo model on demand, the first time the visitor actually
+  // reaches /about — not at mount, since this canvas (and so this
+  // effect) is shared by every route and the file is a real ~6MB. Once
+  // loaded it stays in the scene for the rest of the session (leaving
+  // and returning to /about just re-toggles `.visible`, no re-fetch).
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    if (logoGroupRef.current) {
+      logoGroupRef.current.visible = pathname === "/about";
+      return;
+    }
+    if (pathname !== "/about" || logoRequestedRef.current) return;
+    logoRequestedRef.current = true;
+
+    new GLTFLoader().load(
+      LOGO_MODEL_URL,
+      (gltf) => {
+        // The scene this load was for may already be gone by the time a
+        // ~6MB fetch resolves — a real unmount, or Strict Mode's dev-only
+        // double-invoke rebuilding the whole scene out from under this
+        // still-in-flight request. sceneRef identity (not a boolean) is
+        // the check: if it still points at the exact scene this closure
+        // captured, that scene is still live and gets the model; if not,
+        // free what was just decoded instead of adding it to a scene
+        // nothing will ever render again.
+        if (sceneRef.current !== scene) {
+          disposeObject3D(gltf.scene);
+          return;
+        }
+        smoothLogoSurfaces(gltf.scene);
+        const group = normalizeLogo(gltf.scene);
+        // Reads the *current* pathname, not the value this effect closed
+        // over when the fetch started — a visitor could have already
+        // navigated away during the load.
+        group.visible = pathnameRef.current === "/about";
+        scene.add(group);
+        logoGroupRef.current = group;
+      },
+      undefined,
+      () => {
+        // Missing/blocked/malformed model — same tone as the skybox
+        // texture's own catches: the rest of the page (and the sky
+        // itself) works fine without it, not worth surfacing to a visitor.
+      },
+    );
+  }, [pathname]);
 
   // Re-runs whenever the selected skybox changes; swaps the texture in place.
   useEffect(() => {

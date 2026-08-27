@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Link } from "next-view-transitions";
 import ChromeBar from "../components/ChromeBar";
 import StatusBar from "../components/StatusBar";
+import AboutContent from "./AboutContent";
 
 export const metadata: Metadata = { title: "About — Voltair Studio" };
 
@@ -14,10 +14,8 @@ export const metadata: Metadata = { title: "About — Voltair Studio" };
 // scratch here. This is the honest subset: the one paragraph of studio
 // positioning that's already public (search snippets, OG previews),
 // plus the two real status facts ChromeBar/StatusBar already show
-// elsewhere on the page.
-const ABOUT_BODY =
-  "Voltair Studio is a small, senior web-dev team building MVP and launch websites for early-stage startup founders — brand-true UI, a production Next.js front-end, live in days.";
-const CONTACT_EMAIL = "contact@voltairstudio.com";
+// elsewhere on the page. The EN copy lives in data/i18n.ts now (see
+// AboutContent.tsx) alongside its NL translation, not inline here.
 
 // A real route (see DESIGN.md for the modal-to-route history). Reuses
 // .page as-is for the outer shell — same zero-scroll 3-row grid
@@ -37,35 +35,13 @@ export default function AboutPage() {
     <div className="page">
       <ChromeBar />
       <main className="about-page-content">
-        <div className="about-float" role="region" aria-labelledby="about-float-title">
-          <div className="about-float-header">
-            <h1 id="about-float-title" className="about-float-title">
-              about --voltair_studio
-            </h1>
-          </div>
-          <p className="about-float-body">{ABOUT_BODY}</p>
-          <div className="about-float-meta">
-            <div className="about-float-meta-row">
-              <span className="about-float-meta-label">status</span>
-              <span className="about-float-meta-value">Available October 2026</span>
-            </div>
-            <div className="about-float-meta-row">
-              <span className="about-float-meta-label">contact</span>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
-                {CONTACT_EMAIL}
-              </a>
-            </div>
-          </div>
-          {/* Reads as a real command rather than a bare "×" — there's
-              no box left to hang a dismiss icon off of. Direct request
-              dropped the $ prefix this originally had (site-wide, not
-              just here — see DESIGN.md); "exit" alone still reads as
-              a command name, not decorative chrome. next-view-transitions'
-              Link, so this still gets a real view transition back. */}
-          <Link href="/" className="about-float-close">
-            exit
-          </Link>
-        </div>
+        {/* Reads as a real command rather than a bare "×" — there's no
+            box left to hang a dismiss icon off of. Direct request
+            dropped the $ prefix this originally had (site-wide, not
+            just here — see DESIGN.md); "exit" alone still reads as a
+            command name, not decorative chrome — and stays untranslated
+            for the same reason (see AboutContent.tsx). */}
+        <AboutContent />
       </main>
       <StatusBar />
     </div>

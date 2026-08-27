@@ -6,6 +6,7 @@ import { PROJECTS, getProject } from "../../data/projects";
 import EstrelaCardViewer from "../../components/EstrelaCardViewer";
 import ChromeBar from "../../components/ChromeBar";
 import StatusBar from "../../components/StatusBar";
+import T from "../../components/T";
 
 export function generateStaticParams() {
   return PROJECTS.map((p) => ({ slug: p.slug }));
@@ -72,7 +73,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               <p className="case-study-body">{project.description}</p>
             ) : !project.url ? (
               <p className="case-study-body">
-                Case study in progress — check back soon.
+                <T k="work.inProgress" />
               </p>
             ) : null}
             <a href="mailto:contact@voltairstudio.com" className="case-study-cta">
@@ -101,7 +102,9 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           <div className="case-study-infobar-left">
             {project.role && (
               <div className="case-study-infobar-item">
-                <span className="case-study-infobar-label">Role</span>
+                <span className="case-study-infobar-label">
+                  <T k="work.role" />
+                </span>
                 <span className="case-study-infobar-value">{project.role}</span>
               </div>
             )}
@@ -118,7 +121,9 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               )}
             </span>
             <span className="case-study-infobar-text">
-              <span className="case-study-infobar-label">Next Project</span>
+              <span className="case-study-infobar-label">
+                <T k="work.nextProject" />
+              </span>
               <span className="case-study-infobar-value">{nextProject.name}</span>
             </span>
           </Link>
@@ -139,7 +144,9 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
             invented one. */}
         <div className="case-study-visit-year">
           <div className="case-study-infobar-item">
-            <span className="case-study-infobar-label">Visit</span>
+            <span className="case-study-infobar-label">
+              <T k="work.visit" />
+            </span>
             {project.url ? (
               <a
                 href={project.url}
@@ -147,16 +154,18 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 rel="noopener noreferrer"
                 className="case-study-infobar-value case-study-infobar-link"
               >
-                Live site ↗
+                <T k="work.liveSite" />
               </a>
             ) : (
               <span className="case-study-infobar-value case-study-infobar-value-muted">
-                Coming soon
+                <T k="work.comingSoon" />
               </span>
             )}
           </div>
           <div className="case-study-infobar-item">
-            <span className="case-study-infobar-label">Year</span>
+            <span className="case-study-infobar-label">
+              <T k="work.year" />
+            </span>
             <span
               className={`case-study-infobar-value${project.year ? "" : " case-study-infobar-value-muted"}`}
             >

@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { Link } from "next-view-transitions";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
+import LangToggle from "./LangToggle";
+import { useLang } from "./lang-context";
+import { t } from "../data/i18n";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
 
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
+  const { lang } = useLang();
 
   // Copy-to-clipboard is a courtesy alongside the real mailto link, not
   // instead of it — e.preventDefault() is never called, so the mail
@@ -71,13 +75,21 @@ export default function ChromeBar() {
             }}
           />
         </Link>
+        {/* Between the logo and About, per direct request — a small
+            EN/NL group, not a heavy locale-routing setup: this is a
+            two-language marketing page, not a multi-region product,
+            so a persisted client-side toggle (LangProvider, same
+            localStorage-restore shape as the CRT/audio toggles) is
+            the real, matched-to-scope solution; see lang-context.tsx
+            and data/i18n.ts. */}
+        <LangToggle />
         {/* A real route now (/about), not a local modal-open button —
             direct request, replacing an in-page overlay this same
             session had already built and verified (see DESIGN.md).
             next-view-transitions' Link, so navigating here (either
             direction) gets a real browser view transition for free. */}
         <Link href="/about" className="chrome-nav-link">
-          About
+          {t(lang, "nav.about")}
         </Link>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
@@ -85,7 +97,7 @@ export default function ChromeBar() {
           onClick={handleClick}
           aria-live="polite"
         >
-          {copied ? "Email copied!" : "Contact"}
+          {copied ? t(lang, "nav.contactCopied") : t(lang, "nav.contact")}
         </a>
       </nav>
     </header>

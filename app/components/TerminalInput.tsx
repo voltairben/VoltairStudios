@@ -5,14 +5,23 @@ import { useTransitionRouter } from "next-view-transitions";
 import { useSkybox, SKYBOXES } from "./skybox-context";
 import { useAudio } from "./audio-context";
 import { useCrt } from "./crt-context";
+import { useLang } from "./lang-context";
+import { t, type Lang } from "../data/i18n";
 import { PROJECTS } from "../data/projects";
+import {
+  PALETTES,
+  PALETTE_PREVIEW_COLORS,
+  isPaletteName,
+  applyPalette,
+  persistPalette,
+} from "../data/palette";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
 // word set, split on whitespace and switched on directly, matching the
 // brief's own "no heavy external parser libraries" constraint. Flag-
-// style and multi-word entries (--audio=on, theme green, ...) are full
+// style and multi-word entries (--audio=on, theme cobalt, ...) are full
 // literal tokens, not single words like the rest — Tab-completion/help
 // just treat them the same way regardless (COMMANDS.filter(startsWith)
 // doesn't care whether an entry has a space in it).
@@ -29,8 +38,13 @@ const COMMANDS = [
   "--crt=on",
   "--crt=off",
   "theme persimmon",
-  "theme green",
+  "theme cobalt",
   "theme amber",
+  "theme ambergris",
+  "theme turbo-blue",
+  "theme phosphor-decay",
+  "theme stealth-obsidian",
+  "theme vapor-comm",
 ] as const;
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const HISTORY_LIMIT = 50;
@@ -43,25 +57,40 @@ const HISTORY_LIMIT = 50;
 // is enough feedback and never needs scrolling to show in full.
 const LOG_LIMIT = 2;
 
-// theme <name> — direct request, framed as a "secret command" easter
-// egg, not a new user-facing UI control (the brief's own "no bloated
-// configuration panels" rules that out) — swaps a handful of the
-// site's real CSS custom properties via a data-palette attribute on
-// <html>; every component already reads --color-amber-* through
-// var(), so nothing else needs to change for the whole site to
-// recolor. "persimmon" is the shipped, deliberately-chosen brand
-// accent (see DESIGN.md's palette v3 history) — it's the default and
-// has no override block of its own, only green/amber do (see
-// globals.css). "green"/"amber" reuse this project's own real,
-// already-considered hex values: amber is this project's actual
-// original pre-persimmon accent (from the very first version of this
-// plan, before the persimmon pivot), not invented for this feature.
-const PALETTES = ["persimmon", "green", "amber"] as const;
-type PaletteName = (typeof PALETTES)[number];
-function isPaletteName(value: string): value is PaletteName {
-  return (PALETTES as readonly string[]).includes(value);
-}
-const PALETTE_STORAGE_KEY = "voltair-palette";
+// The fold-out theme picker's own list — direct request, a real
+// visual control this time (an earlier round deliberately kept `theme`
+// terminal-only, reasoning a visible switcher would be the "bloated
+// configuration panel" a different brief warned against; a direct ask
+// for one supersedes that). Every real PALETTES entry except
+// "ambergris" — it's a pure alias of "amber" (same exact color), and
+// a picker showing two visually-identical swatches would just look
+// broken, not like a shortcut the way it is as a typed command.
+const PALETTE_PICKER_ITEMS = PALETTES.filter((name) => name !== "ambergris");
+
+// theme <name> — the terminal command still exists too, unchanged —
+// swaps a handful of the site's real CSS custom properties via a
+// data-palette attribute on <html>; every component already reads
+// --color-amber-* through var(), so nothing else needs to change for
+// the whole site to recolor. The full PALETTES list, validation, and
+// apply/persist logic live in ../data/palette.ts now, shared with
+// PaletteRestorer.tsx and the picker below — see that file for why
+// this used to all live here, until a fresh load of /about or a
+// case-study page (this component doesn't render there) turned out to
+// never restore a saved theme at all.
+//
+// Deliberately accent-only — a later request asked for each new
+// theme's own named *background* too (e.g. "royal blue #000033"), not
+// just its accent. Not built: --color-pane-bg turned out to be load-
+// bearing for --text-halo/--text-halo-small (the per-glyph legibility
+// ring used on every piece of text on the page, partly hardcoded
+// rgba() rather than fully var()-driven — a gradient/shadow can't take
+// a var() inside its own alpha slot). Re-theming that safely across 5
+// new colors without risking text legibility against the actual sky
+// (which never changes color, only the accent does) is real, separate
+// work, not something to fold in silently alongside an accent swap.
+// persimmon/cobalt/amber never touched the background either, so this
+// keeps every theme consistent with itself rather than only the
+// newest ones getting a half-finished background.
 
 // One-time boot flavor text on first-ever visit (direct request) —
 // real facts about what's actually already on screen by the time this
@@ -74,12 +103,18 @@ const PALETTE_STORAGE_KEY = "voltair-palette";
 // just the terminal's own shell announcing itself, purely decorative,
 // never blocks real typing/input while it plays.
 const BOOT_SEEN_KEY = "voltair-boot-seen";
-const BOOT_LINES = [
-  "voltair_studio deploy console",
-  "skybox engine ... ready",
-  "terminal shell ... ready",
-  "type 'help' to begin",
-];
+// First line is a literal product banner, not prose — real CLIs don't
+// localize their own name line, so it's identical in both languages
+// (same policy as command tokens, see data/i18n.ts's own header
+// comment). The rest translate via the current lang at boot time.
+function bootLines(lang: Lang) {
+  return [
+    "voltair_studio deploy console",
+    `skybox engine ... ${t(lang, "terminal.bootReady")}`,
+    `terminal shell ... ${t(lang, "terminal.bootReady")}`,
+    t(lang, "terminal.typeHelp"),
+  ];
+}
 const BOOT_LINE_DELAY_MS = 120;
 
 type LogLine = { id: number; text: string };
@@ -126,6 +161,7 @@ export default function TerminalInput() {
   const { active: activeSkybox, next: nextSkybox } = useSkybox();
   const { enabled: audioEnabled, setEnabled: setAudioEnabled, playClick } = useAudio();
   const { enabled: crtEnabled, setEnabled: setCrtEnabled } = useCrt();
+  const { lang } = useLang();
   const router = useTransitionRouter();
 
   // Real uptime (time since this terminal mounted), not a fabricated
@@ -134,21 +170,11 @@ export default function TerminalInput() {
   // own, only to be read at the moment systeminfo actually runs.
   if (mountTimeRef.current === 0) mountTimeRef.current = performance.now();
 
-  // Restores a manually-picked palette on mount — direct request
-  // ("remember their... theme choice"). A stored "persimmon" (or
-  // nothing stored) needs no action: persimmon is the CSS default,
-  // with no override block of its own.
-  useEffect(() => {
-    let stored: string | null = null;
-    try {
-      stored = localStorage.getItem(PALETTE_STORAGE_KEY);
-    } catch {
-      // localStorage blocked — default persimmon stands
-    }
-    if (stored && isPaletteName(stored) && stored !== "persimmon") {
-      document.documentElement.dataset.palette = stored;
-    }
-  }, []);
+  // Palette restore-on-mount now lives in PaletteRestorer.tsx (root
+  // layout, every page) instead of here — this component only mounts
+  // on the homepage, which is exactly why the old version of this
+  // effect never ran on /about or a case-study page. Nothing to do
+  // here anymore beyond the `theme` command itself, below.
 
   // One-time boot flavor text on first-ever visit — see BOOT_LINES'
   // own comment above for why this is real, not fabricated, and why
@@ -196,10 +222,18 @@ export default function TerminalInput() {
     } catch {
       // not persisted, but still plays once for this visit
     }
-    const timeouts = BOOT_LINES.map((line, i) =>
+    // Mount-only by design (shouldPlayBootRef guards the once-ever
+    // replay), so `lang` here is whatever it is at that instant — the
+    // same one-tick "SSR-safe default, corrected shortly after" gap
+    // every other persisted preference in this app already has (CRT
+    // briefly renders "on" before its own saved-off correction lands,
+    // etc.); not worth deferring a one-time decorative banner to close.
+    const lines = bootLines(lang);
+    const timeouts = lines.map((line, i) =>
       setTimeout(() => pushLog(line), i * BOOT_LINE_DELAY_MS),
     );
     return () => timeouts.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function pushLog(text: string) {
@@ -236,7 +270,7 @@ export default function TerminalInput() {
 
     switch (name) {
       case "help":
-        pushLog(`commands: ${COMMANDS.join(" · ")}`);
+        pushLog(`${t(lang, "terminal.commandsLabel")}: ${COMMANDS.join(" · ")}`);
         break;
       case "about":
         pushLog("→ /about");
@@ -249,7 +283,7 @@ export default function TerminalInput() {
         router.push("/about");
         break;
       case "contact":
-        pushLog(`→ ${CONTACT_EMAIL} copied — opening mail client`);
+        pushLog(`→ ${CONTACT_EMAIL} ${t(lang, "terminal.contactCopied")}`);
         if (navigator.clipboard) {
           navigator.clipboard.writeText(CONTACT_EMAIL).catch(() => {});
         }
@@ -268,42 +302,38 @@ export default function TerminalInput() {
         break;
       }
       case "work":
-        pushLog(`→ projects: ${PROJECTS.map((p) => p.name).join(", ")}`);
+        pushLog(`→ ${t(lang, "terminal.projectsLabel")}: ${PROJECTS.map((p) => p.name).join(", ")}`);
         focusFirstProject();
         break;
       case "--audio=on":
         setAudioEnabled(true);
-        pushLog("→ sound: on");
+        pushLog(t(lang, "terminal.soundOn"));
         break;
       case "--audio=off":
         setAudioEnabled(false);
-        pushLog("→ sound: off");
+        pushLog(t(lang, "terminal.soundOff"));
         break;
       case "--crt=on":
         setCrtEnabled(true);
-        pushLog("→ crt: on");
+        pushLog(t(lang, "terminal.crtOn"));
         break;
       case "--crt=off":
         setCrtEnabled(false);
-        pushLog("→ crt: off");
+        pushLog(t(lang, "terminal.crtOff"));
         break;
-      case "theme":
+      case "theme": {
         if (arg && isPaletteName(arg)) {
-          if (arg === "persimmon") {
-            delete document.documentElement.dataset.palette;
-          } else {
-            document.documentElement.dataset.palette = arg;
-          }
-          try {
-            localStorage.setItem(PALETTE_STORAGE_KEY, arg);
-          } catch {
-            // not persisted this session, but the in-memory swap still works
-          }
-          pushLog(`→ palette: ${arg}`);
+          applyPalette(arg);
+          persistPalette(arg);
+          pushLog(`→ ${t(lang, "terminal.paletteLabel")}: ${arg}`);
         } else {
-          pushLog("usage: theme persimmon|green|amber");
+          // Direct request: an invalid name lists every real option,
+          // not just a bare "usage" hint — built off the one real
+          // PALETTES array so this can't drift from what actually works.
+          pushLog(`${t(lang, "terminal.invalidPalette")} ${PALETTES.join(", ")}`);
         }
         break;
+      }
       case "systeminfo": {
         const uptimeSec = Math.floor((performance.now() - mountTimeRef.current) / 1000);
         const mm = String(Math.floor(uptimeSec / 60)).padStart(2, "0");
@@ -316,8 +346,8 @@ export default function TerminalInput() {
           { key: "engine", value: detectEngine(navigator.userAgent) },
           { key: "skybox", value: activeSkybox },
           { key: "canvas", value: canvas ? `${canvas.width}×${canvas.height}` : "n/a" },
-          { key: "audio", value: audioEnabled ? "on" : "off" },
-          { key: "crt", value: crtEnabled ? "on" : "off" },
+          { key: "audio", value: audioEnabled ? t(lang, "terminal.on") : t(lang, "terminal.off") },
+          { key: "crt", value: crtEnabled ? t(lang, "terminal.on") : t(lang, "terminal.off") },
         ]);
         break;
       }
@@ -325,7 +355,7 @@ export default function TerminalInput() {
         setLog([]);
         break;
       default:
-        pushLog(`command not found: ${name} — try 'help'`);
+        pushLog(`${t(lang, "terminal.commandNotFound")} ${name} — ${t(lang, "terminal.tryHelp")}`);
     }
   }
 
@@ -392,18 +422,65 @@ export default function TerminalInput() {
 
   return (
     <div className="terminal-prompt">
-      {/* Marks this row as a real text box — direct request, after
-          removing the $ prefix and the cursor glyph in earlier rounds
-          left this line with zero visible affordance at rest. Same
-          masked-logo technique ChromeBar's own mark already uses
-          (recolored via the site's real accent token, so it follows a
-          `theme` change too), purely decorative — the accessible name
-          for this control is still the input's own aria-label below. */}
-      <span
-        className="terminal-prompt-logo"
-        aria-hidden="true"
-        style={{ WebkitMaskImage: `url(${logo.src})`, maskImage: `url(${logo.src})` }}
-      />
+      {/* Marks this row as a real text box (an earlier direct request,
+          after removing the $ prefix and the cursor glyph left it with
+          zero visible affordance at rest) — now also a real fold-out
+          theme picker, direct request. Pure CSS hover/focus reveal
+          (opacity + pointer-events, .palette-picker:hover/:focus-within
+          .palette-picker-menu in globals.css), the same technique
+          .mockup-carousel-arrow/-dots already use elsewhere in this
+          codebase, not new JS open/close state — the menu's items stay
+          real, individually focusable buttons the whole time, so
+          Tab-ing onto the trigger reveals the menu and the very next
+          Tab already lands inside it, in visual order, for free.
+          Escape below just blurs whatever's focused, which naturally
+          closes the menu the same way moving the mouse away does. */}
+      <div
+        className="palette-picker"
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+        }}
+      >
+        <button
+          type="button"
+          className="terminal-prompt-logo"
+          aria-haspopup="true"
+          aria-label="Change color theme"
+          style={{ WebkitMaskImage: `url(${logo.src})`, maskImage: `url(${logo.src})` }}
+        />
+        <div className="palette-picker-menu" role="menu" aria-label="Color theme">
+          {PALETTE_PICKER_ITEMS.map((name) => (
+            <button
+              key={name}
+              type="button"
+              role="menuitem"
+              className="palette-picker-item"
+              onClick={(e) => {
+                applyPalette(name);
+                persistPalette(name);
+                // A clicked button keeps browser focus by default,
+                // which would otherwise leave the menu open via
+                // :focus-within even once the mouse moves away —
+                // caught live (the menu stayed open after a real
+                // click), not the intended "pick one and it closes"
+                // feel a normal dropdown has. Blurring hands focus
+                // back to nothing in particular, matching :hover's own
+                // close-on-leave behavior instead of fighting it.
+                e.currentTarget.blur();
+              }}
+            >
+              <span
+                className="palette-picker-swatch"
+                aria-hidden="true"
+                style={{ backgroundColor: PALETTE_PREVIEW_COLORS[name] }}
+              />
+              {name}
+            </button>
+          ))}
+        </div>
+      </div>
       <span className="terminal-prompt-text" aria-hidden="true">
         {value}
       </span>
