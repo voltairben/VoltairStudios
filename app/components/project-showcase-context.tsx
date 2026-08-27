@@ -29,6 +29,15 @@ type ProjectShowcaseContextValue = {
    *  the surface that was actually clicked tags its element. */
   morphSource: MorphSource;
   setMorphSource: (source: MorphSource) => void;
+  /** The project (by slug) the pointer is currently over, on *either*
+   *  surface — direct request for a bidirectional hover: hover a reel
+   *  tile, the matching index entry highlights; hover an index entry,
+   *  the matching reel tile(s) get their own hover pop. Deliberately a
+   *  separate value from activeIndex above: that's the reel's ambient
+   *  auto-loop position (always-on, nothing to do with the pointer),
+   *  this is engagement-driven and null the rest of the time. */
+  hoveredSlug: string | null;
+  setHoveredSlug: (slug: string | null) => void;
 };
 
 const ProjectShowcaseContext = createContext<ProjectShowcaseContextValue | null>(null);
@@ -36,6 +45,7 @@ const ProjectShowcaseContext = createContext<ProjectShowcaseContextValue | null>
 export function ProjectShowcaseProvider({ children }: { children: ReactNode }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [morphSource, setMorphSource] = useState<MorphSource>(null);
+  const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
   const reportActiveIndex = useCallback((i: number) => {
     setActiveIndex(i);
@@ -43,7 +53,14 @@ export function ProjectShowcaseProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProjectShowcaseContext.Provider
-      value={{ activeIndex, reportActiveIndex, morphSource, setMorphSource }}
+      value={{
+        activeIndex,
+        reportActiveIndex,
+        morphSource,
+        setMorphSource,
+        hoveredSlug,
+        setHoveredSlug,
+      }}
     >
       {children}
     </ProjectShowcaseContext.Provider>

@@ -20,7 +20,8 @@ import { PROJECTS } from "../data/projects";
 // elapsed-time formula, not a scroll position, since the reel doesn't
 // have one anymore).
 export default function ProjectIndex() {
-  const { activeIndex, morphSource, setMorphSource } = useProjectShowcase();
+  const { activeIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
+    useProjectShowcase();
   // Which project (by slug) this list should tag for the card-to-page
   // morph — unlike ProjectReel there's no duplicate-instance problem
   // here (PROJECTS.map renders each project exactly once), but the same
@@ -37,8 +38,28 @@ export default function ProjectIndex() {
           <Link
             href={`/work/${project.slug}`}
             key={project.slug}
-            className={`project-index-item${i === activeIndex ? " is-active" : ""}`}
+            className={`project-index-item${i === activeIndex ? " is-active" : ""}${
+              hoveredSlug === project.slug ? " is-cross-hovered" : ""
+            }`}
             aria-current={i === activeIndex ? "true" : undefined}
+            // Bidirectional hover — direct request; the reel side of this
+            // is in ProjectReel.tsx. is-active (activeIndex) and
+            // is-cross-hovered (hoveredSlug) are deliberately separate
+            // state/classes — "the reel is ambiently showing this" and
+            // "the pointer is engaging with this" aren't the same thing
+            // and can both be true, or neither, independently.
+            // onFocus/onBlur added alongside the mouse handlers for the
+            // kinetic hover-expansion feature's own "fully support
+            // keyboard focus transitions" ask — Tab-focusing an item now
+            // drives the exact same is-cross-hovered state a mouse
+            // hover (or hovering the matching reel tile) does, so the
+            // list-wide dim/expand effect below has one real trigger to
+            // key off, not three separately-handled ones that could
+            // drift out of sync with each other.
+            onMouseEnter={() => setHoveredSlug(project.slug)}
+            onMouseLeave={() => setHoveredSlug(null)}
+            onFocus={() => setHoveredSlug(project.slug)}
+            onBlur={() => setHoveredSlug(null)}
             onClick={() => {
               // See ProjectReel.tsx's identical comment — flushSync is
               // required so the tag is actually painted before

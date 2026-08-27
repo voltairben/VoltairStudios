@@ -124,36 +124,46 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           </Link>
         </div>
 
-        {/* Visit/Year, round 2 — direct request: pulled back out of
-            StatusBar's flag row (wrong location, even though that
-            style was fine) into their own centered block at the
-            bottom of the page instead. Reuses the exact same label/
-            value classes the info bar above already uses — the
-            request was specifically to change WHERE this shows, not
-            the label-over-value look itself. */}
-        {(project.url || project.year) && (
-          <div className="case-study-visit-year">
-            {project.url && (
-              <div className="case-study-infobar-item">
-                <span className="case-study-infobar-label">Visit</span>
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="case-study-infobar-value case-study-infobar-link"
-                >
-                  Live site ↗
-                </a>
-              </div>
-            )}
-            {project.year && (
-              <div className="case-study-infobar-item">
-                <span className="case-study-infobar-label">Year</span>
-                <span className="case-study-infobar-value">{project.year}</span>
-              </div>
+        {/* Visit/Year, round 3 — direct request: always show both tags
+            on every project page, placeholders included, instead of
+            the whole block disappearing when there's no real url/year
+            yet. The tags themselves are layout, not a claim — always
+            showing "Visit"/"Year" doesn't assert a placeholder has a
+            live site or a build year. Only the VALUE differs: a real
+            project gets its real link/year exactly as before; a
+            placeholder gets an honest non-link value instead of
+            either a fabricated URL/date or a missing tag — "Coming
+            soon" matches the same honest voice case-study-body already
+            uses ("Case study in progress — check back soon."), and
+            "—" is the standard convention for "no value yet," not an
+            invented one. */}
+        <div className="case-study-visit-year">
+          <div className="case-study-infobar-item">
+            <span className="case-study-infobar-label">Visit</span>
+            {project.url ? (
+              <a
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="case-study-infobar-value case-study-infobar-link"
+              >
+                Live site ↗
+              </a>
+            ) : (
+              <span className="case-study-infobar-value case-study-infobar-value-muted">
+                Coming soon
+              </span>
             )}
           </div>
-        )}
+          <div className="case-study-infobar-item">
+            <span className="case-study-infobar-label">Year</span>
+            <span
+              className={`case-study-infobar-value${project.year ? "" : " case-study-infobar-value-muted"}`}
+            >
+              {project.year ?? "—"}
+            </span>
+          </div>
+        </div>
       </main>
       <div className="case-study-footer">
         <StatusBar />

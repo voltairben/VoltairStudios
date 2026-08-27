@@ -56,7 +56,8 @@ const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
   // clientHeight instead of assuming it). Doubled for real margin.
 
 export default function ProjectReel() {
-  const { reportActiveIndex, morphSource, setMorphSource } = useProjectShowcase();
+  const { reportActiveIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
+    useProjectShowcase();
   const reelRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   // Card-to-page morph target: PROJECTS repeats REPEAT_COUNT times in the
@@ -241,8 +242,18 @@ export default function ProjectReel() {
         {looped.map((project, i) => (
           <Link
             href={`/work/${project.slug}`}
-            className={`project-reel-item${project.image ? " has-image" : ""}`}
+            className={`project-reel-item${project.image ? " has-image" : ""}${
+              hoveredSlug === project.slug ? " is-cross-hovered" : ""
+            }`}
             key={i}
+            // Bidirectional hover — direct request. Matches on slug, not
+            // index i, since REPEAT_COUNT duplicates every project 6x for
+            // the loop illusion: whichever copy the pointer is actually
+            // over sets it, and every copy (plus the index's one entry)
+            // reads the same shared value back, so all of them light up
+            // together, not just the one under the cursor.
+            onMouseEnter={() => setHoveredSlug(project.slug)}
+            onMouseLeave={() => setHoveredSlug(null)}
             onClick={() => {
               // next-view-transitions' Link calls our onClick, THEN
               // synchronously calls document.startViewTransition — a

@@ -646,14 +646,18 @@ body {
     reads as a continuous reel rather than a truncated frame */
 }
 .project-reel:has(.project-reel-item:hover),
-.project-reel:has(.project-reel-item:focus-visible) {
+.project-reel:has(.project-reel-item:focus-visible),
+.project-reel:has(.project-reel-item.is-cross-hovered) {
   /* The fade mask above is alpha, not clipping — it applies to
      everything painted in this box regardless of overflow-clip-margin,
      so a tile popping past the edge into the mask's own 10% fade zone
      was rendering half-transparent right where it should be breaking
      loose (the actual cause of "it scopes out", not the clip itself).
      Dropped only while something's actually hovered/focused — the rest
-     of the time the loop-fade still does its job on the resting reel. */
+     of the time the loop-fade still does its job on the resting reel.
+     is-cross-hovered included: a tile popped by hovering its Index
+     entry instead of the tile itself needs the same real room to break
+     loose into, or it'd get clipped only in that one trigger path. */
   -webkit-mask-image: none;
   mask-image: none;
 }
@@ -762,7 +766,14 @@ body {
   background: linear-gradient(to top, rgba(34, 40, 49, 0.75), transparent 60%);
 }
 .project-reel-item:hover,
-.project-reel-item:focus-visible {
+.project-reel-item:focus-visible,
+.project-reel-item.is-cross-hovered {
+  /* is-cross-hovered (bidirectional hover, direct request): hovering
+     this project's Index entry instead of the tile itself reuses this
+     exact same pop rather than a second, different "highlighted" look —
+     one visual language for "this project has your attention," not two
+     that could drift apart. Real class, not :hover — the pointer isn't
+     necessarily anywhere near this tile when it triggers. */
   background-color: var(--color-amber-tint-14); /* a real hover/focus
     cue — the tiles keep moving underneath, but they're still real,
     clickable links */
@@ -784,7 +795,12 @@ body {
     overflow. */
   z-index: 1;
 }
-.project-reel-item:focus-visible {
+.project-reel-item:focus-visible,
+.project-reel-item.is-cross-hovered {
+  /* Same thin inset border either trigger — a real focus ring for
+     keyboard users, the "active border" half of the cross-hover pop
+     for a pointer one; one raw-engineered outline, not two different
+     treatments for what's visually the same "this one" signal. */
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: calc(-1 * var(--focus-outline-w)); /* inset — an
     outer offset would get clipped by the reel's own overflow/mask */
@@ -852,11 +868,59 @@ body {
   white-space: nowrap;
   color: var(--color-amber-dim);
   text-shadow: var(--text-halo-small);
-  transition: color 300ms ease, font-weight 150ms ease, background-color 120ms ease;
+  transform-origin: right center; /* the list is right-aligned
+    (align-items: flex-end) — the kinetic scaleX below grows away from
+    that fixed right edge, matching how the list is actually anchored,
+    not toward it */
+  transition: color 300ms ease, font-weight 200ms ease, background-color 120ms ease,
+    box-shadow 120ms ease, transform 200ms ease, opacity 200ms ease;
 }
 .project-index-item.is-active {
   color: var(--color-cursor-flash);
   font-weight: 600;
+}
+.project-index-item.is-cross-hovered {
+  /* Bidirectional hover, direct request — hovering this project's reel
+     tile highlights this entry back. Deliberately not the same look
+     as .is-active (color+weight only, the reel's ambient "currently
+     showing" signal): a thin inset left border reads as "the pointer
+     picked this one" without being confused for the loop's own state,
+     and stays a precise color/border swap, not a background wash or
+     anything glow/gradient-shaped. inset box-shadow, not a real
+     border — doesn't reserve/shift any layout width the way border-left
+     would need padding compensation for.
+
+     Also now this list's "kinetic hover expansion" target — direct
+     request: weight up along the real variable axis (IBM Plex Mono
+     Variable covers 100-700, so this is a genuine continuous
+     interpolation the browser performs, not two static cuts being
+     swapped), plus a scaleX stand-in for "increase letter-spacing."
+     Literal letter-spacing was tried first and dropped: .project-index
+     is intentionally shrink-to-fit (flex-shrink: 0, no explicit width),
+     so widening a hovered item's actual text would grow the whole
+     panel's own box on every hover — exactly the "chaotic layout
+     shift" the brief itself says to avoid. transform never affects
+     layout (purely compositable, same reason opacity/transform were
+     asked for by name), so scaleX reads as the same "text opening up"
+     without that risk. Reuses is-cross-hovered rather than a second,
+     narrower "direct hover only" class — hovering the matching reel
+     tile now gets the identical kinetic look on this side too, not a
+     lesser version of it. */
+  color: var(--color-amber-bright);
+  box-shadow: inset 2px 0 0 var(--color-amber-bright);
+  font-weight: 700;
+  transform: scaleX(1.06);
+}
+/* "Lens focus" — direct request: while any one entry has real
+   engagement (mouse hover, keyboard focus, or the matching reel tile
+   being hovered — all three funnel into is-cross-hovered above), every
+   other entry dims and shrinks slightly, sharpening attention on the
+   one that doesn't. :not(.is-cross-hovered) excludes the engaged item
+   itself from its own dimming. */
+.project-index-list:has(.project-index-item.is-cross-hovered)
+  .project-index-item:not(.is-cross-hovered) {
+  opacity: 0.35;
+  transform: scale(0.96);
 }
 .project-index-item:hover,
 .project-index-item:focus-visible {
@@ -1110,10 +1174,17 @@ body {
   /* .project-reel-track needs no entry here anymore — there's no CSS
      animation on it to cancel; ProjectReel.tsx checks this same media
      query itself and skips starting the rAF loop that drives
-     auto-advance, leaving wheel/drag still fully functional.
-     .project-index-item needs no entry either — its highlight is a
-     plain color/font-weight class toggle (.is-active), not a CSS
-     animation. */
+     auto-advance, leaving wheel/drag still fully functional. */
+  .project-index-item {
+    /* .is-active alone really was just a color/font-weight toggle (see
+       the stale version of this comment) — the kinetic hover-expansion
+       feature is the part that actually animates now (scaleX, opacity,
+       font-weight all transition). Instant snap instead, not disabled
+       outright: the dim/expand effect itself isn't the kind of ambient
+       motion reduced-motion targets, only the animated transition
+       between states is. */
+    transition: none;
+  }
 }
 
 /* ==========================================================================
@@ -1336,6 +1407,15 @@ body {
   font-size: var(--fs-chrome);
   font-weight: 500;
   text-shadow: var(--text-halo-small);
+}
+.case-study-infobar-value-muted {
+  /* Visit/Year now always show a value (direct request), even on
+     placeholder projects with no real url/year yet — this is the
+     honest "nothing real here yet" state for that value specifically,
+     same muted color the labels/flags elsewhere already use for a
+     secondary/inactive signal, not the bright real-value color a
+     confirmed url/year gets. */
+  color: var(--color-ui-muted);
 }
 .case-study-infobar-link {
   text-decoration: underline;
