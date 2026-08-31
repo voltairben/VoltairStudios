@@ -302,7 +302,13 @@ export default function ProjectReel() {
                 // REPEAT_COUNT duplicate: the other 5 sets never paint
                 // on load, so eagerly prioritizing their images too
                 // would just be wasted bandwidth for no LCP benefit.
-                priority={Math.floor(i / PROJECTS.length) === 1}
+                // `priority` itself is deprecated as of Next.js 16.0.0 —
+                // caught by CodeRabbit's review, verified against this
+                // project's own installed docs (not assumed, per
+                // AGENTS.md's own warning that this isn't the Next.js a
+                // model would know from training): `preload` is its
+                // direct, same-behavior successor, not a different prop.
+                preload={Math.floor(i / PROJECTS.length) === 1}
               />
             )}
             {project.image && <span className="project-reel-item-scrim" aria-hidden="true" />}
