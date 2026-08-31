@@ -1597,8 +1597,14 @@ body {
    with real scroll, and replaces the earlier one-off fixed skybox-only
    button from the previous round: StatusBar already carries that
    switcher, so keeping the separate button would've just duplicated it. */
-.case-study-chrome,
-.case-study-footer {
+/* Shared by every real-scrolling page (/work/[slug], /about) — not
+   case-study-specific despite the class name's history; renamed to
+   .scroll-page-* when /about became long-form content too, rather than
+   duplicating this exact mechanism under a second name. Fixed
+   positioning is the zero-scroll .page grid's equivalent for a page
+   with real scroll. */
+.scroll-page-chrome,
+.scroll-page-footer {
   position: fixed;
   left: 0;
   right: 0;
@@ -1616,16 +1622,16 @@ body {
     screenshotted directly. Giving the wrapper the same height and
     centering its content reproduces the exact same result. */
 }
-.case-study-chrome {
+.scroll-page-chrome {
   top: 0;
   height: var(--chrome-h);
 }
-.case-study-footer {
+.scroll-page-footer {
   bottom: 0;
   height: var(--status-h);
 }
-.case-study-chrome > .chrome-bar,
-.case-study-footer > .status-bar {
+.scroll-page-chrome > .chrome-bar,
+.scroll-page-footer > .status-bar {
   width: 100%; /* a flex-row child sizes to its own content width by
     default — .chrome-bar/.status-bar's own internal
     justify-content:space-between needs the full wrapper width to
@@ -2062,36 +2068,62 @@ body {
 /* ==========================================================================
    About page (app/about/page.tsx) — §9
    A real route, not a modal (see DESIGN.md for the modal-to-route
-   history). Reuses .page as-is for the outer shell (same zero-scroll
-   3-row grid the homepage uses — "screen-locked" was explicit in an
-   earlier brief for this page), so .about-page-content only needs to
-   fill .page's middle grid row and center the content, the way
-   .hero-row fills it on the homepage.
-
-   Floating text, not a boxed panel — direct request: this shipped
-   first as a "Terminal Glass" box (fill/blur/border, matching the reel
-   tiles/mockup card), then was asked to drop the box entirely in favor
-   of .content's own established technique — text sitting directly on
-   the open sky, legible via --text-halo per glyph, no panel behind it.
-   Same technique, not a new one invented for this page. */
-.about-page-content {
-  grid-row: 2;
+   history). Real scrolling now, not .page's zero-scroll grid — direct
+   request replaced the old one-paragraph placeholder with the full
+   "This Is Voltair" essay (data/about-content.ts), real user-authored
+   content too long for one fixed viewport. .about-page reuses the same
+   shape .case-study already established for real-scrolling content:
+   position:relative to beat the fixed skybox canvas's own stacking,
+   padding reserving space for the now-fixed .scroll-page-chrome/
+   -footer (see their own comment), a max-width column centered with
+   auto margins instead of flex-centering (centering doesn't mean
+   anything once content is taller than the viewport — the page just
+   starts at the top and scrolls, same as .case-study's own reasoning). */
+.about-page {
+  position: relative;
+  min-height: 100dvh;
+  padding: calc(var(--chrome-h) + var(--space-5)) var(--space-4)
+    calc(var(--status-h) + var(--space-5));
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: 0; /* same flex-overflow fix .hero-row already needs —
-    see the Grid Blowout Lesson comment on .hero-row above */
-  overflow: hidden;
-  padding: var(--space-4);
 }
-.about-float {
+/* Real back-link, direct addition once this page started scrolling —
+   the old version only had a bottom "exit," fine for one paragraph but
+   not for an essay long enough to want a return path near the top too.
+   Same styling /work/[slug]'s own top-of-page back link already uses. */
+.about-back {
+  position: fixed;
+  top: calc(var(--chrome-h) + var(--space-3));
+  left: var(--space-4);
+  z-index: 1;
+  color: var(--color-ui-muted);
+  font-size: var(--fs-chrome);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--color-ui-muted-underline);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  text-shadow: var(--text-halo-small);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.about-back:hover,
+.about-back:focus-visible {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+}
+.about-back:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+.about-essay {
   display: flex;
   flex-direction: column;
   align-items: flex-start; /* left-aligned prose, matching .content —
     centered paragraph text reads worse at this length */
-  gap: var(--space-3);
+  gap: var(--space-4);
   max-width: 60ch; /* readable line length for a real paragraph, not
     the fixed 440px box width the panel version used */
+  width: 100%;
   animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both; /* same
     entrance every other floating text element in .content uses */
 }
@@ -2101,10 +2133,59 @@ body {
   font-weight: 500;
   text-shadow: var(--text-halo-small);
 }
-.about-float-body {
+/* Byline, not a heading — direct request's own text opens with "This
+   Is Voltair — by Bennie"; kept as a small tag under the page's own
+   terminal-style H1 rather than replacing it, matching how a real
+   document's byline sits under its masthead, not instead of it. */
+.about-kicker {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-status);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-shadow: var(--text-halo-small);
+}
+.about-paragraph {
   color: var(--color-cursor-flash);
   font-size: var(--fs-position);
-  line-height: 1.5;
+  line-height: 1.6;
+  text-shadow: var(--text-halo-small);
+}
+.about-closing {
+  color: var(--color-amber-bright); /* the essay's own closing line is
+    a direct call to action ("let's build it") — reads as the one
+    paragraph meant to land harder than the rest, same Primary Accent
+    every other real CTA on this site already uses */
+  font-weight: 500;
+}
+/* Real section headings — "each head piece... in the correct colour,"
+   direct request. Deliberately bigger than .about-float-title (the
+   page's own terminal-style breadcrumb H1): that H1 reads as chrome,
+   these read as the essay's own real structure, and need to look like
+   it at a glance while scrolling past them. */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.about-section-title {
+  color: var(--color-amber-bright);
+  font-size: clamp(1.5rem, 3.5dvw, 2.5rem);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  text-shadow: var(--text-halo);
+}
+.about-subsection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.about-subsection-title {
+  color: var(--color-amber-bright);
+  font-size: var(--fs-cta); /* one clear step down from
+    .about-section-title, one step up from body text — the real
+    third tier this essay's own structure needs (section > subsection
+    > paragraph), not just two */
+  font-weight: 600;
   text-shadow: var(--text-halo-small);
 }
 .about-float-meta {
@@ -2166,7 +2247,7 @@ body {
   outline-offset: var(--focus-outline-offset);
 }
 @media (prefers-reduced-motion: reduce) {
-  .about-float {
+  .about-essay {
     animation: none;
   }
 }

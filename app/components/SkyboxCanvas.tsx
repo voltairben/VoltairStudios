@@ -41,11 +41,14 @@ const SWITCH_FADE_MS = 220;
 
 /** The About page's floating 3D logo — direct request ("in the center
  *  of the skybox floating behind the about text"). Lives in this same
- *  scene/renderer rather than a second canvas: .about-page-content
- *  already centers its text over the open sky with no panel behind it
- *  (see globals.css), and .skybox-canvas already sits at z-index 0
- *  under everything — a world-space object here shows through exactly
- *  the same way, with zero new stacking/layout work. Loaded on demand
+ *  scene/renderer rather than a second canvas: .skybox-canvas is
+ *  position:fixed at z-index 0 under everything (see globals.css), so
+ *  a world-space object here shows through behind the page's real
+ *  content exactly the same way regardless of scroll position — /about
+ *  became a real scrolling page later (see globals.css's own About
+ *  page section), and this fixed canvas doesn't scroll with it, so the
+ *  logo stays visible behind whichever part of the essay is currently
+ *  on screen rather than only the first viewport. Loaded on demand
  *  (the file is ~6MB) rather than eagerly at mount — most visits never
  *  reach /about, and this canvas is shared by every route. */
 const LOGO_MODEL_URL = "/models/voltair-logo.glb";

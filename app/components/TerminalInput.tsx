@@ -7,7 +7,7 @@ import { useAudio } from "./audio-context";
 import { useCrt } from "./crt-context";
 import { useLang } from "./lang-context";
 import { t, type Lang } from "../data/i18n";
-import { PROJECTS } from "../data/projects";
+import { PROJECTS, getProject } from "../data/projects";
 import {
   PALETTES,
   PALETTE_PREVIEW_COLORS,
@@ -302,8 +302,23 @@ export default function TerminalInput() {
         break;
       }
       case "work":
-        pushLog(`→ ${t(lang, "terminal.projectsLabel")}: ${PROJECTS.map((p) => p.name).join(", ")}`);
-        focusFirstProject();
+        // Bare `work` keeps its existing behavior (list + focus the
+        // reel) unchanged; `work <slug>` is new — direct request to
+        // navigate straight to a case study from the command line, the
+        // same real router.push + view-transition pattern `about`
+        // already uses below, not a second, different navigation path.
+        if (arg) {
+          const project = getProject(arg);
+          if (project) {
+            pushLog(`→ /work/${project.slug}`);
+            router.push(`/work/${project.slug}`);
+          } else {
+            pushLog(`${t(lang, "terminal.projectNotFound")} ${arg}`);
+          }
+        } else {
+          pushLog(`→ ${t(lang, "terminal.projectsLabel")}: ${PROJECTS.map((p) => p.name).join(", ")}`);
+          focusFirstProject();
+        }
         break;
       case "--audio=on":
         setAudioEnabled(true);

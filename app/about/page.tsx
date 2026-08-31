@@ -5,45 +5,33 @@ import AboutContent from "./AboutContent";
 
 export const metadata: Metadata = { title: "About — Voltair Studio" };
 
-// Real, already-shipped copy only — reused verbatim from layout.tsx's
-// <meta description> and StatusBar's own availability line. PRODUCT.md
-// is explicit ("No copy, testimonials, or case studies exist — none
-// will be invented") and its one Positioning statement is itself
-// flagged "[Assumption, flagged for confirmation]", not fact — so a
-// "developer bio / skills / philosophy" page isn't written from
-// scratch here. This is the honest subset: the one paragraph of studio
-// positioning that's already public (search snippets, OG previews),
-// plus the two real status facts ChromeBar/StatusBar already show
-// elsewhere on the page. The EN copy lives in data/i18n.ts now (see
-// AboutContent.tsx) alongside its NL translation, not inline here.
-
-// A real route (see DESIGN.md for the modal-to-route history). Reuses
-// .page as-is for the outer shell — same zero-scroll 3-row grid
-// ("screen-locked") the homepage already uses, with ChromeBar/StatusBar
-// landing in the exact same top/bottom position via the same grid-row
-// rules, no new positioning scheme needed. .skybox-canvas lives in the
-// root layout (position: fixed, pointer-events: none — see layout.tsx),
-// so it's already rendering behind this route with zero extra wiring.
+// A real route (see DESIGN.md for the modal-to-route history, and the
+// zero-scroll-to-real-scroll history below). .skybox-canvas lives in
+// the root layout (position: fixed, pointer-events: none — see
+// layout.tsx), so it's already rendering behind this route with zero
+// extra wiring.
 //
-// Floating text, not a boxed panel — direct request: dropped the
-// "Terminal Glass" box (fill/blur/border) this shipped with initially
-// in favor of the exact technique .content already uses on the
-// homepage — text sitting directly on the open sky, legible via
-// --text-halo per glyph instead of a panel behind it. See globals.css.
+// Real scrolling now, not .page's zero-scroll 3-row grid — direct
+// request replaced the old one-paragraph "honest subset" placeholder
+// with the full "This Is Voltair" essay (see AboutContent.tsx /
+// data/about-content.ts), real user-authored content far too long to
+// fit one fixed viewport without either unreadable type or clipped
+// content. Same fixed-chrome/real-scroll-body shell /work/[slug]
+// already uses for its own real, long-form content (.scroll-page-chrome/
+// .scroll-page-footer — shared, not duplicated, see globals.css), not a
+// new pattern invented for this page.
 export default function AboutPage() {
   return (
-    <div className="page">
-      <ChromeBar />
-      <main className="about-page-content">
-        {/* Reads as a real command rather than a bare "×" — there's no
-            box left to hang a dismiss icon off of. Direct request
-            dropped the $ prefix this originally had (site-wide, not
-            just here — see DESIGN.md); "exit" alone still reads as a
-            command name, not decorative chrome — and stays untranslated
-            for the same reason (see AboutContent.tsx). */}
+    <>
+      <div className="scroll-page-chrome">
+        <ChromeBar />
+      </div>
+      <main className="about-page">
         <AboutContent />
       </main>
-      <StatusBar />
-    </div>
+      <div className="scroll-page-footer">
+        <StatusBar />
+      </div>
+    </>
   );
 }
