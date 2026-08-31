@@ -17,55 +17,68 @@ const CONTACT_EMAIL = "contact@voltairstudio.com";
 // established amber-bright-for-headings hierarchy (.about-section-title
 // bigger/bolder than .about-subsection-title, project names styled as
 // real links since they go to real case studies) rather than
-// flattening the essay into undifferentiated paragraphs.
+// flattening the essay into undifferentiated paragraphs. Laid out as a
+// real editorial 3-column spread (.about-grid), not one narrow
+// centered column, per a later direct request to fit the whole essay
+// in one fixed viewport again — see globals.css's own comment on
+// .about-page for that layout's full history.
 export default function AboutContent() {
   const { lang } = useLang();
   const c = ABOUT_CONTENT[lang];
 
   return (
-    <>
-      {/* Same real back-link affordance /work/[slug] already has at the
-          top of a long scrolling page — this page only had a bottom
-          "exit" before, which made sense for one short paragraph but
-          not for an essay this long. Reuses next-view-transitions' Link
-          for a real transition back, same as every other internal nav
-          on this site. */}
-      <Link href="/" className="about-back">
-        ← voltair_studio
-      </Link>
-
-      <div className="about-essay" role="region" aria-labelledby="about-essay-title">
-        <div className="about-float-header">
-          <h1 id="about-essay-title" className="about-float-title">
-            about --voltair_studio
-          </h1>
-        </div>
-
+    <div className="about-page-wrap" role="region" aria-labelledby="about-essay-title">
+      <div className="about-masthead">
+        {/* Was position:fixed (useful while this page still scrolled,
+            so the back link stayed reachable at any scroll position) —
+            now that the page is a fixed single viewport again, that's
+            no longer needed, and fixed positioning at a hardcoded top
+            offset was exactly what silently broke: tightening
+            .about-page's own top padding in this same round moved the
+            masthead up without moving this in step, so the two
+            overlapped (caught live, not assumed — a real screenshot
+            showed the actual overlap, not a hypothetical). Inline in
+            the masthead's own flex row, it can't drift out of sync
+            again regardless of future padding changes. */}
+        <Link href="/" className="about-back">
+          ← voltair_studio
+        </Link>
+        <h1 id="about-essay-title" className="about-float-title">
+          about --voltair_studio
+        </h1>
         <p className="about-kicker">{c.kicker}</p>
+      </div>
 
-        {c.lead.map((p, i) => (
-          <p key={i} className="about-paragraph">
-            {p}
-          </p>
-        ))}
-
-        <div className="about-float-meta">
-          <div className="about-float-meta-row">
-            <span className="about-float-meta-label">{t(lang, "about.status")}</span>
-            <span className="about-float-meta-value">{t(lang, "status.available")}</span>
-          </div>
-          <div className="about-float-meta-row">
-            <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
-              {CONTACT_EMAIL}
-            </a>
+      {/* Editorial 3-column spread: real content fits one viewport by
+          using the page's full width instead of one narrow centered
+          column — each column is a real, coherent block (not raw
+          multi-column text reflow, which would split paragraphs and
+          headings unpredictably mid-thought), matching how a real
+          magazine spread groups whole sections side by side rather
+          than free-flowing character-by-character. */}
+      <div className="about-grid">
+        <div className="about-col">
+          {c.lead.map((p, i) => (
+            <p key={i} className="about-paragraph">
+              {p}
+            </p>
+          ))}
+          <div className="about-float-meta">
+            <div className="about-float-meta-row">
+              <span className="about-float-meta-label">{t(lang, "about.status")}</span>
+              <span className="about-float-meta-value">{t(lang, "status.available")}</span>
+            </div>
+            <div className="about-float-meta-row">
+              <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
+                {CONTACT_EMAIL}
+              </a>
+            </div>
           </div>
         </div>
 
-        <section className="about-section" aria-labelledby="about-philosophy-title">
-          <h2 id="about-philosophy-title" className="about-section-title">
-            {c.philosophyTitle}
-          </h2>
+        <div className="about-col">
+          <h2 className="about-section-title">{c.philosophyTitle}</h2>
           <p className="about-paragraph">{c.philosophyIntro}</p>
           {c.subsections.map((s) => (
             <div key={s.title} className="about-subsection">
@@ -73,29 +86,25 @@ export default function AboutContent() {
               <p className="about-paragraph">{s.body}</p>
             </div>
           ))}
-        </section>
+        </div>
 
-        <section className="about-section" aria-labelledby="about-outro-title">
-          <h2 id="about-outro-title" className="about-section-title">
-            {c.outroTitle}
-          </h2>
+        <div className="about-col">
+          <h2 className="about-section-title">{c.outroTitle}</h2>
           {c.outroParagraphs.map((p, i) => (
             <p key={i} className="about-paragraph">
               {p}
             </p>
           ))}
           <p className="about-paragraph about-closing">{c.closing}</p>
-        </section>
-
-        {/* Reads as a real command rather than a bare "×" — there's no
-            box left to hang a dismiss icon off of. Stays untranslated,
-            same as every other command token on this site (see
-            data/i18n.ts's own header comment) — "exit" reads as a
-            command name, not decorative chrome, in either language. */}
-        <Link href="/" className="about-float-close">
-          exit
-        </Link>
+          {/* Reads as a real command rather than a bare "×" — there's
+              no box left to hang a dismiss icon off of. Stays
+              untranslated, same as every other command token on this
+              site (see data/i18n.ts's own header comment). */}
+          <Link href="/" className="about-float-close">
+            exit
+          </Link>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

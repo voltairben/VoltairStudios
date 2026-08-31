@@ -2068,34 +2068,126 @@ body {
 /* ==========================================================================
    About page (app/about/page.tsx) — §9
    A real route, not a modal (see DESIGN.md for the modal-to-route
-   history). Real scrolling now, not .page's zero-scroll grid — direct
-   request replaced the old one-paragraph placeholder with the full
-   "This Is Voltair" essay (data/about-content.ts), real user-authored
-   content too long for one fixed viewport. .about-page reuses the same
-   shape .case-study already established for real-scrolling content:
-   position:relative to beat the fixed skybox canvas's own stacking,
-   padding reserving space for the now-fixed .scroll-page-chrome/
-   -footer (see their own comment), a max-width column centered with
-   auto margins instead of flex-centering (centering doesn't mean
-   anything once content is taller than the viewport — the page just
-   starts at the top and scrolls, same as .case-study's own reasoning). */
+   history). Round-tripped on layout twice now: shipped zero-scroll
+   (short placeholder paragraph) → moved to real scrolling once the
+   full "This Is Voltair" essay replaced it (too long for one fixed
+   viewport at the time) → moved back to zero-scroll here, direct
+   request, once real scrolling itself was the thing to fix. The essay
+   didn't get shorter; what changed is how it's laid out — an editorial
+   3-column spread (.about-grid) uses the page's full width instead of
+   one narrow centered column, so the same real content needs
+   dramatically less height. position:relative still beats the fixed
+   skybox canvas's own stacking, same reason .case-study needs it;
+   padding still reserves space for the fixed .scroll-page-chrome/
+   -footer (shared with /work/[slug] — see their own comment), even
+   though this page's own content no longer scrolls past them. */
 .about-page {
   position: relative;
-  min-height: 100dvh;
-  padding: calc(var(--chrome-h) + var(--space-5)) var(--space-4)
-    calc(var(--status-h) + var(--space-5));
+  height: 100dvh;
+  overflow: hidden; /* the real fit comes from .about-grid's own sizing
+    below, not from this clipping anything in practice — kept as a
+    last-resort safety net, matching .page's own belt-and-suspenders
+    history, not the primary mechanism */
+  padding: calc(var(--chrome-h) + var(--space-2)) var(--space-4)
+    calc(var(--status-h) + var(--space-2));
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-1);
 }
-/* Real back-link, direct addition once this page started scrolling —
-   the old version only had a bottom "exit," fine for one paragraph but
-   not for an essay long enough to want a return path near the top too.
-   Same styling /work/[slug]'s own top-of-page back link already uses. */
+.about-masthead {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.about-grid {
+  flex: 1 1 auto;
+  min-height: 0; /* same flex-overflow fix .hero-row's own comment
+    documents at length — a flex child otherwise refuses to shrink
+    below its content's intrinsic height, which is exactly what this
+    grid needs to do to fit the remaining space under the masthead */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  overflow: hidden; /* same last-resort role as .about-page's own */
+}
+.about-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: 0;
+}
+@media (max-width: 980px) {
+  /* Real 3-column text below ~980px stops being 3 *readable* columns —
+     each one drops under a legible width. Two still works down to a
+     real small-tablet/large-phone width; the lead column (shortest
+     real content — no headings of its own) merges into the philosophy
+     column's slot instead of taking a whole column for itself, so the
+     remaining two columns can stay meaningfully wide rather than three
+     equally-cramped ones. */
+  .about-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .about-col:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 520px) {
+  /* True columns of body text don't work at phone width at all — even
+     two columns here would be reading through a straw. Stacks to one
+     column and leans on smaller type/tighter spacing (below) instead,
+     the same trade-off the brief's own mobile guidance already
+     anticipated ("gracefully stack... limit... or a specialized
+     compact view"). */
+  .about-grid {
+    /* Single column here, not 2D placement — flex:column instead of
+       grid, since grid's implicit-row auto-placement got involved in
+       the real bug below for no benefit this simple a stack actually
+       needs. */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5); /* real separation between stacked sections,
+      not just the grid's normal gap — the last line of one section and
+      the next section's heading otherwise sit close enough that
+      differently-colored, same-alignment text blurs together at a
+      glance, the same problem a plain list of paragraphs would have
+      without it */
+    overflow-y: auto; /* honest fallback, not silent clipping: if the
+      real content still doesn't fit this short a viewport even at the
+      smaller mobile scale below, a visitor can still reach all of it
+      by scrolling the grid itself rather than losing the tail end of
+      the essay outright — .about-page's own overflow:hidden keeps this
+      contained to just this region, not the whole page */
+  }
+  /* The actual bug, found only by comparing each .about-col's own
+     reported box height against the real position of its own last
+     child (a "the container disagrees with its own content" mismatch
+     that a screenshot alone reads as text overlapping, and a single
+     coarse overflow check doesn't catch either): flex items shrink by
+     default (flex-shrink: 1), so a flex column shorter than its 3
+     children's combined natural height was compressing each .about-col
+     below what its own text needs, while the text itself obviously
+     can't shrink — the boxes got smaller, the words didn't, so one
+     column's text visually spilled into the next column's territory.
+     flex-shrink: 0 forces every column to keep its real, full height;
+     the resulting genuine overflow is exactly what .about-grid's own
+     overflow-y:auto above is already there to handle honestly. */
+  .about-col {
+    flex-shrink: 0;
+  }
+}
+/* Real back-link. Was position:fixed while this page still scrolled
+   (kept it reachable at any scroll position); now the page is a fixed
+   single viewport again, so it lives inline in .about-masthead's own
+   flex row instead — fixed positioning at a hardcoded offset was
+   exactly what broke when the masthead's own padding changed later in
+   this same round (a real, caught-live overlap, not a hypothetical —
+   see AboutContent.tsx's own comment on this element). */
 .about-back {
-  position: fixed;
-  top: calc(var(--chrome-h) + var(--space-3));
-  left: var(--space-4);
-  z-index: 1;
+  flex-shrink: 0;
   color: var(--color-ui-muted);
   font-size: var(--fs-chrome);
   font-weight: 500;
@@ -2115,14 +2207,13 @@ body {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
-.about-essay {
+.about-page-wrap {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* left-aligned prose, matching .content —
-    centered paragraph text reads worse at this length */
-  gap: var(--space-4);
-  max-width: 60ch; /* readable line length for a real paragraph, not
-    the fixed 440px box width the panel version used */
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  min-height: 0; /* same flex-overflow fix as .about-grid — this is
+    the element .about-page's own height actually gets distributed to */
   width: 100%;
   animation: line-in 300ms cubic-bezier(0.16, 1, 0.3, 1) both; /* same
     entrance every other floating text element in .content uses */
@@ -2146,8 +2237,20 @@ body {
 }
 .about-paragraph {
   color: var(--color-cursor-flash);
-  font-size: var(--fs-position);
-  line-height: 1.6;
+  /* dvmin, not dvh alone — checked live and a pure-dvh size badly
+     misjudged tall-but-narrow viewports (tablets: generous height, not
+     much width per column), producing text too large for the actual
+     column width available and overflowing there even though the
+     viewport itself was plenty tall. dvmin already tracks whichever
+     dimension is actually tighter, the same reasoning this system's
+     other --fs-* tokens already use — this page just needs a smaller
+     ceiling/floor than those, since it's also fitting inside a shared
+     multi-column grid, not one full-width reading column. */
+  font-size: clamp(0.75rem, 1.7dvmin, 1.05rem);
+  line-height: 1.3; /* tighter than prose-scale 1.6 on purpose — real
+    editorial column-set text runs tighter than a single wide reading
+    column does, and every line saved here is real height given back
+    to fitting the whole essay in one viewport */
   text-shadow: var(--text-halo-small);
 }
 .about-closing {
@@ -2158,18 +2261,16 @@ body {
   font-weight: 500;
 }
 /* Real section headings — "each head piece... in the correct colour,"
-   direct request. Deliberately bigger than .about-float-title (the
-   page's own terminal-style breadcrumb H1): that H1 reads as chrome,
-   these read as the essay's own real structure, and need to look like
-   it at a glance while scrolling past them. */
-.about-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
+   direct request. Still bigger than .about-float-title (the page's
+   own terminal-style breadcrumb H1 reads as chrome; these read as the
+   essay's own real structure), but sized in dvh, not dvw, and much
+   smaller than the old scrolling version's 2.5rem ceiling — a heading
+   this size fit fine when it could take a whole viewport's height to
+   itself; competing with two other columns for one shared viewport, it
+   can't spend that much height on a single line of text. */
 .about-section-title {
   color: var(--color-amber-bright);
-  font-size: clamp(1.5rem, 3.5dvw, 2.5rem);
+  font-size: clamp(1rem, 2.6dvmin, 1.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
   text-shadow: var(--text-halo);
@@ -2181,8 +2282,8 @@ body {
 }
 .about-subsection-title {
   color: var(--color-amber-bright);
-  font-size: var(--fs-cta); /* one clear step down from
-    .about-section-title, one step up from body text — the real
+  font-size: clamp(0.8125rem, 2dvmin, 1.1rem); /* one clear step down
+    from .about-section-title, one step up from body text — the real
     third tier this essay's own structure needs (section > subsection
     > paragraph), not just two */
   font-weight: 600;
@@ -2227,14 +2328,21 @@ body {
 }
 .about-float-close {
   color: var(--color-amber-bright);
-  font-size: var(--fs-position);
+  /* Was --fs-position (the old scrolling page's larger prose scale,
+     left over from before this page needed to fit a fixed height) —
+     matched to .about-paragraph's own smaller dvmin-based scale
+     instead, and its margin trimmed too; on the tightest real
+     viewports this element was the last thing in its column and the
+     one most likely to end up clipped below the fold if it ran any
+     bigger than the body text next to it. */
+  font-size: clamp(0.75rem, 1.7dvmin, 1.05rem);
   font-weight: 500;
   text-decoration: underline;
   text-decoration-color: var(--color-underline-rest);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
   text-shadow: var(--text-halo-small);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   transition: color 120ms ease, text-decoration-color 120ms ease;
 }
 .about-float-close:hover,
