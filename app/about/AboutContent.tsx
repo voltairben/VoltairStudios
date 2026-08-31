@@ -66,7 +66,7 @@ export default function AboutContent() {
               Philosophy"/"The Human Outro" for free, since all three
               are the same grid row. */}
           <h1 id="about-essay-title" className="about-float-title">
-            about --voltair_studio
+            About --voltair_studio
           </h1>
           <p className="about-kicker">{c.kicker}</p>
           {c.lead.map((p, i) => (

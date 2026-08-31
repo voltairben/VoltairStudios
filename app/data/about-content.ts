@@ -1,9 +1,10 @@
 // Real, user-authored content — the full "This Is Voltair" essay,
 // dropped in as a .txt file (This Is Voltair/This Is Voltair by
 // Bennie.txt) with a direct request to put it on the About page. Light
-// copy-editing only (a few typos/apostrophes, one added dash for a
-// pause the surrounding sentences already use that shape for) — the
-// actual content, structure, and voice are the user's own, not
+// copy-editing only — a few typos/apostrophes, and (direct follow-up
+// request) every em dash rewritten into a comma, colon, or a plain
+// sentence split, whichever kept the original meaning most intact —
+// the actual content, structure, and voice are the user's own, not
 // invented or rewritten here. Structured (not one long string) so
 // AboutContent.tsx can give each real heading level its own color per
 // direct request ("each head piece of the text in the correct
@@ -29,10 +30,10 @@ export type AboutContentShape = {
 
 export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
   en: {
-    kicker: "This Is Voltair — by Bennie",
+    kicker: "This Is Voltair, by Bennie",
     lead: [
-      "I run Voltair Studios — a creative space where I build custom things for the web. To put it simply: I make websites that feel like real, physical objects.",
-      "I don't do standard, boring, corporate templates. You know the ones — where every company looks exactly the same, with the same dry text, flat grids, and lifeless layouts. I think the internet should be way more fun, interactive, and alive than that.",
+      "I run Voltair Studios, a creative space where I build custom things for the web. To put it simply: I make websites that feel like real, physical objects.",
+      "I don't do standard, boring, corporate templates. You know the ones: where every company looks exactly the same, with the same dry text, flat grids, and lifeless layouts. I think the internet should be way more fun, interactive, and alive than that.",
       "I build digital playrooms. Spaces where you can click, drag, explore, and actually feel like you're interacting with something solid and tactile under your fingertips.",
     ],
     philosophyTitle: "My Philosophy: Craft Over Copy-Pasting",
@@ -49,23 +50,23 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
       },
       {
         title: "Snappy Momentum",
-        body: "I am obsessed with movement and pacing. A great website should feel fluid, fast, and responsive — like a physical object in motion. I bring that same snappy, energetic momentum into every interaction and line of code I write.",
+        body: "I am obsessed with movement and pacing. A great website should feel fluid, fast, and responsive, like a physical object in motion. I bring that same snappy, energetic momentum into every interaction and line of code I write.",
       },
     ],
     outroTitle: "The Human Outro",
     outroParagraphs: [
-      "When I'm not coding or tweaking pixels, you can usually find me in the gym — I like to work out a lot and live a healthy lifestyle. I like building Lego and walking in nature. I'm also a gamer who likes MMO games, which I've spent a long time playing.",
+      "When I'm not coding or tweaking pixels, you can usually find me in the gym. I like to work out a lot and live a healthy lifestyle. I like building Lego and walking in nature. I'm also a gamer who likes MMO games, which I've spent a long time playing.",
       "My love for building sites and becoming a web developer comes from the creativity it uses and the freedom you have building and designing them. It's honestly the most fun I've had in years.",
-      "At the end of the day, I built this space because I got bored of seeing the same copy-paste websites everywhere. Most of the internet looks exactly the same now, and I wanted a place where I actually enjoy clicking around. This is basically my personal digital workshop — it has its quirks, and I'm constantly tweaking things, but it's mine.",
+      "At the end of the day, I built this space because I got bored of seeing the same copy-paste websites everywhere. Most of the internet looks exactly the same now, and I wanted a place where I actually enjoy clicking around. This is basically my personal digital workshop. It has its quirks, and I'm constantly tweaking things, but it's mine.",
     ],
     closing:
       "So go ahead: mess around with the terminal, switch up the colors, or see what you can break. And if you have an idea for something that actually stands out from the crowd, let's build it.",
   },
   nl: {
-    kicker: "Dit Is Voltair — door Bennie",
+    kicker: "Dit Is Voltair, door Bennie",
     lead: [
-      "Ik run Voltair Studios — een creatieve ruimte waar ik custom dingen bouw voor het web. Simpel gezegd: ik maak websites die aanvoelen als echte, fysieke objecten.",
-      "Ik doe niet aan standaard, saaie, corporate templates. Je kent ze wel — waar elk bedrijf er precies hetzelfde uitziet, met dezelfde droge tekst, platte grids en levenloze layouts. Ik vind dat het internet veel leuker, interactiever en levendiger zou moeten zijn dan dat.",
+      "Ik run Voltair Studios, een creatieve ruimte waar ik custom dingen bouw voor het web. Simpel gezegd: ik maak websites die aanvoelen als echte, fysieke objecten.",
+      "Ik doe niet aan standaard, saaie, corporate templates. Je kent ze wel: waar elk bedrijf er precies hetzelfde uitziet, met dezelfde droge tekst, platte grids en levenloze layouts. Ik vind dat het internet veel leuker, interactiever en levendiger zou moeten zijn dan dat.",
       "Ik bouw digitale speelkamers. Ruimtes waar je kunt klikken, slepen, verkennen, en echt het gevoel hebt dat je met iets solides en tastbaars onder je vingers werkt.",
     ],
     philosophyTitle: "Mijn Filosofie: Vakmanschap Boven Copy-Pasten",
@@ -82,14 +83,14 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
       },
       {
         title: "Snelheid en Momentum",
-        body: "Ik ben geobsedeerd door beweging en tempo. Een goede website moet vloeiend, snel en responsief aanvoelen — als een fysiek object in beweging. Ik breng diezelfde strakke, energieke momentum in elke interactie en elke regel code die ik schrijf.",
+        body: "Ik ben geobsedeerd door beweging en tempo. Een goede website moet vloeiend, snel en responsief aanvoelen, als een fysiek object in beweging. Ik breng diezelfde strakke, energieke momentum in elke interactie en elke regel code die ik schrijf.",
       },
     ],
     outroTitle: "Het Menselijke Verhaal",
     outroParagraphs: [
-      "Als ik niet aan het coderen ben of pixels aan het bijschaven ben, vind je me meestal in de sportschool — ik train graag veel en leef een gezonde levensstijl. Ik bouw graag met Lego en wandel graag in de natuur. Ik ben ook een gamer die van MMO's houdt, waar ik al veel tijd in heb gestoken.",
+      "Als ik niet aan het coderen ben of pixels aan het bijschaven ben, vind je me meestal in de sportschool. Ik train graag veel en leef een gezonde levensstijl. Ik bouw graag met Lego en wandel graag in de natuur. Ik ben ook een gamer die van MMO's houdt, waar ik al veel tijd in heb gestoken.",
       "Mijn liefde voor het bouwen van sites en het worden van webontwikkelaar komt voort uit de creativiteit die het vraagt en de vrijheid die je hebt bij het bouwen en ontwerpen ervan. Het is eerlijk gezegd het leukste wat ik in jaren heb gedaan.",
-      "Uiteindelijk heb ik deze ruimte gebouwd omdat ik het beu was om overal dezelfde copy-paste websites te zien. Het grootste deel van het internet ziet er nu precies hetzelfde uit, en ik wilde een plek waar ik het zelf leuk vind om rond te klikken. Dit is in feite mijn persoonlijke digitale werkplaats — het heeft zijn eigenaardigheden en ik sleutel er constant aan, maar het is van mij.",
+      "Uiteindelijk heb ik deze ruimte gebouwd omdat ik het beu was om overal dezelfde copy-paste websites te zien. Het grootste deel van het internet ziet er nu precies hetzelfde uit, en ik wilde een plek waar ik het zelf leuk vind om rond te klikken. Dit is in feite mijn persoonlijke digitale werkplaats. Het heeft zijn eigenaardigheden en ik sleutel er constant aan, maar het is van mij.",
     ],
     closing:
       "Dus ga je gang: speel met de terminal, wissel van kleuren, of kijk wat je kapot kunt krijgen. En als je een idee hebt voor iets dat écht opvalt tussen de massa, laten we het bouwen.",
