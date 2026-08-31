@@ -1,0 +1,11 @@
+# CodeRabbit config — https://docs.coderabbit.ai/reference/yaml-template
+#
+# Auto-review disabled on direct request: the repo owner reviews PRs
+# himself and wants to choose when CodeRabbit runs, not have it comment
+# on every PR automatically. Trigger a review manually from a PR
+# comment when wanted:
+#   @coderabbitai review       — incremental review of new changes only
+#   @coderabbitai full review  — full review of the whole PR from scratch
+reviews:
+  auto_review:
+    enabled: false
