@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { useSkybox } from "./skybox-context";
@@ -52,6 +53,15 @@ const SWITCH_FADE_MS = 220;
  *  (the file is ~6MB) rather than eagerly at mount — most visits never
  *  reach /about, and this canvas is shared by every route. */
 const LOGO_MODEL_URL = "/models/voltair-logo.glb";
+// Decoder for Draco-compressed geometry — the logo model is Draco-
+// compressed (a direct request to shrink its ~70MB source export; see
+// DESIGN.md), and GLTFLoader can't read Draco meshes at all without
+// this attached — not a quality/perf tweak, a hard requirement, or the
+// load fails outright. Decoder files copied from three's own bundled
+// copy (node_modules/three/examples/jsm/libs/draco/) into public/draco/
+// so they're served from this app's own origin rather than three's
+// default of fetching them from a Google-hosted CDN at runtime.
+const DRACO_DECODER_PATH = "/draco/";
 const LOGO_DISTANCE = 30; // world units in front of the camera (well
   // inside the 500-radius sky sphere, comfortably past the near clip plane)
 const LOGO_TARGET_RADIUS = 18; // half-extent after normalizing the
@@ -228,6 +238,7 @@ export default function SkyboxCanvas() {
   const sphereRef = useRef<THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial> | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const logoGroupRef = useRef<THREE.Group | null>(null);
+  const dracoLoaderRef = useRef<DRACOLoader | null>(null);
   // Guards against loading the model twice for the *same* scene — reset
   // to false right when a scene is (re)created below, not in cleanup,
   // so a Strict Mode double-invoke (which builds a whole new scene) still
@@ -251,6 +262,9 @@ export default function SkyboxCanvas() {
     sceneRef.current = scene;
     logoGroupRef.current = null;
     logoRequestedRef.current = false; // fresh scene, fresh load-once guard
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath(DRACO_DECODER_PATH);
+    dracoLoaderRef.current = dracoLoader;
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -439,10 +453,12 @@ export default function SkyboxCanvas() {
       if (logoGroupRef.current) disposeObject3D(logoGroupRef.current);
       envRenderTarget.dispose();
       pmremGenerator.dispose();
+      dracoLoader.dispose(); // frees the decoder's worker threads/WASM instance
       renderer.dispose();
       sphereRef.current = null;
       sceneRef.current = null;
       logoGroupRef.current = null;
+      dracoLoaderRef.current = null;
     };
   }, []);
 
@@ -462,7 +478,9 @@ export default function SkyboxCanvas() {
     if (pathname !== "/about" || logoRequestedRef.current) return;
     logoRequestedRef.current = true;
 
-    new GLTFLoader().load(
+    const loader = new GLTFLoader();
+    if (dracoLoaderRef.current) loader.setDRACOLoader(dracoLoaderRef.current);
+    loader.load(
       LOGO_MODEL_URL,
       (gltf) => {
         // The scene this load was for may already be gone by the time a
