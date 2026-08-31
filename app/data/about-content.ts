@@ -54,7 +54,7 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
     ],
     outroTitle: "The Human Outro",
     outroParagraphs: [
-      "When I'm not coding or tweaking pixels, you can usually find me in the gym — I like to work out a lot and live a healthy lifestyle. I like building Legos and walking in nature. I'm also a gamer who likes MMO games, which I've spent a long time playing.",
+      "When I'm not coding or tweaking pixels, you can usually find me in the gym — I like to work out a lot and live a healthy lifestyle. I like building Lego and walking in nature. I'm also a gamer who likes MMO games, which I've spent a long time playing.",
       "My love for building sites and becoming a web developer comes from the creativity it uses and the freedom you have building and designing them. It's honestly the most fun I've had in years.",
       "At the end of the day, I built this space because I got bored of seeing the same copy-paste websites everywhere. Most of the internet looks exactly the same now, and I wanted a place where I actually enjoy clicking around. This is basically my personal digital workshop — it has its quirks, and I'm constantly tweaking things, but it's mine.",
     ],
