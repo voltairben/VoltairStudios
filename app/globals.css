@@ -2109,6 +2109,12 @@ body {
     grid needs to do to fit the remaining space under the masthead */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  align-content: center; /* direct request — the grid's one content
+    row is auto-height, so on viewports where the columns don't need
+    the whole available height (most of them, now that the essay
+    actually fits), align-content's default ("normal", which behaves
+    like start here) was leaving all the real leftover space stranded
+    below the columns instead of splitting it evenly above and below */
   gap: var(--space-3);
   width: 100%;
   overflow: hidden; /* same last-resort role as .about-page's own */
@@ -2149,6 +2155,10 @@ body {
        needs. */
     display: flex;
     flex-direction: column;
+    justify-content: center; /* same centering as the wider grid layout
+      above — a no-op whenever this fallback's own content overflows
+      into its scroll (nothing left to center into), but matches when
+      it doesn't */
     gap: var(--space-5); /* real separation between stacked sections,
       not just the grid's normal gap — the last line of one section and
       the next section's heading otherwise sit close enough that
