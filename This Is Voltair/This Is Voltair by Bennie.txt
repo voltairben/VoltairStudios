@@ -1,0 +1,29 @@
+This Is Voltair by Bennie:
+
+I run Voltair Studios—which is a creative space where I build custom things for the web.
+To put it simply: I make websites that feel like real, physical objects.
+I don’t do standard, boring, corporate templates. You know the ones—where every company looks exactly the same, with the same dry text, flat grids, and lifeless layouts. I think the internet should be way more fun, interactive, and alive than that.
+I build digital playrooms. Spaces where you can click, drag, explore, and actually feel like you’re interacting with something solid and tactile under your fingertips.
+My Philosophy: Craft Over Copy-Pasting
+I have a deep love for old-school terminal screens, clean typography, and snappy movements. If something is on the screen, it needs to have a purpose. No useless clutter.
+
+The Power of Simplicity: I lock my designs into a single, clean font. It forces me to make the layout itself beautiful, rather than hiding behind flashy, unnecessary decorations.
+    
+A Web You Can Feel: By using smooth animations and subtle sound effects (like the physical click of a keyboard), I want my websites to feel like premium, hand-crafted hardware.
+
+Snappy Momentum: I am obsessed with movement and pacing. A great website should feel fluid, fast, and responsive—like a physical object in motion. I bring that same snappy, energetic momentum into every interaction and line of code I write.
+   
+What I’ve Been Building Lately:
+
+SOL_DNB // terminal club (soldnb.com) This is my ultimate passion project. It’s an interactive, terminal-style online cockpit built for drum & bass lovers. It connects live stream signals, lets visitors request music, and even has a mini built-in synthesizer you can play with. (Finished)
+    
+KrachtigFit A premium, highly detailed case study designed to show how a fitness brand can tell its story through clean layouts and smooth, interactive galleries.
+
+The Human Outro:
+
+When I’m not coding or tweaking pixels, you can usually find me in the gym I like to work out a lot and live a healthy lifestyle. I like building Lego's and walking in nature. I'm also a gamer who likes MMO games which ive spent a long time playing. 
+
+My love for building sites and becoming a web developer comes from the creativity it uses and the freedom you have building sites and designing them. Its honestly the most fun ive had in years.
+
+At the end of the day, I built this space because I got bored of seeing the same copy-paste websites everywhere. Most of the internet looks exactly the same now, and I wanted a place where I actually enjoy clicking around. This is basically my personal digital workshop—it has its quirks, and I'm constantly tweaking things, but it's mine.
+So go ahead: mess around with the terminal, switch up the colors, or see what you can break. And if you have an idea for something that actually stands out from the crowd, let’s build it.

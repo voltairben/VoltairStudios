@@ -7,7 +7,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type WheelEvent as ReactWheelEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
@@ -182,11 +181,29 @@ export default function ProjectReel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleWheel = (e: ReactWheelEvent<HTMLElement>) => {
-    e.preventDefault();
-    offsetRef.current -= e.deltaY;
-    wrapAndApply();
-  };
+  // Native listener, not React's onWheel — real console warning, caught
+  // live: modern React registers its own wheel listener as passive by
+  // default (matching the browser's own default for scroll-performance
+  // reasons), so a plain onWheel handler's preventDefault() is silently
+  // ignored ("Ignoring 'preventDefault()' call on event of type 'wheel'
+  // from a listener registered as passive"). The manual wheel-to-scroll
+  // interaction still worked regardless — .page's own overflow:hidden
+  // was already backstopping any leaked default page-scroll — but a
+  // known, real console warning with a known fix isn't worth leaving
+  // there just because nothing visibly broke. { passive: false } here
+  // is what actually lets preventDefault take effect.
+  useEffect(() => {
+    const reel = reelRef.current;
+    if (!reel) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      offsetRef.current -= e.deltaY;
+      wrapAndApply();
+    };
+    reel.addEventListener("wheel", onWheel, { passive: false });
+    return () => reel.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Drag-threshold, not an immediate capture-on-down: a real link sits
   // under every pixel of this reel, and calling setPointerCapture()
@@ -232,7 +249,6 @@ export default function ProjectReel() {
       role="region"
       aria-label="Project previews"
       ref={reelRef}
-      onWheel={handleWheel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endDrag}
@@ -277,6 +293,22 @@ export default function ProjectReel() {
                 fill
                 sizes="380px"
                 className="project-reel-item-image"
+                // Real Next.js warning, caught live: the reel mounts
+                // scrolled to copy index 1 (see the mount effect's own
+                // "start in the middle copy" comment), so a tile's
+                // image there — not copy 0 — is what's actually visible
+                // (and became the page's detected LCP element) at load.
+                // Scoped to just that one real copy, not every
+                // REPEAT_COUNT duplicate: the other 5 sets never paint
+                // on load, so eagerly prioritizing their images too
+                // would just be wasted bandwidth for no LCP benefit.
+                // `priority` itself is deprecated as of Next.js 16.0.0 —
+                // caught by CodeRabbit's review, verified against this
+                // project's own installed docs (not assumed, per
+                // AGENTS.md's own warning that this isn't the Next.js a
+                // model would know from training): `preload` is its
+                // direct, same-behavior successor, not a different prop.
+                preload={Math.floor(i / PROJECTS.length) === 1}
               />
             )}
             {project.image && <span className="project-reel-item-scrim" aria-hidden="true" />}

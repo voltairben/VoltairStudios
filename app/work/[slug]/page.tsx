@@ -7,6 +7,7 @@ import EstrelaCardViewer from "../../components/EstrelaCardViewer";
 import ChromeBar from "../../components/ChromeBar";
 import StatusBar from "../../components/StatusBar";
 import T from "../../components/T";
+import Localized from "../../components/Localized";
 
 export function generateStaticParams() {
   return PROJECTS.map((p) => ({ slug: p.slug }));
@@ -50,7 +51,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           This also replaces the one-off fixed skybox-only button from
           the previous round: StatusBar already carries that switcher,
           so a second, separate control would've just duplicated it. */}
-      <div className="case-study-chrome">
+      <div className="scroll-page-chrome">
         <ChromeBar />
       </div>
       <main className="case-study">
@@ -70,7 +71,9 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               {project.name}
             </h1>
             {project.description ? (
-              <p className="case-study-body">{project.description}</p>
+              <p className="case-study-body">
+                <Localized en={project.description.en} nl={project.description.nl} />
+              </p>
             ) : !project.url ? (
               <p className="case-study-body">
                 <T k="work.inProgress" />
@@ -174,7 +177,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           </div>
         </div>
       </main>
-      <div className="case-study-footer">
+      <div className="scroll-page-footer">
         <StatusBar />
       </div>
     </>

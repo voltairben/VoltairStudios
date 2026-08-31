@@ -43,10 +43,10 @@ const DICT = {
     nl: "De geëngineerde architectuur achter de esthetiek.",
   },
 
-  "about.body": {
-    en: "Voltair Studio is a small, senior web-dev team building MVP and launch websites for early-stage startup founders — brand-true UI, a production Next.js front-end, live in days.",
-    nl: "Voltair Studio is een klein, senior webdev-team dat MVP- en launch-websites bouwt voor early-stage startupoprichters — merkgetrouwe UI, een productieklare Next.js front-end, live binnen dagen.",
-  },
+  // "about.body" removed — the About page's short placeholder paragraph
+  // was replaced wholesale by the real "This Is Voltair" essay (see
+  // data/about-content.ts), which is structured content, not a single
+  // shared UI string, so it doesn't live in this dictionary either.
   "about.status": { en: "status", nl: "status" },
   "about.contact": { en: "contact", nl: "contact" },
 
@@ -74,6 +74,10 @@ const DICT = {
   "terminal.paletteLabel": { en: "palette", nl: "palet" },
   "terminal.invalidPalette": { en: "invalid palette. try:", nl: "ongeldig palet. probeer:" },
   "terminal.projectsLabel": { en: "projects", nl: "projecten" },
+  "terminal.projectNotFound": {
+    en: "no project found for:",
+    nl: "geen project gevonden voor:",
+  },
   "terminal.contactCopied": {
     en: "copied — opening mail client",
     nl: "gekopieerd — mailclient wordt geopend",
