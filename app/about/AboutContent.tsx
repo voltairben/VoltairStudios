@@ -39,14 +39,14 @@ export default function AboutContent() {
             overlapped (caught live, not assumed — a real screenshot
             showed the actual overlap, not a hypothetical). Inline in
             the masthead's own flex row, it can't drift out of sync
-            again regardless of future padding changes. */}
+            again regardless of future padding changes. Just the back
+            link now — the H1/kicker moved into the left column below,
+            direct request, so they sit at the same height as the other
+            two columns' own real headings instead of in a separate row
+            above the whole grid. */}
         <Link href="/" className="about-back">
           ← voltair_studio
         </Link>
-        <h1 id="about-essay-title" className="about-float-title">
-          about --voltair_studio
-        </h1>
-        <p className="about-kicker">{c.kicker}</p>
       </div>
 
       {/* Editorial 3-column spread: real content fits one viewport by
@@ -58,6 +58,17 @@ export default function AboutContent() {
           than free-flowing character-by-character. */}
       <div className="about-grid">
         <div className="about-col">
+          {/* The page's own H1 + byline, direct request moved here
+              from the separate masthead row above — column 1 had no
+              heading of its own before, unlike columns 2/3's real
+              section titles, so this doubles as that column's own
+              heading and lines up at the same height as "My
+              Philosophy"/"The Human Outro" for free, since all three
+              are the same grid row. */}
+          <h1 id="about-essay-title" className="about-float-title">
+            about --voltair_studio
+          </h1>
+          <p className="about-kicker">{c.kicker}</p>
           {c.lead.map((p, i) => (
             <p key={i} className="about-paragraph">
               {p}
