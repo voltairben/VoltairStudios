@@ -2301,9 +2301,7 @@ body {
   font-size: clamp(1rem, 2.6dvmin, 1.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
-  text-shadow: none; /* direct request — no dark halo behind the
-    persimmon (amber-bright) text on this page; every other .about-*
-    rule below sharing that color drops it the same way */
+  text-shadow: var(--text-halo);
 }
 /* Byline, not a heading — direct request's own text opens with "This
    Is Voltair — by Bennie"; sits inline behind the page's own
@@ -2347,8 +2345,6 @@ body {
     paragraph meant to land harder than the rest, same Primary Accent
     every other real CTA on this site already uses */
   font-weight: 500;
-  text-shadow: none; /* overrides .about-paragraph's own halo — direct
-    request, no dark shadow behind this page's persimmon text */
 }
 /* Real section headings — "each head piece... in the correct colour,"
    direct request. .about-float-title now matches this exactly (see its
@@ -2363,7 +2359,7 @@ body {
   font-size: clamp(1rem, 2.6dvmin, 1.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
-  text-shadow: none; /* direct request, see .about-float-title */
+  text-shadow: var(--text-halo);
 }
 .about-subsection-title {
   color: var(--color-amber-bright);
@@ -2378,7 +2374,7 @@ body {
     line heading, no reason to spend more height than the tightened
     body/heading scale around it now does */
   font-weight: 600;
-  text-shadow: none; /* direct request, see .about-float-title */
+  text-shadow: var(--text-halo-small);
 }
 .about-float-meta {
   display: flex;
@@ -2413,7 +2409,7 @@ body {
   text-decoration-color: var(--color-underline-rest);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
-  text-shadow: none; /* direct request, see .about-float-title */
+  text-shadow: var(--text-halo-small);
   transition: color 120ms ease, text-decoration-color 120ms ease;
 }
 .about-float-meta-link:hover,
@@ -2440,7 +2436,7 @@ body {
   text-decoration-color: var(--color-underline-rest);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
-  text-shadow: none; /* direct request, see .about-float-title */
+  text-shadow: var(--text-halo-small);
   margin-top: var(--space-1);
   transition: color 120ms ease, text-decoration-color 120ms ease;
 }
