@@ -85,8 +85,8 @@ ol {
      structure (tight ring, soft glow, slight drop), radii roughly
      quartered so they stay inside a single glyph's own footprint. */
   --text-halo-small: 0 0 1px var(--color-pane-bg), 0 0 1px var(--color-pane-bg),
-    0 0 2px rgba(34, 40, 49, 0.85), 0 0 4px rgba(34, 40, 49, 0.65),
-    0 1px 1px rgba(34, 40, 49, 0.8);
+    0 0 2px rgba(34, 40, 49, 0.95), 0 0 4px rgba(34, 40, 49, 0.85),
+    0 1px 1px rgba(34, 40, 49, 0.9);
   /* Legibility halo for background-clip:text gradient fills, as a
      filter instead of text-shadow. text-shadow on a gradient-clipped
      element paints from the PRE-clip glyph shape, which — even at
