@@ -2144,6 +2144,20 @@ body {
     the sizes that were clipping, live-verified — width has slack */
   column-gap: var(--space-3);
   width: 100%;
+  margin: -5px; /* paired with the padding below — net zero for layout
+    (border-box: padding eats inward exactly what negative margin
+    gives outward), but overflow:hidden clips at the padding edge, so
+    this moves that clip boundary 5px further out on every side */
+  padding: 5px; /* direct report, live-verified: the "A" in "About
+    --voltair_studio" sits flush against column 1's left edge (the
+    very first glyph of the page, nothing to its left), so its own
+    --text-halo-small blur (up to 4px) was getting clipped by this
+    grid's overflow:hidden right at the glyph instead of ringing it
+    the way every other letter's halo (with a neighbor's halo to
+    blend into) reads fine. Same clipping hit its top edge at tighter
+    viewports (1024x768: ~3.7px of buffer above row 1, less than the
+    halo's own 4px reach). 5px covers it on every edge without costing
+    real content room, thanks to the margin above. */
   overflow: hidden; /* same last-resort role as .about-page's own */
 }
 .about-col {
