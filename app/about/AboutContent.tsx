@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { Link } from "next-view-transitions";
 import { useLang } from "../components/lang-context";
 import { t } from "../data/i18n";
@@ -56,6 +57,16 @@ export default function AboutContent() {
           headings unpredictably mid-thought), matching how a real
           magazine spread groups whole sections side by side rather
           than free-flowing character-by-character. */}
+      {/* Explicit grid-row on every item below, direct request: "About
+          --voltair_studio" on My Philosophy's line, the first lead
+          paragraph on the intro's line, "I don't do standard" on "I
+          lock my designs"'s line, "I build digital playrooms" on "By
+          using smooth animations"'s line, and so on. Column 2's own h3
+          subsection titles don't have a column-1/3 counterpart, so each
+          gets a row to itself between the body paragraphs that do —
+          see the row map in globals.css's .about-grid comment. Lead
+          paragraphs and outro paragraphs both land on row 2+i*2 so
+          index i always shares a line whether it's column 1 or 3. */}
       <div className="about-grid">
         <div className="about-col">
           {/* The page's own H1 + byline, direct request moved here
@@ -65,58 +76,78 @@ export default function AboutContent() {
               heading. Wrapped with the kicker into .about-heading-block
               (see globals.css) so the pair counts as one row-1 item in
               the 3-column subgrid and lines up with "My Philosophy" /
-              "The Human Outro" on the same line, direct request. */}
-          <div className="about-heading-block">
+              "The Human Outro" on the same line, direct request. Kicker
+              now sits inline behind the H1 (same line), not stacked
+              below it — also a direct request. */}
+          <div className="about-heading-block" style={{ gridRow: 1 }}>
             <h1 id="about-essay-title" className="about-float-title">
               About --voltair_studio
             </h1>
             <p className="about-kicker">{c.kicker}</p>
           </div>
           {c.lead.map((p, i) => (
-            <p key={i} className="about-paragraph">
+            <p key={i} className="about-paragraph" style={{ gridRow: 2 + i * 2 }}>
               {p}
             </p>
           ))}
-          <div className="about-float-meta">
-            <div className="about-float-meta-row">
-              <span className="about-float-meta-label">{t(lang, "about.status")}</span>
-              <span className="about-float-meta-value">{t(lang, "status.available")}</span>
-            </div>
-            <div className="about-float-meta-row">
-              <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
-                {CONTACT_EMAIL}
-              </a>
-            </div>
-          </div>
         </div>
 
         <div className="about-col">
-          <h2 className="about-section-title">{c.philosophyTitle}</h2>
-          <p className="about-paragraph">{c.philosophyIntro}</p>
-          {c.subsections.map((s) => (
-            <div key={s.title} className="about-subsection">
-              <h3 className="about-subsection-title">{s.title}</h3>
-              <p className="about-paragraph">{s.body}</p>
-            </div>
+          <h2 className="about-section-title" style={{ gridRow: 1 }}>
+            {c.philosophyTitle}
+          </h2>
+          <p className="about-paragraph" style={{ gridRow: 2 }}>
+            {c.philosophyIntro}
+          </p>
+          {c.subsections.map((s, i) => (
+            <Fragment key={s.title}>
+              <h3 className="about-subsection-title" style={{ gridRow: 3 + i * 2 }}>
+                {s.title}
+              </h3>
+              <p className="about-paragraph" style={{ gridRow: 4 + i * 2 }}>
+                {s.body}
+              </p>
+            </Fragment>
           ))}
         </div>
 
         <div className="about-col">
-          <h2 className="about-section-title">{c.outroTitle}</h2>
+          <h2 className="about-section-title" style={{ gridRow: 1 }}>
+            {c.outroTitle}
+          </h2>
           {c.outroParagraphs.map((p, i) => (
-            <p key={i} className="about-paragraph">
+            <p key={i} className="about-paragraph" style={{ gridRow: 2 + i * 2 }}>
               {p}
             </p>
           ))}
-          <p className="about-paragraph about-closing">{c.closing}</p>
+          <p className="about-paragraph about-closing" style={{ gridRow: 8 }}>
+            {c.closing}
+          </p>
           {/* Reads as a real command rather than a bare "×" — there's
               no box left to hang a dismiss icon off of. Stays
               untranslated, same as every other command token on this
               site (see data/i18n.ts's own header comment). */}
-          <Link href="/" className="about-float-close">
+          <Link href="/" className="about-float-close" style={{ gridRow: 9 }}>
             exit
           </Link>
+        </div>
+      </div>
+
+      {/* Status/contact, direct request moved out of column 1 and down
+          here so it sits dead-center at the bottom of the page instead
+          of trailing off under the lead paragraphs — a sibling of
+          .about-grid, not one of its cells, so it's free of the row
+          grid above and .about-page-wrap's own flex centers it. */}
+      <div className="about-float-meta">
+        <div className="about-float-meta-row">
+          <span className="about-float-meta-label">{t(lang, "about.status")}</span>
+          <span className="about-float-meta-value">{t(lang, "status.available")}</span>
+        </div>
+        <div className="about-float-meta-row">
+          <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
+            {CONTACT_EMAIL}
+          </a>
         </div>
       </div>
     </div>

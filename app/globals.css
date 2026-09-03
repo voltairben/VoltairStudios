@@ -2108,7 +2108,7 @@ body {
     grid needs to do to fit the remaining space under the masthead */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(6, auto); /* direct request — "About
+  grid-template-rows: repeat(9, auto); /* direct request — "About
     --voltair_studio" on My Philosophy's line, the first lead
     paragraph on My Philosophy's intro's line, and so on down each
     column. Each .about-col below is a subgrid sharing these same row
@@ -2116,17 +2116,32 @@ body {
     most content at position N, and every column's row-N item starts
     at that same shared top edge — real row alignment, not each
     column just centering independently (which is all align-items
-    could do when the columns weren't sharing row tracks at all). */
+    could do when the columns weren't sharing row tracks at all).
+    9 rows, not 6: column 2's h3 subsection titles ("The Power of
+    Simplicity" etc.) have no column-1/3 counterpart, so each gets a
+    row of its own — row N below is: 1 headings, 2 first
+    paragraph/intro/outro, 3 subsection-1 title, 4 "I don't do
+    standard" / subsection-1 body / outro-2 (direct request: same
+    line), 5 subsection-2 title, 6 "I build digital playrooms" /
+    subsection-2 body / outro-3 (direct request: same line), 7
+    subsection-3 title, 8 subsection-3 body / closing, 9 exit link.
+    Every item's exact row is set with an inline style in
+    AboutContent.tsx, not left to grid auto-placement, since these
+    gaps (rows with content in only one column) are exactly what
+    auto-placement can't produce on its own. */
   align-content: center; /* direct request — the grid's row block is
     auto-height, so on viewports where the columns don't need the
     whole available height (most of them, now that the essay actually
     fits), align-content's default ("normal", which behaves like
     start here) was leaving all the real leftover space stranded
     below the columns instead of splitting it evenly above and below */
-  row-gap: var(--space-1); /* shared by every column's subgrid — see
-    .about-col; kept separate from column-gap since the two axes read
-    very differently here (tight between a column's own stacked
-    paragraphs, wide between the 3 columns themselves) */
+  row-gap: clamp(2px, 0.55dvh, 8px); /* shared by every column's
+    subgrid — see .about-col; kept separate from column-gap since the
+    two axes read very differently here (tight between a column's own
+    stacked paragraphs, wide between the 3 columns themselves). dvh,
+    not --space-1's dvmin: 9 shared row tracks (was 6) means 8 gaps
+    stacking up, and it's specifically viewport HEIGHT that's tight at
+    the sizes that were clipping, live-verified — width has slack */
   column-gap: var(--space-3);
   width: 100%;
   overflow: hidden; /* same last-resort role as .about-page's own */
@@ -2146,9 +2161,19 @@ body {
   /* Row 1's column-1 cell: the H1 + kicker read as one heading unit,
      so they're wrapped together into a single subgrid item — without
      this they'd claim 2 of the shared row slots and knock every
-     paragraph below out of alignment with columns 2/3. */
+     paragraph below out of alignment with columns 2/3. Row, not
+     column, direct request — the kicker sits inline behind the H1 on
+     the same line rather than stacked underneath it. */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: baseline; /* the two sit at very different font sizes
+    (about-float-title vs about-kicker); baseline keeps their text
+    sitting on the same line instead of top- or center-aligning the
+    boxes, which would visibly offset the smaller kicker text */
+  flex-wrap: wrap; /* last-resort safety net, not the intended
+    reading — narrower than intended at this breakpoint (near 980px)
+    the pair can get tight; wrapping beats clipping or overflow */
+  gap: var(--space-2);
 }
 @media (max-width: 980px) {
   /* Real 3-column text below ~980px stops being 3 *readable* columns —
@@ -2279,21 +2304,18 @@ body {
   text-shadow: var(--text-halo);
 }
 /* Byline, not a heading — direct request's own text opens with "This
-   Is Voltair — by Bennie"; kept as a small tag under the page's own
-   terminal-style H1 rather than replacing it, matching how a real
-   document's byline sits under its masthead, not instead of it. */
+   Is Voltair — by Bennie"; sits inline behind the page's own
+   terminal-style H1 (see .about-heading-block) rather than replacing
+   it, matching how a real document's byline trails its masthead. */
 .about-kicker {
   color: var(--color-amber-dim);
   font-size: var(--fs-status);
   font-weight: 500;
   letter-spacing: 0.02em;
   text-shadow: var(--text-halo-small);
-  margin-top: calc(var(--space-1) * -1); /* the left column is the only
-    one with this extra element between its heading and its first real
-    paragraph — pulling it closer to the (now taller) H1 above it keeps
-    the column's total height close to before growing the H1 to match
-    .about-section-title, which had reopened a real overflow this
-    round's own live re-check caught on tablet-range viewports */
+  white-space: nowrap; /* reads as one short trailing tag, not a line
+    that reflows independently of where the H1 above it happens to
+    wrap */
 }
 .about-paragraph {
   color: var(--color-cursor-flash);
@@ -2306,11 +2328,15 @@ body {
      other --fs-* tokens already use — this page just needs a smaller
      ceiling/floor than those, since it's also fitting inside a shared
      multi-column grid, not one full-width reading column. */
-  font-size: clamp(0.75rem, 1.7dvmin, 1.05rem);
-  line-height: 1.2; /* tighter than prose-scale 1.6 on purpose — real
-    editorial column-set text runs tighter than a single wide reading
-    column does, and every line saved here is real height given back
-    to fitting the whole essay in one viewport */
+  font-size: clamp(0.75rem, 1.4dvmin, 1.05rem); /* 1.7 → 1.4dvmin —
+    row-alignment (see .about-grid) means every row is now as tall as
+    its tallest column, not each column's own independent height, so
+    the medium-viewport range needs a real margin to still fit zero
+    scroll; live-verified this doesn't touch the ceiling large
+    viewports already peg at, or the floor small ones already peg at,
+    only the in-between range that was actually clipping */
+  line-height: 1.1; /* was 1.2, same reasoning — every line saved here
+    is real height given back to fitting all 9 aligned rows */
   text-shadow: var(--text-halo-small);
 }
 .about-closing {
@@ -2335,24 +2361,33 @@ body {
   line-height: var(--lh-tight);
   text-shadow: var(--text-halo);
 }
-.about-subsection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
 .about-subsection-title {
   color: var(--color-amber-bright);
-  font-size: clamp(0.8125rem, 2dvmin, 1.1rem); /* one clear step down
+  font-size: clamp(0.75rem, 1.7dvmin, 1.05rem); /* one clear step down
     from .about-section-title, one step up from body text — the real
     third tier this essay's own structure needs (section > subsection
-    > paragraph), not just two */
+    > paragraph), not just two. Trimmed alongside .about-paragraph
+    (was 0.8125rem/2dvmin/1.1rem) — now that it's a real row of its
+    own (see .about-grid) rather than bundled with its body text, it's
+    one more row cost the medium-viewport range needs the margin for. */
+  line-height: 1.15; /* was inheriting the default — a real single-
+    line heading, no reason to spend more height than the tightened
+    body/heading scale around it now does */
   font-weight: 600;
   text-shadow: var(--text-halo-small);
 }
 .about-float-meta {
   display: flex;
   flex-direction: column;
+  align-items: center; /* its own two rows (status, contact) centered
+    on each other, not just left-aligned as a block */
   gap: var(--space-1);
+  flex-shrink: 0; /* direct request — moved out of column 1 to sit on
+    its own as the last child of .about-page-wrap (a column flex
+    container), so it naturally lands at the bottom, below .about-grid
+    which takes the flexible space above it */
+  align-self: center; /* dead-center horizontally across the full page
+    width, not pinned under column 1 anymore */
 }
 .about-float-meta-row {
   display: flex;
