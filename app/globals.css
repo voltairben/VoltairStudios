@@ -2114,6 +2114,14 @@ body {
     actually fits), align-content's default ("normal", which behaves
     like start here) was leaving all the real leftover space stranded
     below the columns instead of splitting it evenly above and below */
+  align-items: center; /* the 3 columns hold different amounts of
+    copy, so the row's height is set by the tallest one; default
+    align-items:stretch then forces every column to that same height
+    and top-anchors its content, so shorter columns hang from the top
+    with dead air underneath while the tallest fills its cell — reads
+    as ragged, uneven spacing across the row, worse the bigger the
+    viewport. Centering each column within its own cell instead lines
+    all three up on a shared middle line regardless of content length. */
   gap: var(--space-3);
   width: 100%;
   overflow: hidden; /* same last-resort role as .about-page's own */
