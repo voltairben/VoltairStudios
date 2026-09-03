@@ -2108,30 +2108,47 @@ body {
     grid needs to do to fit the remaining space under the masthead */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  align-content: center; /* direct request — the grid's one content
-    row is auto-height, so on viewports where the columns don't need
-    the whole available height (most of them, now that the essay
-    actually fits), align-content's default ("normal", which behaves
-    like start here) was leaving all the real leftover space stranded
+  grid-template-rows: repeat(6, auto); /* direct request — "About
+    --voltair_studio" on My Philosophy's line, the first lead
+    paragraph on My Philosophy's intro's line, and so on down each
+    column. Each .about-col below is a subgrid sharing these same row
+    tracks, so row N's height is whichever of the 3 columns has the
+    most content at position N, and every column's row-N item starts
+    at that same shared top edge — real row alignment, not each
+    column just centering independently (which is all align-items
+    could do when the columns weren't sharing row tracks at all). */
+  align-content: center; /* direct request — the grid's row block is
+    auto-height, so on viewports where the columns don't need the
+    whole available height (most of them, now that the essay actually
+    fits), align-content's default ("normal", which behaves like
+    start here) was leaving all the real leftover space stranded
     below the columns instead of splitting it evenly above and below */
-  align-items: center; /* the 3 columns hold different amounts of
-    copy, so the row's height is set by the tallest one; default
-    align-items:stretch then forces every column to that same height
-    and top-anchors its content, so shorter columns hang from the top
-    with dead air underneath while the tallest fills its cell — reads
-    as ragged, uneven spacing across the row, worse the bigger the
-    viewport. Centering each column within its own cell instead lines
-    all three up on a shared middle line regardless of content length. */
-  gap: var(--space-3);
+  row-gap: var(--space-1); /* shared by every column's subgrid — see
+    .about-col; kept separate from column-gap since the two axes read
+    very differently here (tight between a column's own stacked
+    paragraphs, wide between the 3 columns themselves) */
+  column-gap: var(--space-3);
   width: 100%;
   overflow: hidden; /* same last-resort role as .about-page's own */
 }
 .about-col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  display: grid;
+  grid-template-rows: subgrid; /* shares .about-grid's row tracks
+    directly instead of sizing to its own content — that's what makes
+    row N line up across all 3 columns. Row-gap isn't re-declared here
+    on purpose: a subgrid's shared tracks need one consistent gap
+    between them, so it's set once on .about-grid and inherited. */
+  grid-row: 1 / -1;
   min-width: 0;
   min-height: 0;
+}
+.about-heading-block {
+  /* Row 1's column-1 cell: the H1 + kicker read as one heading unit,
+     so they're wrapped together into a single subgrid item — without
+     this they'd claim 2 of the shared row slots and knock every
+     paragraph below out of alignment with columns 2/3. */
+  display: flex;
+  flex-direction: column;
 }
 @media (max-width: 980px) {
   /* Real 3-column text below ~980px stops being 3 *readable* columns —
@@ -2143,6 +2160,16 @@ body {
      equally-cramped ones. */
   .about-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .about-col {
+    /* Row-by-row subgrid only makes sense across the full 3-column
+       spread above — once col1 spans both columns here, "grid-row: 1
+       / -1" on all 3 would overlap them instead of laying them out
+       side by side, so this drops back to sizing to its own content,
+       same as before subgrid was introduced. */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
   }
   .about-col:first-child {
     grid-column: 1 / -1;

@@ -62,13 +62,16 @@ export default function AboutContent() {
               from the separate masthead row above — column 1 had no
               heading of its own before, unlike columns 2/3's real
               section titles, so this doubles as that column's own
-              heading and lines up at the same height as "My
-              Philosophy"/"The Human Outro" for free, since all three
-              are the same grid row. */}
-          <h1 id="about-essay-title" className="about-float-title">
-            About --voltair_studio
-          </h1>
-          <p className="about-kicker">{c.kicker}</p>
+              heading. Wrapped with the kicker into .about-heading-block
+              (see globals.css) so the pair counts as one row-1 item in
+              the 3-column subgrid and lines up with "My Philosophy" /
+              "The Human Outro" on the same line, direct request. */}
+          <div className="about-heading-block">
+            <h1 id="about-essay-title" className="about-float-title">
+              About --voltair_studio
+            </h1>
+            <p className="about-kicker">{c.kicker}</p>
+          </div>
           {c.lead.map((p, i) => (
             <p key={i} className="about-paragraph">
               {p}
