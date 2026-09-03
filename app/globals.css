@@ -2301,7 +2301,13 @@ body {
   font-size: clamp(1rem, 2.6dvmin, 1.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small); /* not the full --text-halo —
+    its own comment documents exactly this failure mode: those blur
+    radii are tuned for ~90-140px hero glyphs, and at this element's
+    real size (max 24px) they're wide enough to bridge the gaps
+    between letters, so the halo stops reading as a per-glyph ring and
+    reads as one solid dark box behind the whole word instead — caught
+    live from a screenshot, reported as "doesn't look right." */
 }
 /* Byline, not a heading — direct request's own text opens with "This
    Is Voltair — by Bennie"; sits inline behind the page's own
@@ -2359,7 +2365,7 @@ body {
   font-size: clamp(1rem, 2.6dvmin, 1.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small); /* see .about-float-title */
 }
 .about-subsection-title {
   color: var(--color-amber-bright);
