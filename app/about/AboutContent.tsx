@@ -51,7 +51,16 @@ export default function AboutContent() {
           gives "Creative"/"Designers"; matches "same ... the changing
           of the text" literally rather than just the static size/color
           the first pass matched. */}
-      <h1 id="about-heading" className="about-hero-heading">
+      {/* "about-nav-morph" pairs with ChromeBar's own "About" nav link
+          for a real card-to-page morph, direct request — see that
+          file's own comment for the /about-gating reasoning. Real risk
+          worth watching live: ScrambleText below starts decoding from
+          random symbols the instant it mounts, and the transition's
+          own "new page" snapshot is captured around that same moment —
+          if the snapshot lands mid-scramble instead of on the clean
+          settled text, the fix is delaying the scramble's own start
+          until the transition finishes, not a redesign of either. */}
+      <h1 id="about-heading" className="about-hero-heading" style={{ viewTransitionName: "about-nav-morph" }}>
         <ScrambleText text={t(lang, "about.heading")} />
         {/* Blinking cursor block, direct request ("I want this also
             behind the about") — the same one .headline gives

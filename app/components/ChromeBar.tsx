@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Link } from "next-view-transitions";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import LangToggle from "./LangToggle";
@@ -14,6 +15,7 @@ const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLang();
+  const pathname = usePathname();
 
   // Copy-to-clipboard is a courtesy alongside the real mailto link, not
   // instead of it — e.preventDefault() is never called, so the mail
@@ -89,7 +91,20 @@ export default function ChromeBar() {
             session had already built and verified (see DESIGN.md).
             next-view-transitions' Link, so navigating here (either
             direction) gets a real browser view transition for free. */}
-        <Link href="/about" className="chrome-nav-link">
+        {/* Card-to-page morph into the About page's own big headline,
+            direct request. Gated on not already being on /about: this
+            same ChromeBar renders there too (site-wide nav), and the
+            About page's own <h1> already carries this exact name — two
+            elements sharing one view-transition-name in the same page
+            snapshot is a real conflict the browser rejects, not just a
+            style clash. No click-tracking state needed the way the
+            reel/index need it: ChromeBar renders once per page, no
+            duplicate copies to disambiguate between. */}
+        <Link
+          href="/about"
+          className="chrome-nav-link"
+          style={pathname !== "/about" ? { viewTransitionName: "about-nav-morph" } : undefined}
+        >
           {t(lang, "nav.about")}
         </Link>
         <a

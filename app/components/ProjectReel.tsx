@@ -293,6 +293,11 @@ export default function ProjectReel() {
                 fill
                 sizes="380px"
                 className="project-reel-item-image"
+                style={
+                  i === morphIndex && morphSource === "reel"
+                    ? { viewTransitionName: `project-image-${project.slug}` }
+                    : undefined
+                }
                 // Real Next.js warning, caught live: the reel mounts
                 // scrolled to copy index 1 (see the mount effect's own
                 // "start in the middle copy" comment), so a tile's
