@@ -44,11 +44,19 @@ const DICT = {
   },
 
   // "about.body" removed — the About page's short placeholder paragraph
-  // was replaced wholesale by the real "This Is Voltair" essay (see
-  // data/about-content.ts), which is structured content, not a single
-  // shared UI string, so it doesn't live in this dictionary either.
+  // was replaced wholesale by the real "This Is Voltair" essay, then
+  // that essay itself was replaced by a much shorter user-authored bio
+  // (see data/about-content.ts) — structured content either way, not a
+  // single shared UI string, so it doesn't live in this dictionary.
   "about.status": { en: "status", nl: "status" },
   "about.contact": { en: "contact", nl: "contact" },
+  // The page's own big corner headline — prose (like hero.headline1/2
+  // below), not a terminal command token, so unlike nav.about's fuller
+  // "Over ons" (needs to read as a complete link label) this is the
+  // punchier single word a large display headline wants, direct
+  // request styled after "Creative"/"Designers" on the home page.
+  "about.heading": { en: "About", nl: "Over" },
+  "about.tools": { en: "Tools", nl: "Tools" },
 
   "work.inProgress": {
     en: "Case study in progress — check back soon.",
