@@ -62,7 +62,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 with the matching view-transition-name for the reverse
                 morph — see ProjectReel.tsx's hash-read effect. */}
             <Link href={`/#${project.slug}`} className="case-study-back">
-              ← voltair_studio
+              ← Voltair_Studio
             </Link>
             <h1
               className="case-study-title"

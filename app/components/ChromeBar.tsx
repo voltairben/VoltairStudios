@@ -46,7 +46,7 @@ export default function ChromeBar() {
           to patch — hijacking it would fight what a link is actually
           supposed to do on Space. */}
       <Link href="/" className="wordmark">
-        voltair_studio
+        Voltair_Studio
       </Link>
       <nav className="chrome-nav" aria-label="Site">
         {/* Same real-link treatment as the wordmark above — direct

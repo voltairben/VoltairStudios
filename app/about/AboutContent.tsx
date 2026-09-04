@@ -4,98 +4,115 @@ import { Link } from "next-view-transitions";
 import { useLang } from "../components/lang-context";
 import { t } from "../data/i18n";
 import { ABOUT_CONTENT } from "../data/about-content";
+import ScrambleText from "../components/ScrambleText";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 
-// Split out of page.tsx (a Server Component — it keeps `export const
-// metadata`, which Next.js only allows outside "use client" files) so
-// the translated body can call useLang() directly. Rewritten for the
-// real "This Is Voltair" essay (see data/about-content.ts) — direct
-// request to replace the old one-paragraph placeholder wholesale, "in
-// the style" of this system with "each head piece... in the correct
-// colour": every real heading level gets its own place in the
-// established amber-bright-for-headings hierarchy (.about-section-title
-// bigger/bolder than .about-subsection-title, project names styled as
-// real links since they go to real case studies) rather than
-// flattening the essay into undifferentiated paragraphs.
+// Full rebuild, direct request, modeled on a reference screenshot
+// (segerman.dev's own About page): a big corner headline instead of a
+// page-filling essay, a short user-authored bio instead of the earlier
+// "This Is Voltair" essay (see data/about-content.ts — the user judged
+// that one "too long and too difficult to space out properly" and
+// shortened it himself), and a small Tools/meta cluster instead of the
+// old 3-column editorial spread this replaces wholesale (that
+// history — the essay, the 3-column grid, the subgrid row-alignment
+// work — lives in globals.css's own comment on .about-page for
+// context, not because any of it carries forward here).
+//
+// Layout now matches the reference's own left/right split directly,
+// direct follow-up: bio on the left, Tools/status/contact on the
+// right (an earlier round had these mirrored — bio right, meta left —
+// per an even earlier direct request; this reverses that once the
+// user saw it live). The reference's own photo and Awards list have
+// no real counterpart here (no headshot on hand, no awards to claim —
+// DESIGN.md's own principle against fabricating proof) and aren't
+// invented to fill the reference's exact shape.
 export default function AboutContent() {
   const { lang } = useLang();
   const c = ABOUT_CONTENT[lang];
 
   return (
-    <>
-      {/* Same real back-link affordance /work/[slug] already has at the
-          top of a long scrolling page — this page only had a bottom
-          "exit" before, which made sense for one short paragraph but
-          not for an essay this long. Reuses next-view-transitions' Link
-          for a real transition back, same as every other internal nav
-          on this site. */}
-      <Link href="/" className="about-back">
-        ← voltair_studio
-      </Link>
+    <div className="about-page-wrap" role="region" aria-labelledby="about-heading">
+      <div className="about-masthead">
+        <Link href="/" className="about-back">
+          ← Voltair_Studio
+        </Link>
+      </div>
 
-      <div className="about-essay" role="region" aria-labelledby="about-essay-title">
-        <div className="about-float-header">
-          <h1 id="about-essay-title" className="about-float-title">
-            about --voltair_studio
-          </h1>
-        </div>
+      {/* Big corner headline, direct request: "the same capital about
+          ... same design and look as Creative Designers has on the
+          home page" — reuses that exact headline token (--fs-headline)
+          and weight, uppercased via CSS (the source string stays
+          normal-case for screen readers) rather than baking caps into
+          the translated copy itself. ScrambleText, direct follow-up
+          ("the changing of the text") — the same scramble/decode
+          mount reveal (and hover re-scramble) TerminalPane.tsx already
+          gives "Creative"/"Designers"; matches "same ... the changing
+          of the text" literally rather than just the static size/color
+          the first pass matched. */}
+      <h1 id="about-heading" className="about-hero-heading">
+        <ScrambleText text={t(lang, "about.heading")} />
+        {/* Blinking cursor block, direct request ("I want this also
+            behind the about") — the same one .headline gives
+            "Designers" (see globals.css's own .cursor comment for why
+            it cancels the inherited halo: a solid glyph this size
+            reads as a dark box under it, not a legibility ring). */}
+        <span className="cursor" aria-hidden="true">
+          ▌
+        </span>
+      </h1>
 
-        <p className="about-kicker">{c.kicker}</p>
-
-        {c.lead.map((p, i) => (
-          <p key={i} className="about-paragraph">
-            {p}
-          </p>
-        ))}
-
-        <div className="about-float-meta">
-          <div className="about-float-meta-row">
-            <span className="about-float-meta-label">{t(lang, "about.status")}</span>
-            <span className="about-float-meta-value">{t(lang, "status.available")}</span>
+      {/* Pushed to the bottom of the remaining space (margin-top:auto,
+          see globals.css) — the empty middle is where the floating 3D
+          logo (SkyboxCanvas.tsx) already shows through, same as it did
+          behind the old 3-column essay. */}
+      <div className="about-bottom-row">
+        {/* Left, direct request — no separate "exit" link here (the
+            old 3-column layout's own — see its removal in this same
+            change) — the masthead's "← Voltair_Studio" above is
+            already the one real way back, and a second one reads as
+            clutter now that this page is this short. */}
+        <div className="about-bio">
+          {/* Direct request: "About --Voltair_Studio" / "This Is
+              Voltair, by Bennie" above the bio text — the old H1 +
+              kicker pair from before the ABOUT/scramble headline took
+              over that role, now reintroduced as a smaller title/
+              byline heading the bio column, not a page-wide hero.
+              "About --Voltair_Studio" stays untranslated, plain text —
+              same handle the masthead's own back link and chrome
+              wordmark already show in every language, not prose;
+              capitalized V/S, direct follow-up ("Voltair_Studio ...
+              site wide"), same casing that handle now uses everywhere. */}
+          <div className="about-bio-heading">
+            <h2 className="about-bio-title">About --Voltair_Studio</h2>
+            <p className="about-bio-kicker">{c.kicker}</p>
           </div>
-          <div className="about-float-meta-row">
-            <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
-            <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
-              {CONTACT_EMAIL}
-            </a>
-          </div>
-        </div>
-
-        <section className="about-section" aria-labelledby="about-philosophy-title">
-          <h2 id="about-philosophy-title" className="about-section-title">
-            {c.philosophyTitle}
-          </h2>
-          <p className="about-paragraph">{c.philosophyIntro}</p>
-          {c.subsections.map((s) => (
-            <div key={s.title} className="about-subsection">
-              <h3 className="about-subsection-title">{s.title}</h3>
-              <p className="about-paragraph">{s.body}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="about-section" aria-labelledby="about-outro-title">
-          <h2 id="about-outro-title" className="about-section-title">
-            {c.outroTitle}
-          </h2>
-          {c.outroParagraphs.map((p, i) => (
-            <p key={i} className="about-paragraph">
+          {c.bio.map((p, i) => (
+            <p key={i} className="about-bio-paragraph">
               {p}
             </p>
           ))}
-          <p className="about-paragraph about-closing">{c.closing}</p>
-        </section>
+        </div>
 
-        {/* Reads as a real command rather than a bare "×" — there's no
-            box left to hang a dismiss icon off of. Stays untranslated,
-            same as every other command token on this site (see
-            data/i18n.ts's own header comment) — "exit" reads as a
-            command name, not decorative chrome, in either language. */}
-        <Link href="/" className="about-float-close">
-          exit
-        </Link>
+        <div className="about-meta-cluster">
+          <div className="about-meta-block">
+            <h2 className="about-meta-heading">{t(lang, "about.tools")}</h2>
+            <p className="about-tools-list">{c.tools.join(", ")}</p>
+          </div>
+          <div className="about-meta-block">
+            <div className="about-float-meta-row">
+              <span className="about-float-meta-label">{t(lang, "about.status")}</span>
+              <span className="about-float-meta-value">{t(lang, "status.available")}</span>
+            </div>
+            <div className="about-float-meta-row">
+              <span className="about-float-meta-label">{t(lang, "about.contact")}</span>
+              <a href={`mailto:${CONTACT_EMAIL}`} className="about-float-meta-link">
+                {CONTACT_EMAIL}
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
