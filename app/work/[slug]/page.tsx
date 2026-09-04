@@ -8,6 +8,7 @@ import ChromeBar from "../../components/ChromeBar";
 import StatusBar from "../../components/StatusBar";
 import T from "../../components/T";
 import Localized from "../../components/Localized";
+import { STUDIO_HANDLE } from "../../data/brand";
 
 export function generateStaticParams() {
   return PROJECTS.map((p) => ({ slug: p.slug }));
@@ -62,7 +63,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 with the matching view-transition-name for the reverse
                 morph — see ProjectReel.tsx's hash-read effect. */}
             <Link href={`/#${project.slug}`} className="case-study-back">
-              ← Voltair_Studio
+              ← {STUDIO_HANDLE}
             </Link>
             <h1
               className="case-study-title"

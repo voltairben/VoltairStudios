@@ -19,10 +19,17 @@ export const metadata: Metadata = { title: "About — Voltair Studio" };
 // itself no longer scrolls past them — .about-page's own padding
 // reserves the space either way.
 //
-// hideAvailability on StatusBar, direct request — AboutContent's own
+// StatusBar's `left` override, direct request — AboutContent's own
 // meta cluster already shows "status: Available October 2026," so
-// this footer's copy of the same line is a real duplicate here, not
-// on any other route (each renders its own separate <StatusBar />).
+// this footer's default copy of the same line would be a real
+// duplicate here, not on any other route (each renders its own
+// separate <StatusBar />). `.about-status-left` unconditionally shows
+// `.status-tz`/`.status-copyright` (see globals.css) — the shared
+// component's own default left content hides those below 480px/720px
+// on the assumption "Available October 2026" is always there to
+// anchor the row; without it, that breakpoint math left this footer
+// showing a stray leading " · " or nothing at all in that range,
+// caught on review.
 export default function AboutPage() {
   return (
     <>
@@ -33,7 +40,14 @@ export default function AboutPage() {
         <AboutContent />
       </main>
       <div className="scroll-page-footer">
-        <StatusBar hideAvailability />
+        <StatusBar
+          left={
+            <span className="about-status-left">
+              <span className="status-tz">UTC</span>
+              <span className="status-copyright"> · © 2026</span>
+            </span>
+          }
+        />
       </div>
     </>
   );

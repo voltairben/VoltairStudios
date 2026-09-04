@@ -1,28 +1,37 @@
+import type { ReactNode } from "react";
 import SkyboxSwitcher from "./SkyboxSwitcher";
 import AudioToggle from "./AudioToggle";
 import CrtToggle from "./CrtToggle";
 import T from "./T";
 
 export default function StatusBar({
-  hideAvailability = false,
+  left,
 }: {
-  // About page only, direct request — its own meta cluster already
-  // shows "status: Available October 2026" (see AboutContent.tsx), so
-  // this footer's own copy of the same line is a real duplicate there,
-  // not on any other route each with its own separate <StatusBar />
-  // instance (see about/page.tsx / page.tsx / work/[slug]/page.tsx).
-  hideAvailability?: boolean;
+  // Generic override for status-left's content — not a route-specific
+  // boolean (an earlier `hideAvailability` prop was exactly that, added
+  // to suppress the About page's now-duplicate "Available October
+  // 2026" line; caught on review as the same shape this codebase
+  // already learned not to do once before — work/[slug]/page.tsx's own
+  // comment records Year/Visit being moved out of StatusBar because it
+  // was "the wrong location" for route-specific content). A `left`
+  // slot lets any route replace the whole left cluster with its own
+  // markup — the shared right-side toggles/social links stay exactly
+  // as they are, not duplicated — instead of StatusBar accreting one
+  // new boolean per future route-specific need.
+  left?: ReactNode;
 }) {
   return (
     <footer className="status-bar">
       <div className="status-left">
-        {!hideAvailability && (
-          <span className="status-text">
-            <T k="status.available" />
-          </span>
+        {left ?? (
+          <>
+            <span className="status-text">
+              <T k="status.available" />
+            </span>
+            <span className="status-tz"> · UTC</span>
+            <span className="status-copyright"> · © 2026</span>
+          </>
         )}
-        <span className="status-tz">{hideAvailability ? "UTC" : " · UTC"}</span>
-        <span className="status-copyright"> · © 2026</span>
       </div>
       <div className="status-right">
         <AudioToggle />

@@ -15,6 +15,7 @@ import {
   applyPalette,
   persistPalette,
 } from "../data/palette";
+import { STUDIO_HANDLE } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 
 // Real, functional command line — direct request ("Terminal Command
@@ -109,7 +110,7 @@ const BOOT_SEEN_KEY = "voltair-boot-seen";
 // comment). The rest translate via the current lang at boot time.
 function bootLines(lang: Lang) {
   return [
-    "Voltair_Studio deploy console",
+    `${STUDIO_HANDLE} deploy console`,
     `skybox engine ... ${t(lang, "terminal.bootReady")}`,
     `terminal shell ... ${t(lang, "terminal.bootReady")}`,
     t(lang, "terminal.typeHelp"),

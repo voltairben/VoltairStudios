@@ -3,7 +3,8 @@
 import { Link } from "next-view-transitions";
 import { useLang } from "../components/lang-context";
 import { t } from "../data/i18n";
-import { ABOUT_CONTENT } from "../data/about-content";
+import { ABOUT_CONTENT, ABOUT_TOOLS } from "../data/about-content";
+import { STUDIO_HANDLE } from "../data/brand";
 import ScrambleText from "../components/ScrambleText";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
@@ -35,7 +36,7 @@ export default function AboutContent() {
     <div className="about-page-wrap" role="region" aria-labelledby="about-heading">
       <div className="about-masthead">
         <Link href="/" className="about-back">
-          ← Voltair_Studio
+          ← {STUDIO_HANDLE}
         </Link>
       </div>
 
@@ -84,7 +85,7 @@ export default function AboutContent() {
               capitalized V/S, direct follow-up ("Voltair_Studio ...
               site wide"), same casing that handle now uses everywhere. */}
           <div className="about-bio-heading">
-            <h2 className="about-bio-title">About --Voltair_Studio</h2>
+            <h2 className="about-bio-title">About --{STUDIO_HANDLE}</h2>
             <p className="about-bio-kicker">{c.kicker}</p>
           </div>
           {c.bio.map((p, i) => (
@@ -97,7 +98,7 @@ export default function AboutContent() {
         <div className="about-meta-cluster">
           <div className="about-meta-block">
             <h2 className="about-meta-heading">{t(lang, "about.tools")}</h2>
-            <p className="about-tools-list">{c.tools.join(", ")}</p>
+            <p className="about-tools-list">{ABOUT_TOOLS.join(", ")}</p>
           </div>
           <div className="about-meta-block">
             <div className="about-float-meta-row">
