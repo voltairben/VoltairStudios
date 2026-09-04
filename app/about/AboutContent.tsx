@@ -52,6 +52,14 @@ export default function AboutContent() {
           the first pass matched. */}
       <h1 id="about-heading" className="about-hero-heading">
         <ScrambleText text={t(lang, "about.heading")} />
+        {/* Blinking cursor block, direct request ("I want this also
+            behind the about") — the same one .headline gives
+            "Designers" (see globals.css's own .cursor comment for why
+            it cancels the inherited halo: a solid glyph this size
+            reads as a dark box under it, not a legibility ring). */}
+        <span className="cursor" aria-hidden="true">
+          ▌
+        </span>
       </h1>
 
       {/* Pushed to the bottom of the remaining space (margin-top:auto,

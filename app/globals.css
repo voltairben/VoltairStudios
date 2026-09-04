@@ -2128,6 +2128,14 @@ body {
     so screen readers get "About"/"Over," not a spelled-out "A-B-O-U-T" */
   text-shadow: var(--text-halo);
 }
+.about-hero-heading .cursor {
+  /* Same ratio/delay .headline .cursor gives "Designers" — 1.1em
+     reads as a real cursor block against this headline's own glyphs,
+     not undersized next to them; the delay lets the scramble settle
+     before the cursor's own pulse starts drawing attention. */
+  font-size: 1.1em;
+  animation-delay: 650ms;
+}
 /* Pushed to the bottom of the remaining space (margin-top:auto) — the
    empty middle between this and the headline above is exactly where
    the floating 3D logo (SkyboxCanvas.tsx, a direct request of its own)
