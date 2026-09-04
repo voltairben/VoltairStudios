@@ -85,8 +85,21 @@ ol {
      structure (tight ring, soft glow, slight drop), radii roughly
      quartered so they stay inside a single glyph's own footprint. */
   --text-halo-small: 0 0 1px var(--color-pane-bg), 0 0 1px var(--color-pane-bg),
-    0 0 2px rgba(34, 40, 49, 0.95), 0 0 4px rgba(34, 40, 49, 0.85),
-    0 1px 1px rgba(34, 40, 49, 0.9);
+    0 0 2px rgba(34, 40, 49, 0.85), 0 0 4px rgba(34, 40, 49, 0.65),
+    0 1px 1px rgba(34, 40, 49, 0.8);
+  /* Was darkened (0.85/0.65/0.8 → 0.95/0.85/0.9) for one specific
+     element's legibility against the About page's floating 3D logo —
+     ".about-subsection-title" ("A Web You Can Feel"), which sat
+     directly over the logo in the 3-column layout of the time. That
+     element, and the whole 3-column layout it belonged to, is gone —
+     the About page was fully rebuilt into a corner layout (headline
+     top-left, bio/meta bottom, logo floating in the empty middle)
+     with no text fixed over the logo's usual position anymore. Caught
+     on review: this token is shared by ~30+ unrelated selectors
+     site-wide (status bar, chrome nav, work-page back link, meta
+     labels), so darkening it globally for a need that no longer
+     exists was an undocumented site-wide side effect for a
+     since-removed local problem. Reverted to its original values. */
   /* Legibility halo for background-clip:text gradient fills, as a
      filter instead of text-shadow. text-shadow on a gradient-clipped
      element paints from the PRE-clip glyph shape, which — even at
@@ -1366,6 +1379,17 @@ body {
     display: inline;
   }
 }
+/* About page's own StatusBar `left` override (see about/page.tsx) —
+   .status-tz/.status-copyright's progressive-disclosure hiding above
+   assumes .status-text is always there to anchor the row at narrow
+   widths; this content has no .status-text, and without .status-text
+   competing for space, "UTC · © 2026" is short enough to just always
+   fit — 2 classes beats the single-class media-query rules above
+   regardless of source order, no !important needed. */
+.about-status-left .status-tz,
+.about-status-left .status-copyright {
+  display: inline;
+}
 
 .flag {
   /* Real reset, not just decoration: .flag styles both <a> tags
@@ -1689,7 +1713,15 @@ body {
   min-width: 0;
   width: 100%;
 }
-.case-study-back {
+/* Shared with .about-back (About page's own back link) — caught on
+   review: a full rewrite of .about-back had left it nearly byte-for-
+   byte identical to this rule instead of the two sharing one
+   declaration, so any future tweak to the shared "back link" look
+   would have to be made in two places and the two would keep drifting
+   apart. One real rule, two selectors, same as this file already does
+   elsewhere for genuinely-shared looks. */
+.case-study-back,
+.about-back {
   color: var(--color-ui-muted);
   font-size: var(--fs-chrome);
   font-weight: 500;
@@ -1704,11 +1736,14 @@ body {
   transition: color 120ms ease, text-decoration-color 120ms ease;
 }
 .case-study-back:hover,
-.case-study-back:focus-visible {
+.case-study-back:focus-visible,
+.about-back:hover,
+.about-back:focus-visible {
   color: var(--color-amber-bright);
   text-decoration-color: var(--color-amber-bright);
 }
-.case-study-back:focus-visible {
+.case-study-back:focus-visible,
+.about-back:focus-visible {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
@@ -2086,14 +2121,23 @@ body {
 .about-page {
   position: relative;
   height: 100dvh;
-  overflow: hidden; /* last-resort safety net, matching .page's own
-    belt-and-suspenders history — the real fit comes from this page's
-    own content actually being short now, not from clipping */
+  overflow-x: hidden; /* horizontal overflow here is always a real bug
+    (an element too wide, not a content-length issue), so this stays a
+    hard clip, not a fallback */
+  overflow-y: auto; /* last-resort safety net, not hard clipping — the
+    real fit comes from this page's own content actually being short
+    now, verified live across the full viewport matrix, and this is a
+    no-op at every one of those (auto only ever shows a scrollbar/
+    becomes scrollable when content genuinely overflows). Caught on
+    review: the previous `overflow: hidden` here had no escape hatch
+    at all, unlike the 3-column layout this replaced (which kept a
+    real overflow-y:auto fallback) — an unanticipated case (longer NL
+    text, a wider user font-size setting, browser zoom) would've been
+    silently and unrecoverably clipped instead of just scrollable. */
   padding: calc(var(--chrome-h) + var(--space-2)) var(--space-4)
     calc(var(--status-h) + var(--space-2));
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
 }
 .about-masthead {
   flex-shrink: 0;
@@ -2113,20 +2157,38 @@ body {
    same design and look as Creative Designers has on the home page" —
    reuses --fs-headline itself (not a locally re-derived clamp), so a
    future change to the home page headline's own scale carries over
-   here for free instead of drifting out of sync. Headline-scale text
-   gets the full --text-halo, not -small — -small's whole reason to
-   exist (see .about-meta-heading below) is avoiding letter-bridging at
-   12-28px text; at this size that risk doesn't exist. */
+   here for free instead of drifting out of sync.
+   min() height cap, caught on review: --fs-headline's >=700px override
+   is a pure `dvw` formula (tuned for the home page's own nowrap
+   headline, which has no vertical budget to protect) — on a wide-but-
+   short viewport it can size purely off width while ignoring how much
+   vertical room this page's own fixed-height, no-scroll-fallback
+   layout actually has, risking the bio/meta row below getting pushed
+   out and silently clipped. 16dvh keeps it comfortably under half the
+   viewport height even at extreme aspect ratios; below that cap it's
+   still literally --fs-headline, unchanged from before.
+   text-shadow, also caught on review: -small below 700px, not the
+   full halo unconditionally — --fs-headline's own narrow-viewport
+   formula resolves into the 12-28px letter-bridging danger zone
+   --text-halo-small exists for (see .about-meta-heading below) on
+   real phone widths; only >=700px, where --fs-headline's own dvw
+   override takes over, is this text genuinely headline-scale and
+   clear of that zone. */
 .about-hero-heading {
   flex-shrink: 0;
   color: var(--color-amber-bright);
-  font-size: var(--fs-headline);
+  font-size: min(var(--fs-headline), 16dvh);
   font-weight: 700;
   line-height: var(--lh-tight);
   text-transform: uppercase; /* "capital ABOUT," direct request — the
     translated string (data/i18n.ts's about.heading) stays normal-case
     so screen readers get "About"/"Over," not a spelled-out "A-B-O-U-T" */
-  text-shadow: var(--text-halo);
+  text-shadow: var(--text-halo-small);
+}
+@media (min-width: 700px) {
+  .about-hero-heading {
+    text-shadow: var(--text-halo);
+  }
 }
 .about-hero-heading .cursor {
   /* Same ratio/delay .headline .cursor gives "Designers" — 1.1em
@@ -2230,7 +2292,6 @@ body {
 .about-bio-heading {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--space-1) * -1);
 }
 .about-bio-title {
   color: var(--color-amber-bright);
@@ -2247,6 +2308,14 @@ body {
   font-weight: 500;
   letter-spacing: 0.02em;
   text-shadow: var(--text-halo-small);
+  margin-top: calc(var(--space-1) * -1); /* pulls it tighter to the
+    title above than a plain 0-gap stack would sit — was a negative
+    `gap` on the parent, caught on review: gap only accepts
+    non-negative values per spec, so that declaration was silently
+    invalid and dropped, and the two sat at default spacing instead of
+    the tightened spacing intended. margin-top on the item itself is
+    the same trick .about-kicker used before it moved inline (see
+    AboutContent.tsx's own history on that). */
 }
 .about-bio-paragraph {
   color: var(--color-cursor-flash);
@@ -2289,33 +2358,14 @@ body {
     gap: var(--space-2);
   }
 }
-/* Real back-link. Was position:fixed while this page still scrolled
-   (kept it reachable at any scroll position); now the page is a fixed
-   single viewport again, so it lives inline in .about-masthead's own
-   flex row instead — fixed positioning at a hardcoded offset was
-   exactly what broke when the masthead's own padding changed later in
-   an earlier round (a real, caught-live overlap, not a hypothetical). */
-.about-back {
-  flex-shrink: 0;
-  color: var(--color-ui-muted);
-  font-size: var(--fs-chrome);
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-color: var(--color-ui-muted-underline);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
-  text-shadow: var(--text-halo-small);
-  transition: color 120ms ease, text-decoration-color 120ms ease;
-}
-.about-back:hover,
-.about-back:focus-visible {
-  color: var(--color-amber-bright);
-  text-decoration-color: var(--color-amber-bright);
-}
-.about-back:focus-visible {
-  outline: var(--focus-outline-w) solid var(--color-amber-bright);
-  outline-offset: var(--focus-outline-offset);
-}
+/* .about-back's own look now lives with .case-study-back (see that
+   rule's own comment) — was a full standalone rewrite here, including
+   a `flex-shrink: 0` that (caught on review) was already dead: its
+   only parent, .about-masthead, isn't display:flex, so .about-back
+   was never a flex item and the declaration had no effect. Was likely
+   copy-pasted from this page's own real flex items (.about-hero-heading,
+   .about-meta-cluster) without checking .about-back sits one DOM level
+   too deep to be one. */
 @media (prefers-reduced-motion: reduce) {
   .about-page-wrap {
     animation: none;

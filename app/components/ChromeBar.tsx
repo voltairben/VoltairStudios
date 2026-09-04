@@ -6,6 +6,7 @@ import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import LangToggle from "./LangToggle";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
+import { STUDIO_HANDLE } from "../data/brand";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
@@ -46,7 +47,7 @@ export default function ChromeBar() {
           to patch — hijacking it would fight what a link is actually
           supposed to do on Space. */}
       <Link href="/" className="wordmark">
-        Voltair_Studio
+        {STUDIO_HANDLE}
       </Link>
       <nav className="chrome-nav" aria-label="Site">
         {/* Same real-link treatment as the wordmark above — direct

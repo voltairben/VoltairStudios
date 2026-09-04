@@ -11,14 +11,11 @@
 // NL is a first-pass translation, same status as every other Dutch
 // string on this site right now (see DESIGN.md / memory: the user is
 // a native Dutch speaker and will review all NL copy himself once the
-// site is done) — not the final word on it. Tool names are real
-// product/brand names, left untranslated in both languages, same as
-// every other proper noun already on this site.
+// site is done) — not the final word on it.
 
 export type AboutContentShape = {
   kicker: string;
   bio: string[];
-  tools: string[];
 };
 
 export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
@@ -29,7 +26,6 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
       "I care about websites that look good, feel smooth, and are satisfying to use. I like making small details matter, whether it's the way something moves, responds, or catches you off guard. The goal is simple: make digital experiences that people can feel.",
       "Voltair Studio is my own corner of the internet, built from a love of making things and seeing ideas come to life. If you have something worth building, let's make it a place people actually want to spend time in.",
     ],
-    tools: ["Next.js", "Three.js", "React", "Tailwind CSS", "Supabase", "Resend", "Vercel"],
   },
   nl: {
     kicker: "Dit Is Voltair, door Bennie",
@@ -38,6 +34,21 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
       "Ik hecht veel waarde aan websites die er goed uitzien, soepel aanvoelen en fijn zijn om te gebruiken. Ik vind het leuk om kleine details te laten opvallen, of het nou gaat om hoe iets beweegt, reageert, of je verrast. Het doel is simpel: digitale ervaringen maken die mensen kunnen voelen.",
       "Voltair Studio is mijn eigen hoekje van het internet, gebouwd vanuit een liefde voor het maken van dingen en het tot leven zien komen van ideeën. Heb je iets de moeite waard om te bouwen? Laten we er een plek van maken waar mensen ook echt willen zijn.",
     ],
-    tools: ["Next.js", "Three.js", "React", "Tailwind CSS", "Supabase", "Resend", "Vercel"],
   },
 };
+
+// Real tool/product names — never translated (same policy i18n.ts's
+// own header comment sets for command tokens/proper nouns), so this
+// lives outside the per-language record instead of being duplicated
+// as an identical literal array under both `en` and `nl`. Caught on
+// review: the old shape let the two arrays silently diverge (add a
+// tool to one language and forget the other) with no type error.
+export const ABOUT_TOOLS = [
+  "Next.js",
+  "Three.js",
+  "React",
+  "Tailwind CSS",
+  "Supabase",
+  "Resend",
+  "Vercel",
+];
