@@ -3,14 +3,25 @@ import AudioToggle from "./AudioToggle";
 import CrtToggle from "./CrtToggle";
 import T from "./T";
 
-export default function StatusBar() {
+export default function StatusBar({
+  hideAvailability = false,
+}: {
+  // About page only, direct request — its own meta cluster already
+  // shows "status: Available October 2026" (see AboutContent.tsx), so
+  // this footer's own copy of the same line is a real duplicate there,
+  // not on any other route each with its own separate <StatusBar />
+  // instance (see about/page.tsx / page.tsx / work/[slug]/page.tsx).
+  hideAvailability?: boolean;
+}) {
   return (
     <footer className="status-bar">
       <div className="status-left">
-        <span className="status-text">
-          <T k="status.available" />
-        </span>
-        <span className="status-tz"> · UTC</span>
+        {!hideAvailability && (
+          <span className="status-text">
+            <T k="status.available" />
+          </span>
+        )}
+        <span className="status-tz">{hideAvailability ? "UTC" : " · UTC"}</span>
         <span className="status-copyright"> · © 2026</span>
       </div>
       <div className="status-right">

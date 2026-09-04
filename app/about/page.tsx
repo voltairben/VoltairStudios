@@ -5,21 +5,24 @@ import AboutContent from "./AboutContent";
 
 export const metadata: Metadata = { title: "About — Voltair Studio" };
 
-// A real route (see DESIGN.md for the modal-to-route history, and the
-// zero-scroll-to-real-scroll history below). .skybox-canvas lives in
-// the root layout (position: fixed, pointer-events: none — see
-// layout.tsx), so it's already rendering behind this route with zero
-// extra wiring.
+// A real route (see DESIGN.md for the modal-to-route history). Been
+// through real scrolling and back — a full essay once needed it, a
+// later full rebuild (AboutContent.tsx's own comment has that
+// history) replaced the essay with a short corner layout that fits
+// one fixed viewport again, zero-scroll like .page's own 3-row grid.
+// .skybox-canvas lives in the root layout (position: fixed,
+// pointer-events: none — see layout.tsx), so it's already rendering
+// behind this route with zero extra wiring. Still uses the same
+// fixed-chrome/fixed-footer shell /work/[slug] uses for its own real,
+// long-form scrolling content (.scroll-page-chrome/.scroll-page-footer —
+// shared, not duplicated, see globals.css) even though this page
+// itself no longer scrolls past them — .about-page's own padding
+// reserves the space either way.
 //
-// Real scrolling now, not .page's zero-scroll 3-row grid — direct
-// request replaced the old one-paragraph "honest subset" placeholder
-// with the full "This Is Voltair" essay (see AboutContent.tsx /
-// data/about-content.ts), real user-authored content far too long to
-// fit one fixed viewport without either unreadable type or clipped
-// content. Same fixed-chrome/real-scroll-body shell /work/[slug]
-// already uses for its own real, long-form content (.scroll-page-chrome/
-// .scroll-page-footer — shared, not duplicated, see globals.css), not a
-// new pattern invented for this page.
+// hideAvailability on StatusBar, direct request — AboutContent's own
+// meta cluster already shows "status: Available October 2026," so
+// this footer's copy of the same line is a real duplicate here, not
+// on any other route (each renders its own separate <StatusBar />).
 export default function AboutPage() {
   return (
     <>
@@ -30,7 +33,7 @@ export default function AboutPage() {
         <AboutContent />
       </main>
       <div className="scroll-page-footer">
-        <StatusBar />
+        <StatusBar hideAvailability />
       </div>
     </>
   );
