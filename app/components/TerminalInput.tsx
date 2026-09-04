@@ -109,7 +109,7 @@ const BOOT_SEEN_KEY = "voltair-boot-seen";
 // comment). The rest translate via the current lang at boot time.
 function bootLines(lang: Lang) {
   return [
-    "voltair_studio deploy console",
+    "Voltair_Studio deploy console",
     `skybox engine ... ${t(lang, "terminal.bootReady")}`,
     `terminal shell ... ${t(lang, "terminal.bootReady")}`,
     t(lang, "terminal.typeHelp"),
