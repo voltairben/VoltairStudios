@@ -2200,10 +2200,10 @@ body {
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
-/* Bottom-right, direct request (the reference screenshot's own bio
-   sits bottom-left; deliberately mirrored, not copied literally, so
-   the Tools/meta cluster above balances it on the left). Capped width
-   so 3 short paragraphs still read as a real column, not one line
+/* Bottom-left, direct follow-up — matches the reference screenshot's
+   own bio position directly now (an earlier round mirrored it to the
+   right; reversed once the user saw that live). Capped width so 3
+   short paragraphs still read as a real column, not one line
    stretching the full remaining page width now that the old 3-column
    grid isn't there to constrain it. */
 .about-bio {
@@ -2222,20 +2222,23 @@ body {
   text-shadow: var(--text-halo-small);
 }
 @media (max-width: 700px) {
-  /* Two side-by-side columns (meta cluster + bio) stop being
+  /* Two side-by-side columns (bio + meta cluster) stop being
      meaningfully wide below a real small-tablet/large-phone width —
-     stacks to one column instead, bio first (the actual "who this
-     is" content) then the smaller Tools/status/contact cluster.
-     Stacking means the two blocks' heights now sum instead of just
-     taking whichever was taller side by side, real height pressure a
-     live check caught: at 390x844 the stacked content's own last line
-     landed exactly flush against the fixed status bar with zero
-     margin (technically not overflowing .about-page's own reserved
-     padding, but touching it — no real breathing room). Tightened
-     line-height/gaps/size below to give that margin back rather than
-     just trusting the padding reservation is enough on its own. */
+     stacks to one column instead. Plain column, not column-reverse:
+     bio is first in DOM now (left in the row layout above), so a
+     plain stack already puts it first visually too — the actual "who
+     this is" content, ahead of the smaller Tools/status/contact
+     cluster. Stacking means the two blocks' heights now sum instead
+     of just taking whichever was taller side by side, real height
+     pressure a live check caught: at 390x844 the stacked content's
+     own last line landed exactly flush against the fixed status bar
+     with zero margin (technically not overflowing .about-page's own
+     reserved padding, but touching it — no real breathing room).
+     Tightened line-height/gaps/size below to give that margin back
+     rather than just trusting the padding reservation is enough on
+     its own. */
   .about-bottom-row {
-    flex-direction: column-reverse;
+    flex-direction: column;
     align-items: stretch;
     gap: var(--space-2);
   }
