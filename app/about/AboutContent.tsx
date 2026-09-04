@@ -65,6 +65,18 @@ export default function AboutContent() {
             already the one real way back, and a second one reads as
             clutter now that this page is this short. */}
         <div className="about-bio">
+          {/* Direct request: "About --voltair_studio" / "This Is
+              Voltair, by Bennie" above the bio text — the old H1 +
+              kicker pair from before the ABOUT/scramble headline took
+              over that role, now reintroduced as a smaller title/
+              byline heading the bio column, not a page-wide hero.
+              "About --voltair_studio" stays untranslated, plain text —
+              same handle the masthead's own back link and chrome
+              wordmark already show in every language, not prose. */}
+          <div className="about-bio-heading">
+            <h2 className="about-bio-title">About --voltair_studio</h2>
+            <p className="about-bio-kicker">{c.kicker}</p>
+          </div>
           {c.bio.map((p, i) => (
             <p key={i} className="about-bio-paragraph">
               {p}

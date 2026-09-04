@@ -16,12 +16,14 @@
 // every other proper noun already on this site.
 
 export type AboutContentShape = {
+  kicker: string;
   bio: string[];
   tools: string[];
 };
 
 export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
   en: {
+    kicker: "This Is Voltair, by Bennie",
     bio: [
       "I'm Bennie, the designer and developer behind Voltair Studio. I build custom websites that feel less like pages and more like places you can explore. Tactile, responsive, and fun to click around in.",
       "I care about websites that look good, feel smooth, and are satisfying to use. I like making small details matter, whether it's the way something moves, responds, or catches you off guard. The goal is simple: make digital experiences that people can feel.",
@@ -30,6 +32,7 @@ export const ABOUT_CONTENT: Record<"en" | "nl", AboutContentShape> = {
     tools: ["Next.js", "Three.js", "React", "Tailwind CSS", "Supabase", "Resend", "Vercel"],
   },
   nl: {
+    kicker: "Dit Is Voltair, door Bennie",
     bio: [
       "Ik ben Bennie, de designer en developer achter Voltair Studio. Ik bouw custom websites die minder aanvoelen als pagina's en meer als plekken die je kunt verkennen. Tactiel, responsief en leuk om doorheen te klikken.",
       "Ik hecht veel waarde aan websites die er goed uitzien, soepel aanvoelen en fijn zijn om te gebruiken. Ik vind het leuk om kleine details te laten opvallen, of het nou gaat om hoe iets beweegt, reageert, of je verrast. Het doel is simpel: digitale ervaringen maken die mensen kunnen voelen.",

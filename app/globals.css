@@ -2213,6 +2213,33 @@ body {
   max-width: 30rem;
   text-align: left;
 }
+/* "About --voltair_studio" / kicker byline, direct request — the old
+   H1+kicker pair from before the big ABOUT headline existed,
+   reintroduced as a smaller heading for this column rather than a
+   second page-wide hero. Stacked, not inline like .about-hero-heading
+   sits with nothing beside it — this one has a byline of real
+   different length underneath, not a short trailing tag next to it. */
+.about-bio-heading {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space-1) * -1);
+}
+.about-bio-title {
+  color: var(--color-amber-bright);
+  font-size: clamp(0.9375rem, 2dvmin, 1.3rem);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  text-shadow: var(--text-halo-small); /* --text-halo-small, not the
+    full ring — this sits well under the 12-28px danger zone
+    .about-hero-heading's own comment documents, same reasoning */
+}
+.about-bio-kicker {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-status);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-shadow: var(--text-halo-small);
+}
 .about-bio-paragraph {
   color: var(--color-cursor-flash);
   font-size: clamp(0.8125rem, 1.6dvmin, 1.05rem);
