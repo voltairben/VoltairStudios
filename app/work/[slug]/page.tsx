@@ -113,11 +113,34 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               </div>
             )}
           </div>
+          {/* Card-to-page morph, direct request ("for every page") —
+              same project-title-${slug}/project-image-${slug} names the
+              reel/index use, no click-tracking state needed here unlike
+              those: this link is the only instance of the "next
+              project" on the page (no REPEAT_COUNT-style duplicates to
+              disambiguate between), so the names can just be static
+              instead of set imperatively on click. Always a different
+              slug than this page's own (project.slug), never the
+              current page's own project-title/-image name, so nothing
+              here can collide with this page's own <h1>/mockup tags. */}
           <Link
             href={`/work/${nextProject.slug}`}
             className="case-study-infobar-next"
           >
-            <span className="case-study-infobar-thumb">
+            <span
+              className="case-study-infobar-thumb"
+              style={
+                // Only when there's a real mockup to land on — a
+                // placeholder next-project's own case-study page never
+                // tags anything with this name (EstrelaCardViewer skips
+                // it when mockups.length is 0), so tagging this side
+                // unconditionally would create a one-sided, unpaired
+                // transition name for every placeholder pairing.
+                nextProject.image
+                  ? { viewTransitionName: `project-image-${nextProject.slug}` }
+                  : undefined
+              }
+            >
               {nextProject.image ? (
                 <Image src={nextProject.image} alt="" fill sizes="64px" />
               ) : (
@@ -128,7 +151,12 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               <span className="case-study-infobar-label">
                 <T k="work.nextProject" />
               </span>
-              <span className="case-study-infobar-value">{nextProject.name}</span>
+              <span
+                className="case-study-infobar-value"
+                style={{ viewTransitionName: `project-title-${nextProject.slug}` }}
+              >
+                {nextProject.name}
+              </span>
             </span>
           </Link>
         </div>

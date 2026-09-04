@@ -215,7 +215,7 @@ export default function EstrelaCardViewer({ project }: { project: Project }) {
       ) : (
         <>
           <div ref={trackRef} className="mockup-carousel-track">
-            {mockups.map((m) => (
+            {mockups.map((m, i) => (
               <Image
                 key={m.src}
                 src={m.src}
@@ -223,6 +223,18 @@ export default function EstrelaCardViewer({ project }: { project: Project }) {
                 width={1440}
                 height={900}
                 className="mockup-card-image"
+                // Card-to-page image morph target, matching the reel/
+                // index thumbnail's own project-image-${slug} name (see
+                // ProjectReel.tsx). Only the first slide — the carousel
+                // always mounts at activeIndex 0, and a duplicate name
+                // across multiple slides would be the same "browser
+                // rejects duplicate view-transition-name" problem the
+                // reel's own morphIndex state already exists to avoid,
+                // just with a static index instead of click-tracked
+                // state since (unlike the reel) this component only
+                // ever renders one project's mockups at a time — no
+                // duplicate copies to disambiguate between.
+                style={i === 0 ? { viewTransitionName: `project-image-${project.slug}` } : undefined}
               />
             ))}
           </div>
