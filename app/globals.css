@@ -2086,12 +2086,64 @@ body {
   outline-offset: var(--focus-outline-offset);
 }
 
-/* Card-to-page morph (project reel/index -> case study, see
-   ProjectReel.tsx / ProjectIndex.tsx). The browser's View Transitions API
-   doesn't check prefers-reduced-motion on its own -- every other motion
-   feature in this file gets its own reduced-motion override, so this
-   does too: content still swaps instantly and correctly, it just stops
-   growing/sliding into place. */
+/* Card-to-page morph (project reel/index <-> case study, ChromeBar's
+   About link <-> the About page's headline, the case-study "Next
+   Project" link). Direct follow-up: the browser's own default
+   View Transition behavior interpolates each shared element's
+   position/size between its old and new rect, which reads exactly as
+   "zoom in and out" — reported directly, not a guess. Checked what
+   segerman.dev itself actually does instead of assuming (live, via a
+   real triggered navigation, screenshotted frame by frame): no
+   noticeable grow/slide at all — new content just appears at its
+   destination and blur-clears into focus, fast (~100-150ms measured).
+   Reproduces that instead: the geometric group animation is cut to
+   near-nothing (any position/size snap happens in 100ms, too fast to
+   read as motion) and the actual visible effect is this blur+fade on
+   the old/new content pair, which has zero grow/scale/zoom quality to
+   it at all — content sits still and clears up. */
+::view-transition-group(*) {
+  animation-duration: 100ms;
+}
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
+    system's own established ease-out-expo, already used for line-in
+    elsewhere in this file — kept consistent rather than inventing a
+    second easing curve for one more motion feature */
+}
+@keyframes card-morph-blur-in {
+  from {
+    filter: blur(20px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes card-morph-blur-out {
+  from {
+    filter: blur(0);
+    opacity: 1;
+  }
+  to {
+    filter: blur(20px);
+    opacity: 0;
+  }
+}
+::view-transition-new(*) {
+  animation-name: card-morph-blur-in;
+}
+::view-transition-old(*) {
+  animation-name: card-morph-blur-out;
+}
+/* The browser's View Transitions API doesn't check prefers-reduced-
+   motion on its own -- every other motion feature in this file gets
+   its own reduced-motion override, so this does too: content still
+   swaps instantly and correctly, it just stops blurring/fading into
+   place. animation (shorthand) + !important resets every longhand
+   set above regardless of the order these rules appear in. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
