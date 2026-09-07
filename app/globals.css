@@ -41,15 +41,20 @@ ol {
   --color-amber-bright: #ff5a36; /* Primary Accent (Warm Persimmon) — used
     selectively now, per direct hierarchy request: "Designers", the
     headline cursor, and the Contact link only, not every accent role */
-  --color-transition-block: #bd4b35; /* the page-transition overlay's
-    own block color — persimmon blended ~70/30 toward --color-pane-bg.
-    Direct follow-up ("the colour of the transision doesnt look right
-    its too bright"): --color-amber-bright is a small-dose accent
-    everywhere else on the site (text, a CTA, a link against near-
-    black); filling the whole viewport with it at full saturation is a
-    completely different visual weight. Darkening toward the site's
-    own background keeps it recognizably the same accent family
-    without the full-screen wash reading as a blinding flash. */
+  --color-transition-block: #6f3a33; /* the page-transition overlay's
+    own block color — persimmon blended toward --color-pane-bg.
+    Direct follow-up, round 2 ("i dont like it its too much. It needs
+    to be more subtle"): the first blend (~70/30 persimmon/pane-bg,
+    #bd4b35) fixed the original "too bright" complaint but was still
+    a bold, saturated rust at full-viewport scale. Pushed much further
+    toward the background this time (~35/65) — a dark, moody surface
+    with just a warm undertone, matching this site's own restrained
+    near-black terminal character instead of reading as a color block
+    in its own right. Same reasoning as before on WHY a blend at all:
+    --color-amber-bright is a small-dose accent everywhere else (text,
+    a CTA, a link against near-black); filling the whole viewport with
+    it — at ANY intensity — is a different visual weight than a
+    accent's own scale, and needs its own, separately-tuned value. */
   --color-amber-dim: #94a3b8; /* Muted Text (Slate Grey) — was an
     off-white alpha tint before this pass; redefined to the spec's exact
     named slate for the tagline and footer metadata */
