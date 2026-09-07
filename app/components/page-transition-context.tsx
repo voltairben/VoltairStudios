@@ -20,20 +20,26 @@ export type TransitionPhase = "idle" | "covering" | "revealing";
 export type TransitionDirection = "forward" | "back";
 
 // Cover: strips slide in, staggered left-to-right on top of each
-// strip's own transform duration.
-export const COVER_TRANSITION_MS = 420;
-export const COVER_STAGGER_MS = 140;
+// strip's own transform duration. Direct follow-up ("slowed... so you
+// can actually see the blocks... the blocks dont come as fast as we
+// have it now") — v3's 420/140 made every strip arrive within ~560ms
+// of each other, close enough to read as one near-simultaneous snap
+// rather than a visible, one-after-another sweep. Both numbers pushed
+// up, and the stagger widened much more than the duration — a wider
+// spread relative to each strip's own travel time is what actually
+// makes the wave read as sequential blocks landing, not just "slower."
+export const COVER_TRANSITION_MS = 650;
+export const COVER_STAGGER_MS = 500;
 // Hold: fully covered, immediately after which `navigate()` fires and
 // the new route renders — this only has to absorb React committing
 // the new page's first paint, not a real network round-trip anymore
-// (navigate() is called once already fully covered, not on click), so
-// it's much shorter than v1/v2's guess-and-hope margin.
-export const HOLD_MS = 120;
+// (navigate() is called once already fully covered, not on click).
+export const HOLD_MS = 200;
 // Reveal: strips continue in the same direction of travel they
 // entered from (down-and-out or up-and-out, never reversing), same
 // stagger shape as the cover.
-export const REVEAL_TRANSITION_MS = 420;
-export const REVEAL_STAGGER_MS = 140;
+export const REVEAL_TRANSITION_MS = 650;
+export const REVEAL_STAGGER_MS = 500;
 
 const TOTAL_COVER_MS = COVER_TRANSITION_MS + COVER_STAGGER_MS;
 const TOTAL_REVEAL_MS = REVEAL_TRANSITION_MS + REVEAL_STAGGER_MS;
