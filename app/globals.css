@@ -2100,27 +2100,22 @@ body {
   }
 }
 
-/* Page-transition strip-wipe overlay (PageTransitionOverlay.tsx). v3 —
-   two direct follow-ups. (1) "it first lets me see the page and then
-   the transition screen comes, it has a delay": v2 let real navigation
-   fire immediately on click, racing this overlay's own separately-timed
-   cover animation — a static prefetched route could paint before the
-   strips finished closing. Fixed in page-transition-context.tsx:
-   trigger() now owns navigation and only calls it once every strip has
-   fully closed. (2) "1 colour would work better... change it to the
-   persimmon weve been using": dropped the shader (LoadingShader) v2
-   used as material — solid var(--color-amber-bright) fill instead, no
-   canvas/WebGL involved at all now. .page-transition-strip below still
-   only ever animates `transform`, the one CSS property that never
-   triggers layout or paint, so the whole cover/reveal stays GPU
-   compositor work — that part of v2's own fix (see git history for its
-   own "why", replacing v1's masked-canvas mosaic) still holds. Not
-   built on the View Transitions API — see page-transition-context.tsx
-   for why. z-index 50: above real page content (1) and the loading
-   screen (10), below the CRT overlay (100) — the scanline/vignette
-   texture stays visible over the wipe too, same "viewed through one
-   continuous CRT" framing every other layer on this site already
-   commits to. */
+/* Page-transition block-wipe overlay (PageTransitionOverlay.tsx). v5
+   — direct follow-up ("it just looks like a orange slab moves over
+   the page i really want it to have the pixel effect"). v2-v4 slid a
+   handful of full-viewport-height bars via `transform` — reads as one
+   solid mass in motion regardless of stagger/pacing. Live-tested
+   rudeingenierie.com's actual reveal directly: a real 2D grid of
+   small blocks toggling plain `opacity` in place, nothing travels.
+   .page-transition-block below only ever animates `opacity` on small,
+   solid-color elements — still GPU-cheap (validated directly against
+   an isolated repro before shipping this), just a different cheap
+   property than v2-v4's `transform`. Not built on the View
+   Transitions API — see page-transition-context.tsx for why. z-index
+   50: above real page content (1) and the loading screen (10), below
+   the CRT overlay (100) — the scanline/vignette texture stays visible
+   over the wipe too, same "viewed through one continuous CRT" framing
+   every other layer on this site already commits to. */
 .page-transition-overlay {
   position: fixed;
   inset: 0;
@@ -2130,16 +2125,21 @@ body {
     should still reach whatever's underneath once it clears */
   overflow: hidden;
 }
-.page-transition-strips {
+.page-transition-grid {
   position: absolute;
   inset: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  /* No gap — cells sit edge-to-edge so a fully-covered frame is one
+     seamless persimmon surface, not a permanent grid-line texture.
+     The mosaic only reads as blocks mid-transition, while adjacent
+     cells are genuinely in different opacity states. */
 }
-.page-transition-strip {
-  flex: 1 0 0;
+.page-transition-block {
   background: var(--color-amber-bright); /* the persimmon accent —
     same token the headline/CTA/links already use, not a new color */
-  transition-property: transform;
+  transition-property: opacity;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
     system's own established ease-out-expo, used everywhere else this
     session tuned a motion feature's pacing */
@@ -2150,7 +2150,7 @@ body {
      machine, so this overlay never even mounts under reduced motion
      in practice) — kept here too so a future call site that invokes
      the overlay by some other path still can't animate it. */
-  .page-transition-strip {
+  .page-transition-block {
     transition: none;
   }
 }
