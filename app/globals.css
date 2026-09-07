@@ -2100,20 +2100,23 @@ body {
   }
 }
 
-/* Page-transition block-wipe overlay (PageTransitionOverlay.tsx),
-   direct request after browsing awwwards.com/elements/transition
-   together and picking rude-ingenierie.com's own block-wipe: a
-   scattered grid of blocks sweeps in, holds, then sweeps back out in
-   a staggered mosaic. Not built on the View Transitions API used
-   above — ::view-transition-old/new(name) are UA-rasterized snapshots
-   of the real page, not live DOM, so there's no way to put a live
-   WebGL canvas or a real animated SVG mask "inside" one; this is a
-   plain fixed overlay with its own JS-driven cover/hold/reveal timing
-   instead (see page-transition-context.tsx). z-index 50: above real
-   page content (1) and the loading screen (10), below the CRT overlay
-   (100) — the scanline/vignette texture stays visible over the block-
-   wipe too, same "viewed through one continuous CRT" framing every
-   other layer on this site already commits to. */
+/* Page-transition strip-wipe overlay (PageTransitionOverlay.tsx). v2 —
+   direct follow-up ("laggy/buggy... not the same as the site weve got
+   it from"). v1 masked a live WebGL canvas through 60 individually
+   CSS-transitioning SVG rects — real per-pixel mask compositing every
+   frame, the likely source of the reported lag (see the removed
+   .page-transition-mask-rect rule this replaced, in git history).
+   Live-tested rudeingenierie.com's own transition directly this
+   round: solid-color <div> strips animating a single cheap property,
+   not a masked shader. This mirrors that — .page-transition-strip
+   below only ever animates `transform`, the one CSS property that
+   never triggers layout or paint, so the whole cover/reveal is GPU
+   compositor work. Not built on the View Transitions API — see
+   page-transition-context.tsx for why. z-index 50: above real page
+   content (1) and the loading screen (10), below the CRT overlay
+   (100) — the scanline/vignette texture stays visible over the wipe
+   too, same "viewed through one continuous CRT" framing every other
+   layer on this site already commits to. */
 .page-transition-overlay {
   position: fixed;
   inset: 0;
@@ -2123,31 +2126,26 @@ body {
     should still reach whatever's underneath once it clears */
   overflow: hidden;
 }
-/* LoadingShader's own canvas already carries position:absolute;
-   inset:0 (see .loading-shader-canvas) — that alone correctly fills
-   this overlay too, since both are position:fixed with the same
-   inset:0. Only the mask is new here. maskContentUnits/maskUnits:
-   objectBoundingBox on the <mask> itself (see PageTransitionOverlay.tsx)
-   means the rects inside are already normalized 0-1 against whatever
-   element the mask is applied to — no pixel math needed on either
-   side for this to track the real, current viewport size. */
-.page-transition-overlay .loading-shader-canvas {
-  mask: url(#page-transition-mask);
-  -webkit-mask: url(#page-transition-mask);
-}
-/* Zero-size, not display:none — an SVG only used to hold a <mask>
-   definition doesn't need to render any visible box of its own, but
-   display:none (or the mask consumer failing to resolve the same-
-   document #id) has caused real "mask silently does nothing" bugs
-   elsewhere on the web for exactly this pattern; an invisible-but-
-   present 0x0 element keeps the reference reliably resolvable. */
-.page-transition-mask-svg {
+/* The shader sits unmasked underneath the strips — see
+   PageTransitionOverlay.tsx's own comment: it only becomes visible
+   when a strip's own position genuinely uncovers it (plain z-index
+   occlusion), never through a mask. LoadingShader's own canvas
+   already carries position:absolute; inset:0 (.loading-shader-canvas),
+   which correctly fills this fixed-position overlay too. */
+.page-transition-strips {
   position: absolute;
-  width: 0;
-  height: 0;
+  inset: 0;
+  z-index: 1; /* above .loading-shader-canvas's own z-index:0 */
+  display: flex;
 }
-.page-transition-mask-rect {
-  transition-property: opacity;
+.page-transition-strip {
+  flex: 1 0 0;
+  /* var(--color-pane-bg): the same near-black the shader itself
+     darkens toward — a covering strip and an uncovered shader patch
+     read as one continuous surface, not two different materials
+     seamed together. */
+  background: var(--color-pane-bg);
+  transition-property: transform;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
     system's own established ease-out-expo, used everywhere else this
     session tuned a motion feature's pacing */
@@ -2158,7 +2156,7 @@ body {
      machine, so this overlay never even mounts under reduced motion
      in practice) — kept here too so a future call site that invokes
      the overlay by some other path still can't animate it. */
-  .page-transition-mask-rect {
+  .page-transition-strip {
     transition: none;
   }
 }

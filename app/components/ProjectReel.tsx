@@ -281,9 +281,11 @@ export default function ProjectReel() {
               // tagged yet and the morph would silently degrade to a
               // plain fade. flushSync forces the commit to happen
               // before this handler returns.
-              trigger(); // independent of the flushSync morph below —
-              // see ChromeBar.tsx's own comment on why this doesn't
-              // need to coordinate with it or with the real navigation
+              trigger("forward"); // independent of the flushSync morph
+              // below — see ChromeBar.tsx's own comment on why this
+              // doesn't need to coordinate with it or with the real
+              // navigation. "forward": a project case study is deeper
+              // into the site, not a return trip.
               flushSync(() => {
                 setMorphIndex(i);
                 setMorphSource("reel");

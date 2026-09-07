@@ -37,7 +37,7 @@ export default function AboutContent() {
   return (
     <div className="about-page-wrap" role="region" aria-labelledby="about-heading">
       <div className="about-masthead">
-        <Link href="/" className="about-back" onClick={trigger}>
+        <Link href="/" className="about-back" onClick={() => trigger("back")}>
           ← {STUDIO_HANDLE}
         </Link>
       </div>

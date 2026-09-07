@@ -62,7 +62,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 mount on "/") knows which of its 6 duplicated copies to tag
                 with the matching view-transition-name for the reverse
                 morph — see ProjectReel.tsx's hash-read effect. */}
-            <TransitionLink href={`/#${project.slug}`} className="case-study-back">
+            <TransitionLink href={`/#${project.slug}`} className="case-study-back" direction="back">
               ← {STUDIO_HANDLE}
             </TransitionLink>
             <h1
