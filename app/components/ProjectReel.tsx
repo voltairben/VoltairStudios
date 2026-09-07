@@ -1,12 +1,11 @@
 "use client";
 
-import { Link, useTransitionRouter } from "next-view-transitions";
+import { Link } from "next-view-transitions";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { flushSync } from "react-dom";
 import {
   useEffect,
   useRef,
-  useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
@@ -57,18 +56,10 @@ const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
 
 export default function ProjectReel() {
   const { trigger } = usePageTransition();
-  const router = useTransitionRouter();
-  const { reportActiveIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
-    useProjectShowcase();
+  const router = useRouter();
+  const { reportActiveIndex, hoveredSlug, setHoveredSlug } = useProjectShowcase();
   const reelRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  // Card-to-page morph target: PROJECTS repeats REPEAT_COUNT times in the
-  // DOM at once (see `looped` below), so a shared view-transition-name
-  // can't just live on every copy's label — the browser rejects duplicate
-  // names within one document snapshot. Only the one physical <span> the
-  // user actually clicked gets tagged; every other copy renders a plain
-  // untagged span. `morphIndex` is an index into `looped`, not PROJECTS.
-  const [morphIndex, setMorphIndex] = useState<number | null>(null);
   const offsetRef = useRef(0); // current translateY in px, always <= 0
   const singleSetHeightRef = useRef(0);
   const speedPxPerMsRef = useRef(0);
@@ -163,27 +154,6 @@ export default function ProjectReel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reverse-direction morph: the case-study page's back link encodes
-  // which project it came from as a URL hash (`/#slug`) since a fresh
-  // mount here has no other way to know which tile the browser should
-  // pair against the case-study's outgoing <h1>. Mount-only — matches
-  // the "start in the middle copy" offset above (copy index 1), so the
-  // tagged instance is the one actually on screen at mount.
-  useEffect(() => {
-    const slug = window.location.hash.slice(1);
-    if (!slug) return;
-    const projectIndex = PROJECTS.findIndex((p) => p.slug === slug);
-    if (projectIndex === -1) return;
-    // One-time read of a real external system (the URL's own hash,
-    // which doesn't exist as React state anywhere) to tag which
-    // duplicated tile owns the reverse morph; not state derived from a prop.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMorphIndex(PROJECTS.length + projectIndex);
-    setMorphSource("reel");
-    history.replaceState(null, "", window.location.pathname + window.location.search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Native listener, not React's onWheel — real console warning, caught
   // live: modern React registers its own wheel listener as passive by
   // default (matching the browser's own default for scroll-performance
@@ -274,27 +244,21 @@ export default function ProjectReel() {
             onMouseEnter={() => setHoveredSlug(project.slug)}
             onMouseLeave={() => setHoveredSlug(null)}
             onClick={(e) => {
-              // v3: trigger() now owns navigation timing — real
-              // navigation no longer fires immediately on click (see
-              // page-transition-context.tsx's own comment on why a
-              // plain Link's own default behavior raced the cover
-              // animation, a real bug). "forward": a project case
-              // study is deeper into the site, not a return trip. The
-              // flushSync tag+router.push pair moves inside navigate()
-              // — router.push() is what actually calls
-              // document.startViewTransition (see useTransitionRouter
-              // in next-view-transitions), so the tag still has to be
-              // committed and painted immediately before THAT call,
-              // same reasoning as before, just at its new (later) moment.
+              // trigger() owns navigation timing — real navigation no
+              // longer fires immediately on click (see page-
+              // transition-context.tsx's own comment on why a plain
+              // Link's own default behavior raced the cover animation,
+              // a real bug). "forward": a project case study is deeper
+              // into the site, not a return trip. Plain useRouter()
+              // (not useTransitionRouter()) — see TransitionLink.tsx's
+              // own comment on why: the native View Transition this
+              // used to drive (for the card-to-page title morph, now
+              // removed) rendered in the browser's top layer, above
+              // this overlay regardless of z-index, which was the real
+              // cause of a "sees the destination header early" bug.
               e.preventDefault();
               const slug = project.slug;
-              trigger("forward", () => {
-                flushSync(() => {
-                  setMorphIndex(i);
-                  setMorphSource("reel");
-                });
-                router.push(`/work/${slug}`);
-              });
+              trigger("forward", () => router.push(`/work/${slug}`));
             }}
           >
             {project.image && (
@@ -324,16 +288,7 @@ export default function ProjectReel() {
               />
             )}
             {project.image && <span className="project-reel-item-scrim" aria-hidden="true" />}
-            <span
-              className="project-reel-label"
-              style={
-                i === morphIndex && morphSource === "reel"
-                  ? { viewTransitionName: `project-title-${project.slug}` }
-                  : undefined
-              }
-            >
-              {project.name}
-            </span>
+            <span className="project-reel-label">{project.name}</span>
           </Link>
         ))}
       </div>

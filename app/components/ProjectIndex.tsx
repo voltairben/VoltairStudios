@@ -1,8 +1,7 @@
 "use client";
 
-import { Link, useTransitionRouter } from "next-view-transitions";
-import { flushSync } from "react-dom";
-import { useState } from "react";
+import { Link } from "next-view-transitions";
+import { useRouter } from "next/navigation";
 import { useProjectShowcase } from "./project-showcase-context";
 import { usePageTransition } from "./page-transition-context";
 import { PROJECTS } from "../data/projects";
@@ -22,16 +21,8 @@ import { PROJECTS } from "../data/projects";
 // have one anymore).
 export default function ProjectIndex() {
   const { trigger } = usePageTransition();
-  const router = useTransitionRouter();
-  const { activeIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
-    useProjectShowcase();
-  // Which project (by slug) this list should tag for the card-to-page
-  // morph — unlike ProjectReel there's no duplicate-instance problem
-  // here (PROJECTS.map renders each project exactly once), but the same
-  // project is also always visible in the reel at the same time, so
-  // morphSource still gates which of the two surfaces owns the name —
-  // see project-showcase-context.tsx.
-  const [morphSlug, setMorphSlug] = useState<string | null>(null);
+  const router = useRouter();
+  const { activeIndex, hoveredSlug, setHoveredSlug } = useProjectShowcase();
 
   return (
     <aside className="project-index" role="region" aria-label="Project index">
@@ -64,27 +55,14 @@ export default function ProjectIndex() {
             onFocus={() => setHoveredSlug(project.slug)}
             onBlur={() => setHoveredSlug(null)}
             onClick={(e) => {
-              // v3: trigger() now owns navigation timing — see
-              // ProjectReel.tsx's identical comment for the full "why".
-              // flushSync is still required so the tag is actually
-              // painted immediately before router.push() (which is
-              // what calls document.startViewTransition), just at its
-              // new, later moment inside navigate() instead of on click.
+              // trigger() owns navigation timing — see ProjectReel.tsx's
+              // identical comment for the full "why", including why
+              // this is a plain useRouter() and not
+              // useTransitionRouter().
               e.preventDefault();
               const slug = project.slug;
-              trigger("forward", () => {
-                flushSync(() => {
-                  setMorphSlug(slug);
-                  setMorphSource("index");
-                });
-                router.push(`/work/${slug}`);
-              });
+              trigger("forward", () => router.push(`/work/${slug}`));
             }}
-            style={
-              project.slug === morphSlug && morphSource === "index"
-                ? { viewTransitionName: `project-title-${project.slug}` }
-                : undefined
-            }
           >
             {project.name}
           </Link>
