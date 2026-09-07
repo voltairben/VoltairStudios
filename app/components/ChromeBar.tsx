@@ -7,6 +7,7 @@ import LangToggle from "./LangToggle";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
 import { STUDIO_HANDLE } from "../data/brand";
+import { usePageTransition } from "./page-transition-context";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
@@ -14,6 +15,7 @@ const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLang();
+  const { trigger } = usePageTransition();
 
   // Copy-to-clipboard is a courtesy alongside the real mailto link, not
   // instead of it — e.preventDefault() is never called, so the mail
@@ -89,7 +91,14 @@ export default function ChromeBar() {
             session had already built and verified (see DESIGN.md).
             next-view-transitions' Link, so navigating here (either
             direction) gets a real browser view transition for free. */}
-        <Link href="/about" className="chrome-nav-link">
+        {/* trigger() runs independently of the real navigation below —
+            it doesn't intercept/prevent this click, just also plays
+            the block-wipe overlay on its own fixed timeline while the
+            real next-view-transitions navigation happens underneath,
+            unseen (see page-transition-context.tsx's own comment on
+            why this is a plain fixed overlay, not the View Transitions
+            API this Link still separately triggers for free). */}
+        <Link href="/about" className="chrome-nav-link" onClick={trigger}>
           {t(lang, "nav.about")}
         </Link>
         <a

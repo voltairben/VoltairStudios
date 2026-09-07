@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
+import { usePageTransition } from "./page-transition-context";
 import { PROJECTS } from "../data/projects";
 
 // No real project screenshots exist yet (see PRODUCT.md — nothing gets
@@ -55,6 +56,7 @@ const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
   // clientHeight instead of assuming it). Doubled for real margin.
 
 export default function ProjectReel() {
+  const { trigger } = usePageTransition();
   const { reportActiveIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
     useProjectShowcase();
   const reelRef = useRef<HTMLElement>(null);
@@ -279,6 +281,9 @@ export default function ProjectReel() {
               // tagged yet and the morph would silently degrade to a
               // plain fade. flushSync forces the commit to happen
               // before this handler returns.
+              trigger(); // independent of the flushSync morph below —
+              // see ChromeBar.tsx's own comment on why this doesn't
+              // need to coordinate with it or with the real navigation
               flushSync(() => {
                 setMorphIndex(i);
                 setMorphSource("reel");

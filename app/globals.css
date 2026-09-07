@@ -2100,6 +2100,69 @@ body {
   }
 }
 
+/* Page-transition block-wipe overlay (PageTransitionOverlay.tsx),
+   direct request after browsing awwwards.com/elements/transition
+   together and picking rude-ingenierie.com's own block-wipe: a
+   scattered grid of blocks sweeps in, holds, then sweeps back out in
+   a staggered mosaic. Not built on the View Transitions API used
+   above — ::view-transition-old/new(name) are UA-rasterized snapshots
+   of the real page, not live DOM, so there's no way to put a live
+   WebGL canvas or a real animated SVG mask "inside" one; this is a
+   plain fixed overlay with its own JS-driven cover/hold/reveal timing
+   instead (see page-transition-context.tsx). z-index 50: above real
+   page content (1) and the loading screen (10), below the CRT overlay
+   (100) — the scanline/vignette texture stays visible over the block-
+   wipe too, same "viewed through one continuous CRT" framing every
+   other layer on this site already commits to. */
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none; /* never a click target — this is a transient
+    visual, not a modal; a real double-click during the hold phase
+    should still reach whatever's underneath once it clears */
+  overflow: hidden;
+}
+/* LoadingShader's own canvas already carries position:absolute;
+   inset:0 (see .loading-shader-canvas) — that alone correctly fills
+   this overlay too, since both are position:fixed with the same
+   inset:0. Only the mask is new here. maskContentUnits/maskUnits:
+   objectBoundingBox on the <mask> itself (see PageTransitionOverlay.tsx)
+   means the rects inside are already normalized 0-1 against whatever
+   element the mask is applied to — no pixel math needed on either
+   side for this to track the real, current viewport size. */
+.page-transition-overlay .loading-shader-canvas {
+  mask: url(#page-transition-mask);
+  -webkit-mask: url(#page-transition-mask);
+}
+/* Zero-size, not display:none — an SVG only used to hold a <mask>
+   definition doesn't need to render any visible box of its own, but
+   display:none (or the mask consumer failing to resolve the same-
+   document #id) has caused real "mask silently does nothing" bugs
+   elsewhere on the web for exactly this pattern; an invisible-but-
+   present 0x0 element keeps the reference reliably resolvable. */
+.page-transition-mask-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.page-transition-mask-rect {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
+    system's own established ease-out-expo, used everywhere else this
+    session tuned a motion feature's pacing */
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Belt-and-suspenders with page-transition-context.tsx's own
+     matchMedia check in trigger() (which skips the whole state
+     machine, so this overlay never even mounts under reduced motion
+     in practice) — kept here too so a future call site that invokes
+     the overlay by some other path still can't animate it. */
+  .page-transition-mask-rect {
+    transition: none;
+  }
+}
+
 /* ==========================================================================
    About page (app/about/page.tsx) — §9
    A real route, not a modal (see DESIGN.md for the modal-to-route

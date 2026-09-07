@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Link } from "next-view-transitions";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { PROJECTS, getProject } from "../../data/projects";
@@ -9,6 +8,7 @@ import StatusBar from "../../components/StatusBar";
 import T from "../../components/T";
 import Localized from "../../components/Localized";
 import { STUDIO_HANDLE } from "../../data/brand";
+import TransitionLink from "../../components/TransitionLink";
 
 export function generateStaticParams() {
   return PROJECTS.map((p) => ({ slug: p.slug }));
@@ -62,9 +62,9 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 mount on "/") knows which of its 6 duplicated copies to tag
                 with the matching view-transition-name for the reverse
                 morph — see ProjectReel.tsx's hash-read effect. */}
-            <Link href={`/#${project.slug}`} className="case-study-back">
+            <TransitionLink href={`/#${project.slug}`} className="case-study-back">
               ← {STUDIO_HANDLE}
-            </Link>
+            </TransitionLink>
             <h1
               className="case-study-title"
               style={{ viewTransitionName: `project-title-${project.slug}` }}
@@ -113,7 +113,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               </div>
             )}
           </div>
-          <Link
+          <TransitionLink
             href={`/work/${nextProject.slug}`}
             className="case-study-infobar-next"
           >
@@ -130,7 +130,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
               </span>
               <span className="case-study-infobar-value">{nextProject.name}</span>
             </span>
-          </Link>
+          </TransitionLink>
         </div>
 
         {/* Visit/Year, round 3 — direct request: always show both tags

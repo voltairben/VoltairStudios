@@ -4,6 +4,7 @@ import { Link } from "next-view-transitions";
 import { flushSync } from "react-dom";
 import { useState } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
+import { usePageTransition } from "./page-transition-context";
 import { PROJECTS } from "../data/projects";
 
 // Mirrors ProjectReel's placeholder reasoning: no real project names
@@ -20,6 +21,7 @@ import { PROJECTS } from "../data/projects";
 // elapsed-time formula, not a scroll position, since the reel doesn't
 // have one anymore).
 export default function ProjectIndex() {
+  const { trigger } = usePageTransition();
   const { activeIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
     useProjectShowcase();
   // Which project (by slug) this list should tag for the card-to-page
@@ -61,6 +63,9 @@ export default function ProjectIndex() {
             onFocus={() => setHoveredSlug(project.slug)}
             onBlur={() => setHoveredSlug(null)}
             onClick={() => {
+              trigger(); // independent of the flushSync morph below —
+              // see ChromeBar.tsx's own comment on why this doesn't
+              // need to coordinate with it or with the real navigation
               // See ProjectReel.tsx's identical comment — flushSync is
               // required so the tag is actually painted before
               // next-view-transitions calls document.startViewTransition.

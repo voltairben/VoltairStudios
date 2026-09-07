@@ -6,6 +6,7 @@ import { t } from "../data/i18n";
 import { ABOUT_CONTENT, ABOUT_TOOLS } from "../data/about-content";
 import { STUDIO_HANDLE } from "../data/brand";
 import ScrambleText from "../components/ScrambleText";
+import { usePageTransition } from "../components/page-transition-context";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 
@@ -31,11 +32,12 @@ const CONTACT_EMAIL = "contact@voltairstudio.com";
 export default function AboutContent() {
   const { lang } = useLang();
   const c = ABOUT_CONTENT[lang];
+  const { trigger } = usePageTransition();
 
   return (
     <div className="about-page-wrap" role="region" aria-labelledby="about-heading">
       <div className="about-masthead">
-        <Link href="/" className="about-back">
+        <Link href="/" className="about-back" onClick={trigger}>
           ← {STUDIO_HANDLE}
         </Link>
       </div>
