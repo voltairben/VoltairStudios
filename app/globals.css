@@ -41,6 +41,24 @@ ol {
   --color-amber-bright: #ff5a36; /* Primary Accent (Warm Persimmon) — used
     selectively now, per direct hierarchy request: "Designers", the
     headline cursor, and the Contact link only, not every accent role */
+  /* Page-transition block colors, one per skybox — direct follow-up
+     ("we need to get the transistion to more fit the skybox
+     background thats why it doesnt look good with any colour"): a
+     single fixed color (this token used to be one value, persimmon
+     blended toward --color-pane-bg) can't read as "fitting" against
+     all 5 real skybox moods at once — a warm rust block sits fine
+     against dusk's own warm tones and clashes against day's bright
+     blue. Each value below is that SAME blend technique (~35% of the
+     skybox's own real dominant tone, sampled directly from
+     public/skyboxes/skybox-*.png, blended toward --color-pane-bg) —
+     just keyed per mood instead of fixed to one. PageTransitionOverlay.tsx
+     reads the live skybox and sets --transition-block-color to the
+     matching one of these on its own wrapper; see its own comment. */
+  --color-transition-block-morning: #6a605b; /* peachy-cream morning sky */
+  --color-transition-block-day: #48586e; /* cornflower-blue day sky */
+  --color-transition-block-dusk: #514b6b; /* lavender-to-peach dusk sky */
+  --color-transition-block-night: #2a3247; /* deep navy night sky */
+  --color-transition-block-midnight: #23293c; /* near-black midnight sky */
   --color-amber-dim: #94a3b8; /* Muted Text (Slate Grey) — was an
     off-white alpha tint before this pass; redefined to the spec's exact
     named slate for the tagline and footer metadata */
@@ -2097,6 +2115,75 @@ body {
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation: none !important;
+  }
+}
+
+/* Page-transition block-wipe overlay (PageTransitionOverlay.tsx). v5
+   — direct follow-up ("it just looks like a orange slab moves over
+   the page i really want it to have the pixel effect"). v2-v4 slid a
+   handful of full-viewport-height bars via `transform` — reads as one
+   solid mass in motion regardless of stagger/pacing. Live-tested
+   rudeingenierie.com's actual reveal directly: a real 2D grid of
+   small blocks toggling plain `opacity` in place, nothing travels.
+   .page-transition-block below only ever animates `opacity` on small,
+   solid-color elements — still GPU-cheap (validated directly against
+   an isolated repro before shipping this), just a different cheap
+   property than v2-v4's `transform`. Not built on the View
+   Transitions API — see page-transition-context.tsx for why. z-index
+   50: above real page content (1) and the loading screen (10), below
+   the CRT overlay (100) — the scanline/vignette texture stays visible
+   over the wipe too, same "viewed through one continuous CRT" framing
+   every other layer on this site already commits to. */
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none; /* never a click target — this is a transient
+    visual, not a modal; a real double-click during the hold phase
+    should still reach whatever's underneath once it clears */
+  overflow: hidden;
+}
+.page-transition-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr); /* matches COLS in
+    PageTransitionOverlay.tsx — keep these two in sync */
+  grid-template-rows: repeat(10, 1fr); /* matches ROWS */
+  /* No gap — cells sit edge-to-edge so a fully-covered frame is one
+     seamless surface, not a permanent grid-line texture. The mosaic
+     only reads as blocks mid-transition, while adjacent cells are
+     genuinely in different opacity states. */
+}
+.page-transition-block {
+  /* --transition-block-color is set inline on .page-transition-grid
+     (its parent) by PageTransitionOverlay.tsx, picked from the live
+     skybox — see the --color-transition-block-* tokens' own comment
+     for why this varies per skybox instead of being one fixed color. */
+  background: var(--transition-block-color);
+  transition-property: opacity;
+  /* NOT this system's own established ease-out-expo (cubic-bezier
+     (0.16, 1, 0.3, 1), used everywhere else here) — direct follow-up
+     ("opacity change... so it doesnt look like a hard cover"): traced
+     directly against real per-block opacity samples, that curve
+     reaches ~90% of its target within the first ~25% of its own
+     duration regardless of how long the duration is — a block was
+     caught jumping from 0.15 to 0.75 opacity in 48ms of a 380ms
+     transition. Doubling duration alone couldn't fix that; the curve
+     itself was front-loading the entire visible change. ease-in-out
+     spends its time much more evenly across the whole duration, so
+     the fade is actually visible instead of snapping early and idling
+     near-opaque/near-transparent for most of the nominal time. */
+  transition-timing-function: ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Belt-and-suspenders with page-transition-context.tsx's own
+     matchMedia check in trigger() (which skips the whole state
+     machine, so this overlay never even mounts under reduced motion
+     in practice) — kept here too so a future call site that invokes
+     the overlay by some other path still can't animate it. */
+  .page-transition-block {
+    transition: none;
   }
 }
 

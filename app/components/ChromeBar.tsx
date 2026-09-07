@@ -7,9 +7,35 @@ import LangToggle from "./LangToggle";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
 import { STUDIO_HANDLE } from "../data/brand";
+import TransitionLink from "./TransitionLink";
+import { LOGO_MODEL_URL } from "./SkyboxCanvas";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
+
+// Direct report: "when loading the about page the logo takes longer
+// to load." Real cause: SkyboxCanvas only starts fetching the ~6MB
+// logo model once the pathname actually becomes "/about" — zero head
+// start, and our own cover animation already hides the screen for
+// over a second before that even happens (see page-transition-
+// context.tsx: navigate() doesn't fire until fully covered). Warming
+// the browser's HTTP cache the moment real intent shows up — hover,
+// keyboard focus, or the click itself — means that hidden second-plus
+// is spent actually fetching the model instead of doing nothing, so
+// SkyboxCanvas's own loader.load() picks it up from cache moments
+// later instead of starting a fresh network request once the page is
+// already visible. Module-level, not component state — this only
+// needs to fire once per session regardless of how many times
+// ChromeBar itself mounts (it's on every route).
+let logoPrefetchStarted = false;
+function prefetchLogoModel() {
+  if (logoPrefetchStarted) return;
+  logoPrefetchStarted = true;
+  fetch(LOGO_MODEL_URL).catch(() => {
+    // Offline/blocked — SkyboxCanvas's own loader.load() still tries
+    // for real once /about actually mounts, same as it always did.
+  });
+}
 
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
@@ -35,9 +61,8 @@ export default function ChromeBar() {
 
   return (
     <header className="chrome-bar">
-      {/* Real navigation now, not a static label — direct request. Plain
-          next-view-transitions Link, same className the div had, so
-          .wordmark's own layout/position is completely unaffected (a
+      {/* Real navigation, direct request — same className the div had,
+          so .wordmark's own layout/position is completely unaffected (a
           flex item's outer display value doesn't matter to a flex
           parent — div and a both get blockified the same way). No
           custom role/tabIndex/keydown anywhere in this file: a real
@@ -45,10 +70,16 @@ export default function ChromeBar() {
           Enter for free; Space intentionally still scrolls instead of
           navigating, which is correct native link behavior, not a gap
           to patch — hijacking it would fight what a link is actually
-          supposed to do on Space. */}
-      <Link href="/" className="wordmark">
+          supposed to do on Space. TransitionLink, direct follow-up
+          ("when i click the top left voltair studio button it also
+          uses that transition") — same block-wipe every other real nav
+          link already gets. "back": the wordmark always points home,
+          which reads as a return trip from anywhere deeper in the site
+          (About, a case study), the same convention every other
+          back-link already uses. */}
+      <TransitionLink href="/" className="wordmark" direction="back">
         {STUDIO_HANDLE}
-      </Link>
+      </TransitionLink>
       <nav className="chrome-nav" aria-label="Site">
         {/* Same real-link treatment as the wordmark above — direct
             request named "the logo and the top-left brand name" as a
@@ -87,11 +118,22 @@ export default function ChromeBar() {
         {/* A real route now (/about), not a local modal-open button —
             direct request, replacing an in-page overlay this same
             session had already built and verified (see DESIGN.md).
-            next-view-transitions' Link, so navigating here (either
-            direction) gets a real browser view transition for free. */}
-        <Link href="/about" className="chrome-nav-link">
+            TransitionLink owns navigation timing (preventDefault +
+            router.push once the strip-wipe has fully covered the
+            screen — see page-transition-context.tsx's own comment on
+            why a plain Link's own immediately-firing navigation was a
+            real bug). "forward" — About is deeper into the site, not
+            a return trip. */}
+        <TransitionLink
+          href="/about"
+          className="chrome-nav-link"
+          direction="forward"
+          onMouseEnter={prefetchLogoModel}
+          onFocus={prefetchLogoModel}
+          onClick={prefetchLogoModel}
+        >
           {t(lang, "nav.about")}
-        </Link>
+        </TransitionLink>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
           className="chrome-nav-link"

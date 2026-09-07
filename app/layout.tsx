@@ -4,6 +4,8 @@ import { ViewTransitions } from "next-view-transitions";
 import { SkyboxProvider } from "./components/skybox-context";
 import SkyboxCanvas from "./components/SkyboxCanvas";
 import LoadingScreen from "./components/LoadingScreen";
+import { PageTransitionProvider } from "./components/page-transition-context";
+import PageTransitionOverlay from "./components/PageTransitionOverlay";
 import { AudioProvider } from "./components/audio-context";
 import { CrtProvider } from "./components/crt-context";
 import { LangProvider } from "./components/lang-context";
@@ -95,9 +97,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <CrtProvider>
             <AudioProvider>
               <SkyboxProvider>
-                <SkyboxCanvas />
-                <ViewTransitions>{children}</ViewTransitions>
-                <LoadingScreen />
+                {/* PageTransitionProvider wraps the same tree ViewTransitions
+                    does, for the same "cross-page, not per-component" reason
+                    — every trigger() call site (ChromeBar, ProjectReel,
+                    work/[slug]/page.tsx, ...) lives on a different route,
+                    so the state needs to survive the navigation itself, not
+                    reset with whatever page happened to call trigger(). */}
+                <PageTransitionProvider>
+                  <SkyboxCanvas />
+                  <ViewTransitions>{children}</ViewTransitions>
+                  <LoadingScreen />
+                  <PageTransitionOverlay />
+                </PageTransitionProvider>
               </SkyboxProvider>
             </AudioProvider>
           </CrtProvider>
