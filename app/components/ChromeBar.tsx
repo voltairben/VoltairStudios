@@ -61,9 +61,8 @@ export default function ChromeBar() {
 
   return (
     <header className="chrome-bar">
-      {/* Real navigation now, not a static label — direct request. Plain
-          next-view-transitions Link, same className the div had, so
-          .wordmark's own layout/position is completely unaffected (a
+      {/* Real navigation, direct request — same className the div had,
+          so .wordmark's own layout/position is completely unaffected (a
           flex item's outer display value doesn't matter to a flex
           parent — div and a both get blockified the same way). No
           custom role/tabIndex/keydown anywhere in this file: a real
@@ -71,10 +70,16 @@ export default function ChromeBar() {
           Enter for free; Space intentionally still scrolls instead of
           navigating, which is correct native link behavior, not a gap
           to patch — hijacking it would fight what a link is actually
-          supposed to do on Space. */}
-      <Link href="/" className="wordmark">
+          supposed to do on Space. TransitionLink, direct follow-up
+          ("when i click the top left voltair studio button it also
+          uses that transition") — same block-wipe every other real nav
+          link already gets. "back": the wordmark always points home,
+          which reads as a return trip from anywhere deeper in the site
+          (About, a case study), the same convention every other
+          back-link already uses. */}
+      <TransitionLink href="/" className="wordmark" direction="back">
         {STUDIO_HANDLE}
-      </Link>
+      </TransitionLink>
       <nav className="chrome-nav" aria-label="Site">
         {/* Same real-link treatment as the wordmark above — direct
             request named "the logo and the top-left brand name" as a
