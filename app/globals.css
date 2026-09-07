@@ -2292,6 +2292,10 @@ body {
 .about-bio-heading {
   display: flex;
   flex-direction: column;
+  gap: var(--space-1); /* direct report: "too close to each other" —
+    the kicker below used to pull negative margin-top to sit tighter
+    than a plain stack, which is exactly what read as cramped. Real
+    positive gap instead. */
 }
 .about-bio-title {
   color: var(--color-amber-bright);
@@ -2308,14 +2312,6 @@ body {
   font-weight: 500;
   letter-spacing: 0.02em;
   text-shadow: var(--text-halo-small);
-  margin-top: calc(var(--space-1) * -1); /* pulls it tighter to the
-    title above than a plain 0-gap stack would sit — was a negative
-    `gap` on the parent, caught on review: gap only accepts
-    non-negative values per spec, so that declaration was silently
-    invalid and dropped, and the two sat at default spacing instead of
-    the tightened spacing intended. margin-top on the item itself is
-    the same trick .about-kicker used before it moved inline (see
-    AboutContent.tsx's own history on that). */
 }
 .about-bio-paragraph {
   color: var(--color-cursor-flash);
