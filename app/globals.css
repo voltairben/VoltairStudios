@@ -2147,8 +2147,9 @@ body {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(6, 1fr);
+  grid-template-columns: repeat(16, 1fr); /* matches COLS in
+    PageTransitionOverlay.tsx — keep these two in sync */
+  grid-template-rows: repeat(10, 1fr); /* matches ROWS */
   /* No gap — cells sit edge-to-edge so a fully-covered frame is one
      seamless surface, not a permanent grid-line texture. The mosaic
      only reads as blocks mid-transition, while adjacent cells are

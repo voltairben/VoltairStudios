@@ -26,12 +26,15 @@ const BLOCK_COLOR_VAR: Record<SkyboxName, string> = {
 };
 
 // Grid density — a real 2D mosaic, not a handful of full-height bars.
-// Roughly square cells at common viewport widths (1440/8 = 180,
-// 900/6 = 150), matching the reference's own actual technique: a CSS
-// grid of plain blocks (live-tested rudeingenierie.com directly —
-// its .transition-block grid is 7 cols x 6 rows).
-const COLS = 8;
-const ROWS = 6;
+// Direct follow-up ("make the pixels smaller they are very big") —
+// 8x6 (180x150px cells at 1440x900) read as big tiles, not pixels.
+// Doubled per axis: roughly square 90x90px cells at 1440x900, small
+// enough to genuinely read as a mosaic of pixels rather than a
+// handful of large tiles. Still cheap — same plain <div>s, same
+// opacity-only transition; more of them costs nothing meaningful (see
+// PageTransitionOverlay's own comment on why opacity was chosen).
+const COLS = 16;
+const ROWS = 10;
 const CELL_COUNT = COLS * ROWS;
 const ROW_STEP = ROWS > 1 ? 1 / (ROWS - 1) : 0;
 // How much of a cell's delay comes from its row (a directional trend)
