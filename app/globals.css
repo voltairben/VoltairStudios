@@ -2088,25 +2088,33 @@ body {
 
 /* Card-to-page morph (project reel/index <-> case study, ChromeBar's
    About link <-> the About page's headline, the case-study "Next
-   Project" link). Direct follow-up: the browser's own default
-   View Transition behavior interpolates each shared element's
+   Project" link). Direct follow-up, twice now: the browser's own
+   default View Transition behavior interpolates each shared element's
    position/size between its old and new rect, which reads exactly as
    "zoom in and out" — reported directly, not a guess. Checked what
    segerman.dev itself actually does instead of assuming (live, via a
    real triggered navigation, screenshotted frame by frame): no
    noticeable grow/slide at all — new content just appears at its
-   destination and blur-clears into focus, fast (~100-150ms measured).
-   Reproduces that instead: the geometric group animation is cut to
-   near-nothing (any position/size snap happens in 100ms, too fast to
-   read as motion) and the actual visible effect is this blur+fade on
-   the old/new content pair, which has zero grow/scale/zoom quality to
-   it at all — content sits still and clears up. */
+   destination and blur-clears into focus.
+   A first pass cut the geometric group animation to 100ms rather than
+   removing it — still read as "zoom" on a second look, because ANY
+   observable size/position tween between a small thumbnail and a
+   large destination reads as "that thing just grew," no matter how
+   fast. Removed outright this time: animation: none leaves the group
+   box sitting statically at the destination geometry for the entire
+   transition (per spec, that's its resting state once no animation is
+   overriding it) — old and new content both render inside that same
+   still box and simply blur/fade, no tween connecting a start point
+   to an end point at all. */
 ::view-transition-group(*) {
-  animation-duration: 100ms;
+  animation: none;
 }
 ::view-transition-old(*),
 ::view-transition-new(*) {
-  animation-duration: 320ms;
+  animation-duration: 200ms; /* tightened from 320ms, closer to the
+    ~100-150ms measured on the reference — with the group's own grow
+    motion gone, the blur+fade is the only thing left to read as slow
+    or fast, so it's the one dial actually worth matching to that pace */
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
     system's own established ease-out-expo, already used for line-in
     elsewhere in this file — kept consistent rather than inventing a
