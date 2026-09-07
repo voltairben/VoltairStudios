@@ -8,9 +8,34 @@ import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
 import { STUDIO_HANDLE } from "../data/brand";
 import TransitionLink from "./TransitionLink";
+import { LOGO_MODEL_URL } from "./SkyboxCanvas";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
+
+// Direct report: "when loading the about page the logo takes longer
+// to load." Real cause: SkyboxCanvas only starts fetching the ~6MB
+// logo model once the pathname actually becomes "/about" — zero head
+// start, and our own cover animation already hides the screen for
+// over a second before that even happens (see page-transition-
+// context.tsx: navigate() doesn't fire until fully covered). Warming
+// the browser's HTTP cache the moment real intent shows up — hover,
+// keyboard focus, or the click itself — means that hidden second-plus
+// is spent actually fetching the model instead of doing nothing, so
+// SkyboxCanvas's own loader.load() picks it up from cache moments
+// later instead of starting a fresh network request once the page is
+// already visible. Module-level, not component state — this only
+// needs to fire once per session regardless of how many times
+// ChromeBar itself mounts (it's on every route).
+let logoPrefetchStarted = false;
+function prefetchLogoModel() {
+  if (logoPrefetchStarted) return;
+  logoPrefetchStarted = true;
+  fetch(LOGO_MODEL_URL).catch(() => {
+    // Offline/blocked — SkyboxCanvas's own loader.load() still tries
+    // for real once /about actually mounts, same as it always did.
+  });
+}
 
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
@@ -94,7 +119,14 @@ export default function ChromeBar() {
             why a plain Link's own immediately-firing navigation was a
             real bug). "forward" — About is deeper into the site, not
             a return trip. */}
-        <TransitionLink href="/about" className="chrome-nav-link" direction="forward">
+        <TransitionLink
+          href="/about"
+          className="chrome-nav-link"
+          direction="forward"
+          onMouseEnter={prefetchLogoModel}
+          onFocus={prefetchLogoModel}
+          onClick={prefetchLogoModel}
+        >
           {t(lang, "nav.about")}
         </TransitionLink>
         <a

@@ -51,8 +51,11 @@ const SWITCH_FADE_MS = 220;
  *  logo stays visible behind whichever part of the essay is currently
  *  on screen rather than only the first viewport. Loaded on demand
  *  (the file is ~6MB) rather than eagerly at mount — most visits never
- *  reach /about, and this canvas is shared by every route. */
-const LOGO_MODEL_URL = "/models/voltair-logo.glb";
+ *  reach /about, and this canvas is shared by every route. Exported
+ *  so ChromeBar's About link can prefetch the raw bytes on hover/click
+ *  — see its own comment for why "on demand" doesn't have to mean
+ *  "with zero head start." */
+export const LOGO_MODEL_URL = "/models/voltair-logo.glb";
 // Decoder for Draco-compressed geometry — the logo model is Draco-
 // compressed (a direct request to shrink its ~70MB source export; see
 // DESIGN.md), and GLTFLoader can't read Draco meshes at all without
