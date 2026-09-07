@@ -41,20 +41,24 @@ ol {
   --color-amber-bright: #ff5a36; /* Primary Accent (Warm Persimmon) — used
     selectively now, per direct hierarchy request: "Designers", the
     headline cursor, and the Contact link only, not every accent role */
-  --color-transition-block: #6f3a33; /* the page-transition overlay's
-    own block color — persimmon blended toward --color-pane-bg.
-    Direct follow-up, round 2 ("i dont like it its too much. It needs
-    to be more subtle"): the first blend (~70/30 persimmon/pane-bg,
-    #bd4b35) fixed the original "too bright" complaint but was still
-    a bold, saturated rust at full-viewport scale. Pushed much further
-    toward the background this time (~35/65) — a dark, moody surface
-    with just a warm undertone, matching this site's own restrained
-    near-black terminal character instead of reading as a color block
-    in its own right. Same reasoning as before on WHY a blend at all:
-    --color-amber-bright is a small-dose accent everywhere else (text,
-    a CTA, a link against near-black); filling the whole viewport with
-    it — at ANY intensity — is a different visual weight than a
-    accent's own scale, and needs its own, separately-tuned value. */
+  /* Page-transition block colors, one per skybox — direct follow-up
+     ("we need to get the transistion to more fit the skybox
+     background thats why it doesnt look good with any colour"): a
+     single fixed color (this token used to be one value, persimmon
+     blended toward --color-pane-bg) can't read as "fitting" against
+     all 5 real skybox moods at once — a warm rust block sits fine
+     against dusk's own warm tones and clashes against day's bright
+     blue. Each value below is that SAME blend technique (~35% of the
+     skybox's own real dominant tone, sampled directly from
+     public/skyboxes/skybox-*.png, blended toward --color-pane-bg) —
+     just keyed per mood instead of fixed to one. PageTransitionOverlay.tsx
+     reads the live skybox and sets --transition-block-color to the
+     matching one of these on its own wrapper; see its own comment. */
+  --color-transition-block-morning: #6a605b; /* peachy-cream morning sky */
+  --color-transition-block-day: #48586e; /* cornflower-blue day sky */
+  --color-transition-block-dusk: #514b6b; /* lavender-to-peach dusk sky */
+  --color-transition-block-night: #2a3247; /* deep navy night sky */
+  --color-transition-block-midnight: #23293c; /* near-black midnight sky */
   --color-amber-dim: #94a3b8; /* Muted Text (Slate Grey) — was an
     off-white alpha tint before this pass; redefined to the spec's exact
     named slate for the tagline and footer metadata */
@@ -2146,12 +2150,16 @@ body {
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(6, 1fr);
   /* No gap — cells sit edge-to-edge so a fully-covered frame is one
-     seamless persimmon surface, not a permanent grid-line texture.
-     The mosaic only reads as blocks mid-transition, while adjacent
-     cells are genuinely in different opacity states. */
+     seamless surface, not a permanent grid-line texture. The mosaic
+     only reads as blocks mid-transition, while adjacent cells are
+     genuinely in different opacity states. */
 }
 .page-transition-block {
-  background: var(--color-transition-block);
+  /* --transition-block-color is set inline on .page-transition-grid
+     (its parent) by PageTransitionOverlay.tsx, picked from the live
+     skybox — see the --color-transition-block-* tokens' own comment
+     for why this varies per skybox instead of being one fixed color. */
+  background: var(--transition-block-color);
   transition-property: opacity;
   /* NOT this system's own established ease-out-expo (cubic-bezier
      (0.16, 1, 0.3, 1), used everywhere else here) — direct follow-up

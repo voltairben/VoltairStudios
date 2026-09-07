@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   usePageTransition,
   COVER_TRANSITION_MS,
@@ -8,6 +8,22 @@ import {
   REVEAL_TRANSITION_MS,
   REVEAL_STAGGER_MS,
 } from "./page-transition-context";
+import { useSkybox } from "./skybox-context";
+import type { SkyboxName } from "./skybox-context";
+
+// Direct follow-up ("we need to get the transistion to more fit the
+// skybox background thats why it doesnt look good with any colour")
+// — a single fixed block color can't read as "fitting" against all 5
+// real skybox moods at once. One token per mood instead (see their
+// own comment in globals.css for the actual blend values, sampled
+// directly from the skybox images).
+const BLOCK_COLOR_VAR: Record<SkyboxName, string> = {
+  morning: "var(--color-transition-block-morning)",
+  day: "var(--color-transition-block-day)",
+  dusk: "var(--color-transition-block-dusk)",
+  night: "var(--color-transition-block-night)",
+  midnight: "var(--color-transition-block-midnight)",
+};
 
 // Grid density — a real 2D mosaic, not a handful of full-height bars.
 // Roughly square cells at common viewport widths (1440/8 = 180,
@@ -40,6 +56,7 @@ const DIRECTIONAL_WEIGHT = 0.3;
 // context.tsx's own comment on the class of bug that retires).
 export default function PageTransitionOverlay() {
   const { phase, direction } = usePageTransition();
+  const { active: activeSkybox } = useSkybox();
 
   // Stable per-cell random delay fraction (0..1), rolled once on mount
   // rather than re-rolled every trigger — keeps the scattered read
@@ -61,9 +78,13 @@ export default function PageTransitionOverlay() {
   const staggerMs = phase === "revealing" ? REVEAL_STAGGER_MS : COVER_STAGGER_MS;
   const transitionMs = phase === "revealing" ? REVEAL_TRANSITION_MS : COVER_TRANSITION_MS;
 
+  const gridStyle = {
+    "--transition-block-color": BLOCK_COLOR_VAR[activeSkybox],
+  } as CSSProperties;
+
   return (
     <div className="page-transition-overlay" aria-hidden="true">
-      <div className="page-transition-grid">
+      <div className="page-transition-grid" style={gridStyle}>
         {Array.from({ length: CELL_COUNT }, (_, i) => {
           const row = Math.floor(i / COLS);
           const rowFraction = row * ROW_STEP;
