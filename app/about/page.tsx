@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ChromeBar from "../components/ChromeBar";
 import StatusBar from "../components/StatusBar";
 import AboutContent from "./AboutContent";
+import { LOGO_MODEL_URL } from "../components/SkyboxCanvas";
 
 export const metadata: Metadata = { title: "About — Voltair Studio" };
 
@@ -33,6 +34,25 @@ export const metadata: Metadata = { title: "About — Voltair Studio" };
 export default function AboutPage() {
   return (
     <>
+      {/* Direct follow-up ("after refreshing the page it still has a
+          delay when loading the logo"): ChromeBar's own hover/click
+          prefetch (see its own comment) only helps when arriving from
+          ANOTHER page — a hard reload, direct visit, or bookmark lands
+          straight here with no prior page to hover from, so
+          SkyboxCanvas's own on-demand fetch would start from zero head
+          start again, the original bug for this one entry path. A
+          server-rendered <link rel="preload"> is present in the very
+          first HTML the browser gets, so the fetch starts the instant
+          the page is parsed — before hydration, before React ever
+          runs — the earliest possible start for exactly this case.
+          React hoists any <link> rendered anywhere in the tree into
+          the real document <head> automatically; crossOrigin is
+          required for `as="fetch"` preloads to be reused by GLTFLoader's
+          own same-origin fetch() call (a same-origin preload without
+          it doesn't match against a `fetch()` consumer's own default
+          request mode, per the Fetch spec — a real, easy-to-miss gotcha,
+          not a defensive extra). */}
+      <link rel="preload" as="fetch" href={LOGO_MODEL_URL} crossOrigin="anonymous" />
       <div className="scroll-page-chrome">
         <ChromeBar />
       </div>
