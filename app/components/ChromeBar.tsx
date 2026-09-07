@@ -7,7 +7,7 @@ import LangToggle from "./LangToggle";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
 import { STUDIO_HANDLE } from "../data/brand";
-import { usePageTransition } from "./page-transition-context";
+import TransitionLink from "./TransitionLink";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
@@ -15,7 +15,6 @@ const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLang();
-  const { trigger } = usePageTransition();
 
   // Copy-to-clipboard is a courtesy alongside the real mailto link, not
   // instead of it — e.preventDefault() is never called, so the mail
@@ -89,19 +88,15 @@ export default function ChromeBar() {
         {/* A real route now (/about), not a local modal-open button —
             direct request, replacing an in-page overlay this same
             session had already built and verified (see DESIGN.md).
-            next-view-transitions' Link, so navigating here (either
-            direction) gets a real browser view transition for free. */}
-        {/* trigger() runs independently of the real navigation below —
-            it doesn't intercept/prevent this click, just also plays
-            the strip-wipe overlay on its own fixed timeline while the
-            real next-view-transitions navigation happens underneath,
-            unseen (see page-transition-context.tsx's own comment on
-            why this is a plain fixed overlay, not the View Transitions
-            API this Link still separately triggers for free). "forward"
-            — About is deeper into the site, not a return trip. */}
-        <Link href="/about" className="chrome-nav-link" onClick={() => trigger("forward")}>
+            TransitionLink owns navigation timing (preventDefault +
+            router.push once the strip-wipe has fully covered the
+            screen — see page-transition-context.tsx's own comment on
+            why a plain Link's own immediately-firing navigation was a
+            real bug). "forward" — About is deeper into the site, not
+            a return trip. */}
+        <TransitionLink href="/about" className="chrome-nav-link" direction="forward">
           {t(lang, "nav.about")}
-        </Link>
+        </TransitionLink>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
           className="chrome-nav-link"

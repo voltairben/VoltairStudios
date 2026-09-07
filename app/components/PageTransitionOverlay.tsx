@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import LoadingShader from "./LoadingShader";
 import {
   usePageTransition,
   COVER_TRANSITION_MS,
@@ -10,41 +8,21 @@ import {
   REVEAL_STAGGER_MS,
 } from "./page-transition-context";
 
-// Column count for the strip sweep — a handful of wide bars, not the
-// v1 mosaic's 60 tiny cells. Cheap on purpose: each strip is one plain
-// <div>, animated only via `transform`, the one CSS property that
-// never triggers layout or paint — the whole cover/reveal is GPU
-// compositor work, nothing else.
+// Column count for the strip sweep — a handful of wide bars. Cheap on
+// purpose: each strip is one plain <div>, animated only via
+// `transform`, the one CSS property that never triggers layout or
+// paint — the whole cover/reveal is GPU compositor work, nothing else.
 const COLS = 8;
 
-// v2 rebuild — see page-transition-context.tsx's own comment for the
-// full "why": v1 masked a live WebGL canvas through 60 individually
-// CSS-transitioning SVG rects (real per-pixel mask compositing every
-// frame) and shipped laggy. This drops masking entirely. The strips
-// below are solid, cheap divs; the shader sits UNDERNEATH them,
-// unmasked and always fully opaque while mounted, so it only becomes
-// visible when a strip's own position genuinely uncovers it — plain
-// z-index occlusion, not per-pixel compositing.
+// v3 — direct follow-up ("1 colour would work better than the same as
+// the loading page... change it to the persimmon weve been using").
+// Drops the shader (LoadingShader) entirely — solid var(--color-amber-
+// bright) fill instead, set in globals.css's .page-transition-strip.
+// No canvas, no WebGL context to mount/unmount; this component is now
+// just the strip grid itself. See page-transition-context.tsx for the
+// v3 sequencing fix (navigate() only fires once fully covered).
 export default function PageTransitionOverlay() {
   const { phase, direction } = usePageTransition();
-  const [shaderMounted, setShaderMounted] = useState(false);
-
-  // Mount synchronously the moment a transition starts — a React-
-  // endorsed "adjust state during render" call (not an effect), so it
-  // takes effect the same render instead of one tick late.
-  if (phase !== "idle" && !shaderMounted) {
-    setShaderMounted(true);
-  }
-
-  useEffect(() => {
-    if (phase !== "idle") return;
-    // Free the WebGL context once fully idle again. Nested in the
-    // timeout callback (not the effect body) so this setState is a
-    // reaction to a real timer event, not a synchronous effect-body
-    // update (react-hooks/set-state-in-effect).
-    const timeout = setTimeout(() => setShaderMounted(false), 0);
-    return () => clearTimeout(timeout);
-  }, [phase]);
 
   const isIdle = phase === "idle";
   const covering = phase === "covering";
@@ -63,7 +41,6 @@ export default function PageTransitionOverlay() {
 
   return (
     <div className="page-transition-overlay" aria-hidden="true">
-      {shaderMounted && <LoadingShader />}
       <div className="page-transition-strips">
         {Array.from({ length: COLS }, (_, i) => (
           <div
@@ -77,8 +54,7 @@ export default function PageTransitionOverlay() {
               // entry point" reset before every real cover animation,
               // and that snap must not itself animate (it would be a
               // real, visible sweep across the screen using whatever
-              // duration a stale phase left behind — the actual bug
-              // this replaced).
+              // duration a stale phase left behind — a real bug v2 shipped).
               transitionDuration: isIdle ? "0ms" : `${transitionMs}ms`,
               transitionDelay: isIdle ? "0ms" : `${(i / (COLS - 1)) * staggerMs}ms`,
             }}

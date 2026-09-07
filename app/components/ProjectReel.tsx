@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "next-view-transitions";
+import { Link, useTransitionRouter } from "next-view-transitions";
 import Image from "next/image";
 import { flushSync } from "react-dom";
 import {
@@ -57,6 +57,7 @@ const REPEAT_COUNT = 6; // duplicated copies of the item list. Was 3,
 
 export default function ProjectReel() {
   const { trigger } = usePageTransition();
+  const router = useTransitionRouter();
   const { reportActiveIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
     useProjectShowcase();
   const reelRef = useRef<HTMLElement>(null);
@@ -272,23 +273,27 @@ export default function ProjectReel() {
             // together, not just the one under the cursor.
             onMouseEnter={() => setHoveredSlug(project.slug)}
             onMouseLeave={() => setHoveredSlug(null)}
-            onClick={() => {
-              // next-view-transitions' Link calls our onClick, THEN
-              // synchronously calls document.startViewTransition — a
-              // plain setState here wouldn't paint until after that
-              // (React defers commits from event handlers), so the
-              // browser would snapshot the "old" DOM with nothing
-              // tagged yet and the morph would silently degrade to a
-              // plain fade. flushSync forces the commit to happen
-              // before this handler returns.
-              trigger("forward"); // independent of the flushSync morph
-              // below — see ChromeBar.tsx's own comment on why this
-              // doesn't need to coordinate with it or with the real
-              // navigation. "forward": a project case study is deeper
-              // into the site, not a return trip.
-              flushSync(() => {
-                setMorphIndex(i);
-                setMorphSource("reel");
+            onClick={(e) => {
+              // v3: trigger() now owns navigation timing — real
+              // navigation no longer fires immediately on click (see
+              // page-transition-context.tsx's own comment on why a
+              // plain Link's own default behavior raced the cover
+              // animation, a real bug). "forward": a project case
+              // study is deeper into the site, not a return trip. The
+              // flushSync tag+router.push pair moves inside navigate()
+              // — router.push() is what actually calls
+              // document.startViewTransition (see useTransitionRouter
+              // in next-view-transitions), so the tag still has to be
+              // committed and painted immediately before THAT call,
+              // same reasoning as before, just at its new (later) moment.
+              e.preventDefault();
+              const slug = project.slug;
+              trigger("forward", () => {
+                flushSync(() => {
+                  setMorphIndex(i);
+                  setMorphSource("reel");
+                });
+                router.push(`/work/${slug}`);
               });
             }}
           >

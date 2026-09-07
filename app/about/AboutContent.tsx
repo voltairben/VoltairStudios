@@ -1,12 +1,11 @@
 "use client";
 
-import { Link } from "next-view-transitions";
 import { useLang } from "../components/lang-context";
 import { t } from "../data/i18n";
 import { ABOUT_CONTENT, ABOUT_TOOLS } from "../data/about-content";
 import { STUDIO_HANDLE } from "../data/brand";
 import ScrambleText from "../components/ScrambleText";
-import { usePageTransition } from "../components/page-transition-context";
+import TransitionLink from "../components/TransitionLink";
 
 const CONTACT_EMAIL = "contact@voltairstudio.com";
 
@@ -32,14 +31,13 @@ const CONTACT_EMAIL = "contact@voltairstudio.com";
 export default function AboutContent() {
   const { lang } = useLang();
   const c = ABOUT_CONTENT[lang];
-  const { trigger } = usePageTransition();
 
   return (
     <div className="about-page-wrap" role="region" aria-labelledby="about-heading">
       <div className="about-masthead">
-        <Link href="/" className="about-back" onClick={() => trigger("back")}>
+        <TransitionLink href="/" className="about-back" direction="back">
           ← {STUDIO_HANDLE}
-        </Link>
+        </TransitionLink>
       </div>
 
       {/* Big corner headline, direct request: "the same capital about

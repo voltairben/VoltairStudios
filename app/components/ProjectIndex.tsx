@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "next-view-transitions";
+import { Link, useTransitionRouter } from "next-view-transitions";
 import { flushSync } from "react-dom";
 import { useState } from "react";
 import { useProjectShowcase } from "./project-showcase-context";
@@ -22,6 +22,7 @@ import { PROJECTS } from "../data/projects";
 // have one anymore).
 export default function ProjectIndex() {
   const { trigger } = usePageTransition();
+  const router = useTransitionRouter();
   const { activeIndex, morphSource, setMorphSource, hoveredSlug, setHoveredSlug } =
     useProjectShowcase();
   // Which project (by slug) this list should tag for the card-to-page
@@ -62,16 +63,21 @@ export default function ProjectIndex() {
             onMouseLeave={() => setHoveredSlug(null)}
             onFocus={() => setHoveredSlug(project.slug)}
             onBlur={() => setHoveredSlug(null)}
-            onClick={() => {
-              trigger("forward"); // independent of the flushSync morph
-              // below — see ChromeBar.tsx's own comment on why this
-              // doesn't need to coordinate with it or with the real
-              // navigation. See ProjectReel.tsx's identical comment —
-              // flushSync is required so the tag is actually painted
-              // before next-view-transitions calls document.startViewTransition.
-              flushSync(() => {
-                setMorphSlug(project.slug);
-                setMorphSource("index");
+            onClick={(e) => {
+              // v3: trigger() now owns navigation timing — see
+              // ProjectReel.tsx's identical comment for the full "why".
+              // flushSync is still required so the tag is actually
+              // painted immediately before router.push() (which is
+              // what calls document.startViewTransition), just at its
+              // new, later moment inside navigate() instead of on click.
+              e.preventDefault();
+              const slug = project.slug;
+              trigger("forward", () => {
+                flushSync(() => {
+                  setMorphSlug(slug);
+                  setMorphSource("index");
+                });
+                router.push(`/work/${slug}`);
               });
             }}
             style={

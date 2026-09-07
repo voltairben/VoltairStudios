@@ -2,31 +2,20 @@
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 
-// v2 — direct follow-up after the first build ("laggy/buggy... not the
-// same as the site weve got it from"). Live-tested rudeingenierie.com
-// directly this round instead of going on the screenshot alone: its
-// own .transition-block grid is 42 plain solid-color <div>s animating
-// opacity, not a shader sampled through an SVG mask — and the visible
-// menu-open reveal the user screenshotted is a DIFFERENT feature on
-// that site from its page-to-page navigation. The v1 build's real bug
-// (see PageTransitionOverlay.tsx's old comment, since replaced) was
-// masking a live WebGL canvas through 60 individually CSS-transitioning
-// SVG rects — expensive per-pixel mask compositing every frame, the
-// likely source of the reported lag. v2 drops masking entirely: a
-// small number of plain <div> strips slide via transform (GPU
-// compositor only, the cheapest possible animation), with the shader
-// canvas sitting unmasked underneath them as a brief flash once they
-// part — same material, without ever compositing it through a mask.
-//
-// Direction, direct request ("slides down from the top or bottom
-// depending on what section you click"): "forward" (About, a project,
-// next-project — going deeper) drops in from the top and exits out
-// the bottom; "back" (every back-link) rises in from the bottom and
-// exits out the top — a push/pop convention, not literal replication
-// of the reference's own per-section logic (its exact rule wasn't
-// observable live — clicks on its project links never actually
-// navigated in headless testing), but it satisfies the same
-// "depends on which way you're going" description.
+// v3 — direct follow-up ("it first lets me see the page and then the
+// transition screen comes, it has a delay"). Real bug: v2 let
+// next-view-transitions' own <Link> fire real navigation immediately
+// on click, on its own independent timeline from this overlay's
+// cover animation — a static, prefetched Next.js route can paint in
+// well under 100ms, faster than the strips' own ~560ms close, so the
+// destination page was visibly rendering underneath through the
+// still-open gaps before the cover finished sweeping in. trigger()
+// now OWNS navigation instead of racing it: call sites preventDefault
+// the real Link click and hand trigger() a `navigate` callback, which
+// only fires once every strip has fully closed — the browser physically
+// cannot paint the new route before the screen is opaque. See
+// TransitionLink.tsx and each call site for the useTransitionRouter()
+// wiring this requires.
 export type TransitionPhase = "idle" | "covering" | "revealing";
 export type TransitionDirection = "forward" | "back";
 
@@ -34,8 +23,12 @@ export type TransitionDirection = "forward" | "back";
 // strip's own transform duration.
 export const COVER_TRANSITION_MS = 420;
 export const COVER_STAGGER_MS = 140;
-// Hold: fully covered, real navigation happens invisibly underneath.
-export const HOLD_MS = 260;
+// Hold: fully covered, immediately after which `navigate()` fires and
+// the new route renders — this only has to absorb React committing
+// the new page's first paint, not a real network round-trip anymore
+// (navigate() is called once already fully covered, not on click), so
+// it's much shorter than v1/v2's guess-and-hope margin.
+export const HOLD_MS = 120;
 // Reveal: strips continue in the same direction of travel they
 // entered from (down-and-out or up-and-out, never reversing), same
 // stagger shape as the cover.
@@ -48,7 +41,7 @@ const TOTAL_REVEAL_MS = REVEAL_TRANSITION_MS + REVEAL_STAGGER_MS;
 const PageTransitionContext = createContext<{
   phase: TransitionPhase;
   direction: TransitionDirection;
-  trigger: (direction?: TransitionDirection) => void;
+  trigger: (direction: TransitionDirection, navigate: () => void) => void;
 } | null>(null);
 
 export function PageTransitionProvider({ children }: { children: ReactNode }) {
@@ -57,42 +50,52 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
   const timeoutsRef = useRef<number[]>([]);
   const rafsRef = useRef<number[]>([]);
 
-  const trigger = useCallback((dir: TransitionDirection = "forward") => {
+  const trigger = useCallback((dir: TransitionDirection, navigate: () => void) => {
     // Same reduced-motion contract every other motion feature in this
-    // codebase honors — real navigation still happens (this never
-    // intercepts/prevents the click), it just skips the whole
-    // cover/hold/reveal show around it.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // codebase honors — navigation still has to actually happen even
+    // with the show skipped, since trigger() is now the only thing
+    // that calls it (a plain Link's own default behavior no longer
+    // fires — see TransitionLink.tsx).
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      navigate();
+      return;
+    }
 
     timeoutsRef.current.forEach(clearTimeout);
     timeoutsRef.current = [];
     rafsRef.current.forEach(cancelAnimationFrame);
     rafsRef.current = [];
 
-    // "idle" first, always — a real bug caught live: the previous
-    // build let a consecutive/opposite-direction trigger jump straight
-    // into "covering" from wherever the strips happened to be resting
-    // (the exit point of whatever the last transition was), which for
-    // a same-direction repeat (e.g. clicking "next project" twice)
-    // meant entering from the wrong edge, and for idle's own resting
-    // formula recomputing off the *new* direction meant the strips
-    // could visibly sweep back across the screen the instant a
-    // transition finished, before ever being clicked again. Setting
-    // "idle" (with the new direction already committed) first makes
-    // PageTransitionOverlay snap the strips to *this* direction's real
-    // entry point with the transition disabled — see its own comment —
-    // then the double rAF below waits for that snap to actually paint
-    // before starting the real, transitioned "covering" animation, the
-    // standard technique for restarting a CSS transition cleanly.
+    // "idle" first, always — a real bug caught live in v2: a
+    // consecutive/opposite-direction trigger jumping straight into
+    // "covering" from wherever the strips happened to be resting (the
+    // exit point of whatever the last transition was) entered from the
+    // wrong edge on a same-direction repeat, and idle's own resting
+    // formula recomputing off the *new* direction could visibly sweep
+    // the strips back across the screen the instant a transition
+    // finished. Setting "idle" (with the new direction already
+    // committed) first makes PageTransitionOverlay snap the strips to
+    // *this* direction's real entry point with the transition disabled
+    // — see its own comment — then the double rAF below waits for that
+    // snap to actually paint before starting the real, transitioned
+    // "covering" animation, the standard technique for restarting a
+    // CSS transition cleanly.
     setDirection(dir);
     setPhase("idle");
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => {
         setPhase("covering");
-        timeoutsRef.current = [
-          window.setTimeout(() => setPhase("revealing"), TOTAL_COVER_MS + HOLD_MS),
-          window.setTimeout(() => setPhase("idle"), TOTAL_COVER_MS + HOLD_MS + TOTAL_REVEAL_MS),
-        ];
+        const coverDone = window.setTimeout(() => {
+          // Only now — screen fully opaque — does the real route
+          // change happen. Whatever it paints, it paints behind
+          // fully-closed strips.
+          navigate();
+          timeoutsRef.current = [
+            window.setTimeout(() => setPhase("revealing"), HOLD_MS),
+            window.setTimeout(() => setPhase("idle"), HOLD_MS + TOTAL_REVEAL_MS),
+          ];
+        }, TOTAL_COVER_MS);
+        timeoutsRef.current = [coverDone];
       });
       rafsRef.current = [raf2];
     });

@@ -2100,23 +2100,27 @@ body {
   }
 }
 
-/* Page-transition strip-wipe overlay (PageTransitionOverlay.tsx). v2 —
-   direct follow-up ("laggy/buggy... not the same as the site weve got
-   it from"). v1 masked a live WebGL canvas through 60 individually
-   CSS-transitioning SVG rects — real per-pixel mask compositing every
-   frame, the likely source of the reported lag (see the removed
-   .page-transition-mask-rect rule this replaced, in git history).
-   Live-tested rudeingenierie.com's own transition directly this
-   round: solid-color <div> strips animating a single cheap property,
-   not a masked shader. This mirrors that — .page-transition-strip
-   below only ever animates `transform`, the one CSS property that
-   never triggers layout or paint, so the whole cover/reveal is GPU
-   compositor work. Not built on the View Transitions API — see
-   page-transition-context.tsx for why. z-index 50: above real page
-   content (1) and the loading screen (10), below the CRT overlay
-   (100) — the scanline/vignette texture stays visible over the wipe
-   too, same "viewed through one continuous CRT" framing every other
-   layer on this site already commits to. */
+/* Page-transition strip-wipe overlay (PageTransitionOverlay.tsx). v3 —
+   two direct follow-ups. (1) "it first lets me see the page and then
+   the transition screen comes, it has a delay": v2 let real navigation
+   fire immediately on click, racing this overlay's own separately-timed
+   cover animation — a static prefetched route could paint before the
+   strips finished closing. Fixed in page-transition-context.tsx:
+   trigger() now owns navigation and only calls it once every strip has
+   fully closed. (2) "1 colour would work better... change it to the
+   persimmon weve been using": dropped the shader (LoadingShader) v2
+   used as material — solid var(--color-amber-bright) fill instead, no
+   canvas/WebGL involved at all now. .page-transition-strip below still
+   only ever animates `transform`, the one CSS property that never
+   triggers layout or paint, so the whole cover/reveal stays GPU
+   compositor work — that part of v2's own fix (see git history for its
+   own "why", replacing v1's masked-canvas mosaic) still holds. Not
+   built on the View Transitions API — see page-transition-context.tsx
+   for why. z-index 50: above real page content (1) and the loading
+   screen (10), below the CRT overlay (100) — the scanline/vignette
+   texture stays visible over the wipe too, same "viewed through one
+   continuous CRT" framing every other layer on this site already
+   commits to. */
 .page-transition-overlay {
   position: fixed;
   inset: 0;
@@ -2126,25 +2130,15 @@ body {
     should still reach whatever's underneath once it clears */
   overflow: hidden;
 }
-/* The shader sits unmasked underneath the strips — see
-   PageTransitionOverlay.tsx's own comment: it only becomes visible
-   when a strip's own position genuinely uncovers it (plain z-index
-   occlusion), never through a mask. LoadingShader's own canvas
-   already carries position:absolute; inset:0 (.loading-shader-canvas),
-   which correctly fills this fixed-position overlay too. */
 .page-transition-strips {
   position: absolute;
   inset: 0;
-  z-index: 1; /* above .loading-shader-canvas's own z-index:0 */
   display: flex;
 }
 .page-transition-strip {
   flex: 1 0 0;
-  /* var(--color-pane-bg): the same near-black the shader itself
-     darkens toward — a covering strip and an uncovered shader patch
-     read as one continuous surface, not two different materials
-     seamed together. */
-  background: var(--color-pane-bg);
+  background: var(--color-amber-bright); /* the persimmon accent —
+    same token the headline/CTA/links already use, not a new color */
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
     system's own established ease-out-expo, used everywhere else this
