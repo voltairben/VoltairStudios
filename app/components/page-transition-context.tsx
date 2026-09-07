@@ -24,9 +24,16 @@ export type TransitionPhase = "idle" | "covering" | "revealing";
 export type TransitionDirection = "forward" | "back";
 
 // Cover: blocks fade in, staggered by row on top of each block's own
-// opacity-transition duration.
-export const COVER_TRANSITION_MS = 650;
-export const COVER_STAGGER_MS = 500;
+// opacity-transition duration. Brainstormed direct follow-up: v5 had
+// these backwards for a "pixel" read — a 650ms per-block fade next to
+// only a 500ms spread meant blocks were barely staggered relative to
+// their own soft, slow fade, reading as one mushy blob breathing
+// rather than a mosaic. Snappy short duration + a much wider spread
+// is what actually makes individual blocks flash on one after
+// another — the stagger is where "slow and deliberate" should live,
+// not each block's own fade.
+export const COVER_TRANSITION_MS = 180;
+export const COVER_STAGGER_MS = 1000;
 // Hold: fully covered, immediately after which `navigate()` fires and
 // the new route renders — this only has to absorb React committing
 // the new page's first paint, not a real network round-trip anymore
@@ -35,8 +42,8 @@ export const HOLD_MS = 200;
 // Reveal: blocks fade out in the same row order they faded in with
 // (top-to-bottom or bottom-to-top, whichever "forward"/"back" picked),
 // same stagger shape as the cover.
-export const REVEAL_TRANSITION_MS = 650;
-export const REVEAL_STAGGER_MS = 500;
+export const REVEAL_TRANSITION_MS = 180;
+export const REVEAL_STAGGER_MS = 1000;
 
 const TOTAL_COVER_MS = COVER_TRANSITION_MS + COVER_STAGGER_MS;
 const TOTAL_REVEAL_MS = REVEAL_TRANSITION_MS + REVEAL_STAGGER_MS;

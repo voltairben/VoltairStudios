@@ -41,6 +41,15 @@ ol {
   --color-amber-bright: #ff5a36; /* Primary Accent (Warm Persimmon) — used
     selectively now, per direct hierarchy request: "Designers", the
     headline cursor, and the Contact link only, not every accent role */
+  --color-transition-block: #bd4b35; /* the page-transition overlay's
+    own block color — persimmon blended ~70/30 toward --color-pane-bg.
+    Direct follow-up ("the colour of the transision doesnt look right
+    its too bright"): --color-amber-bright is a small-dose accent
+    everywhere else on the site (text, a CTA, a link against near-
+    black); filling the whole viewport with it at full saturation is a
+    completely different visual weight. Darkening toward the site's
+    own background keeps it recognizably the same accent family
+    without the full-screen wash reading as a blinding flash. */
   --color-amber-dim: #94a3b8; /* Muted Text (Slate Grey) — was an
     off-white alpha tint before this pass; redefined to the spec's exact
     named slate for the tagline and footer metadata */
@@ -2137,8 +2146,7 @@ body {
      cells are genuinely in different opacity states. */
 }
 .page-transition-block {
-  background: var(--color-amber-bright); /* the persimmon accent —
-    same token the headline/CTA/links already use, not a new color */
+  background: var(--color-transition-block);
   transition-property: opacity;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); /* this
     system's own established ease-out-expo, used everywhere else this

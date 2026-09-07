@@ -18,17 +18,13 @@ const COLS = 8;
 const ROWS = 6;
 const CELL_COUNT = COLS * ROWS;
 const ROW_STEP = ROWS > 1 ? 1 / (ROWS - 1) : 0;
-// How far a cell's own random jitter can nudge it off its row's base
-// delay, as a fraction of one row-step — real fabric, direct request:
-// every column in a row sharing the exact same delay reads as
-// horizontal BANDS wiping in sequence, not scattered pixels. Enough
-// jitter to blend adjacent rows' timing without erasing the overall
-// top-first/bottom-first directional read entirely.
-const JITTER_FRACTION = 0.7;
-
-function clamp01(x: number) {
-  return Math.min(1, Math.max(0, x));
-}
+// How much of a cell's delay comes from its row (a directional trend)
+// vs. pure per-cell randomness — brainstormed direct follow-up: v5's
+// row-plus-jitter formula still leaned mostly on row order, closer to
+// "bands with soft edges" than genuine pixel scatter. Flipping the mix
+// so randomness dominates and the row only supplies a faint bias is
+// what makes it read as noise with a direction, not a wipe with jitter.
+const DIRECTIONAL_WEIGHT = 0.3;
 
 // v5 — direct follow-up ("it just looks like a orange slab moves over
 // the page i really want it to have the pixel effect"). v2-v4 slid a
@@ -37,28 +33,26 @@ function clamp01(x: number) {
 // This is a real 2D grid of small blocks instead, each toggling plain
 // `opacity` IN PLACE — nothing ever travels across the screen, so
 // mid-transition genuinely shows a mosaic of blocks in different
-// states, not a slab. `direction` only changes which row gets the
-// smallest base stagger delay (top-first for "forward", bottom-first
-// for "back") — a pure timing value, not a position, so there's no
-// positional entry/exit concept left to get wrong (see
-// page-transition-context.tsx's own comment on the class of bug that
-// retires). Per-cell jitter on top of that row trend (below) is what
-// keeps it reading as scattered pixels rather than uniform bands.
+// states, not a slab. `direction` only shifts the random-delay mix's
+// faint bias (top-first for "forward", bottom-first for "back") — a
+// pure timing value, not a position, so there's no positional
+// entry/exit concept left to get wrong (see page-transition-
+// context.tsx's own comment on the class of bug that retires).
 export default function PageTransitionOverlay() {
   const { phase, direction } = usePageTransition();
 
-  // Stable per-cell random jitter (0..1), rolled once on mount rather
-  // than re-rolled every trigger — keeps the scattered read consistent
-  // across repeated transitions instead of an arbitrary new pattern
-  // every click. Math.random() can't run during render (impure) and a
-  // plain setState call directly in an effect body isn't allowed
+  // Stable per-cell random delay fraction (0..1), rolled once on mount
+  // rather than re-rolled every trigger — keeps the scattered read
+  // consistent across repeated transitions instead of an arbitrary new
+  // pattern every click. Math.random() can't run during render (impure)
+  // and a plain setState call directly in an effect body isn't allowed
   // either — nesting it in the timeout callback satisfies both (the
   // same wall the very first version of this overlay hit — see git
   // history).
-  const [jitters, setJitters] = useState<number[]>([]);
+  const [randomDelays, setRandomDelays] = useState<number[]>([]);
   useEffect(() => {
     const timeout = setTimeout(() => {
-      setJitters(Array.from({ length: CELL_COUNT }, () => Math.random()));
+      setRandomDelays(Array.from({ length: CELL_COUNT }, () => Math.random()));
     }, 0);
     return () => clearTimeout(timeout);
   }, []);
@@ -73,11 +67,11 @@ export default function PageTransitionOverlay() {
         {Array.from({ length: CELL_COUNT }, (_, i) => {
           const row = Math.floor(i / COLS);
           const rowFraction = row * ROW_STEP;
-          // forward: row 0 (top) fades first, last row lags — reads as
+          // forward: row 0 (top) biased first, last row lags — reads as
           // filling in from the top. back: reversed — bottom fills first.
           const baseFraction = direction === "forward" ? rowFraction : 1 - rowFraction;
-          const jitter = (jitters[i] ?? 0.5) - 0.5; // -0.5..0.5, defaults to no jitter pre-mount
-          const delayFraction = clamp01(baseFraction + jitter * ROW_STEP * JITTER_FRACTION);
+          const random = randomDelays[i] ?? 0.5; // defaults to the midpoint pre-mount
+          const delayFraction = baseFraction * DIRECTIONAL_WEIGHT + random * (1 - DIRECTIONAL_WEIGHT);
           return (
             <div
               key={i}
