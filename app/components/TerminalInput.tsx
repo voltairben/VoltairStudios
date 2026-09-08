@@ -6,7 +6,7 @@ import { useSkybox, SKYBOXES } from "./skybox-context";
 import { useAudio } from "./audio-context";
 import { useCrt } from "./crt-context";
 import { useLang } from "./lang-context";
-import { t, type Lang } from "../data/i18n";
+import { t, isLang, type Lang } from "../data/i18n";
 import { PROJECTS, getProject } from "../data/projects";
 import {
   PALETTES,
@@ -34,6 +34,9 @@ const COMMANDS = [
   "skybox",
   "work",
   "systeminfo",
+  "lang",
+  "lang en",
+  "lang nl",
   "--audio=on",
   "--audio=off",
   "--crt=on",
@@ -162,7 +165,7 @@ export default function TerminalInput() {
   const { active: activeSkybox, next: nextSkybox } = useSkybox();
   const { enabled: audioEnabled, setEnabled: setAudioEnabled, playClick } = useAudio();
   const { enabled: crtEnabled, setEnabled: setCrtEnabled } = useCrt();
-  const { lang } = useLang();
+  const { lang, setLang } = useLang();
   const router = useTransitionRouter();
 
   // Real uptime (time since this terminal mounted), not a fabricated
@@ -348,6 +351,25 @@ export default function TerminalInput() {
           // PALETTES array so this can't drift from what actually works.
           pushLog(`${t(lang, "terminal.invalidPalette")} ${PALETTES.join(", ")}`);
         }
+        break;
+      }
+      case "lang": {
+        // Bare `lang` toggles; `lang en`/`lang nl` sets explicitly —
+        // same shape as `theme`/`theme <name>` above. setLang() is the
+        // one real setter (lang-context.tsx) every other lang switch in
+        // the app already goes through (ChromeBar's toggle included),
+        // so this is a second door onto the same state, not a new path.
+        let next: Lang;
+        if (!arg) {
+          next = lang === "en" ? "nl" : "en";
+        } else if (isLang(arg)) {
+          next = arg;
+        } else {
+          pushLog(`${t(lang, "terminal.invalidLang")} en, nl`);
+          break;
+        }
+        setLang(next);
+        pushLog(t(next, "terminal.langSet"));
         break;
       }
       case "systeminfo": {

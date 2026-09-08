@@ -92,6 +92,12 @@ const DICT = {
   },
   "terminal.commandNotFound": { en: "command not found:", nl: "commando niet gevonden:" },
   "terminal.tryHelp": { en: "try 'help'", nl: "probeer 'help'" },
+  // Deliberately read with the LANGUAGE JUST SWITCHED TO, not the
+  // previous active one (see `lang` in TerminalInput.tsx) — the
+  // feedback for "you're now in Dutch" reads in Dutch, matching a real
+  // OS's own "language changed" confirmation.
+  "terminal.langSet": { en: "→ language: English", nl: "→ taal: Nederlands" },
+  "terminal.invalidLang": { en: "invalid language. try:", nl: "ongeldige taal. probeer:" },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
 } as const;
