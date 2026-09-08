@@ -108,6 +108,15 @@ const DICT = {
   },
   "terminal.statusChecking": { en: "→ checking soldnb.com...", nl: "→ soldnb.com controleren..." },
   "terminal.statusUnreachable": { en: "soldnb.com unreachable", nl: "soldnb.com onbereikbaar" },
+
+  // The one and only clue to the hidden `snake` command (see
+  // TerminalInput.tsx/SnakeGame.tsx) — a native browser title tooltip
+  // on the headline's blinking cursor, direct request ("a subtle nudge
+  // on the site itself"). Nowhere else references this.
+  "hero.cursorHint": {
+    en: "psst — try typing 'snake' in the terminal",
+    nl: "psst — probeer 'snake' te typen in de terminal",
+  },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
 } as const;

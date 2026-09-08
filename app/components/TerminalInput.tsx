@@ -19,6 +19,7 @@ import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import MatrixOverlay from "./MatrixOverlay";
 import StatusLED, { type LEDVariant } from "./StatusLED";
+import SnakeGame from "./SnakeGame";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
@@ -167,6 +168,13 @@ export default function TerminalInput() {
     rows: { key: string; value: string }[];
   } | null>(null);
   const [matrixActive, setMatrixActive] = useState(false);
+  // Hidden easter egg (direct request) — no COMMANDS entry, so it
+  // never appears in `help` or Tab-completion; typing "snake" and
+  // hitting Enter still runs it, the switch below doesn't check
+  // COMMANDS membership at all. See handleKeyDown's own guard for how
+  // this keeps WASD/arrows from also triggering command history while
+  // the game owns the keyboard.
+  const [snakeActive, setSnakeActive] = useState(false);
   const historyRef = useRef<string[]>([]);
   // null = live draft line; otherwise an index into historyRef.current.
   const historyCursorRef = useRef<number | null>(null);
@@ -390,6 +398,14 @@ export default function TerminalInput() {
           setMatrixActive(true);
         }
         break;
+      case "snake":
+        // Deliberately no reduced-motion gate here — unlike matrix,
+        // this isn't ambient decorative motion, it's a real game the
+        // player is actively controlling; skipping it under reduced-
+        // motion would remove the feature entirely rather than just
+        // trim an animation.
+        setSnakeActive(true);
+        break;
       case "status": {
         // Only soldnb — the only real project with a genuine live
         // status surface to read (see route.ts's own comment: soldnb.com
@@ -494,6 +510,16 @@ export default function TerminalInput() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // SnakeGame owns all keyboard input while active (its own window-
+    // level listener, WASD/arrows included) — this is the other half
+    // of that: without it, ArrowUp/ArrowDown below would ALSO fire
+    // command-history navigation for the exact same keystroke whenever
+    // the input happens to still (or again) have focus, corrupting
+    // both the game and the input's own value at once. SnakeGame
+    // blurs this input on activate as the first line of defense; this
+    // guard is the second, in case focus ever returns to it mid-game
+    // (e.g. a stray click on the terminal row).
+    if (snakeActive) return;
     // Every real keypress gets the same mechanical click regardless of
     // what it does — a real keyboard clacks on Backspace and Enter too,
     // not just letters. No-op silently when audio is off (see
@@ -668,6 +694,7 @@ export default function TerminalInput() {
           navigation (see runCommand above). */}
       <a ref={mailtoLinkRef} href={`mailto:${CONTACT_EMAIL}`} hidden aria-hidden="true" tabIndex={-1} />
       {matrixActive && <MatrixOverlay onDismiss={() => setMatrixActive(false)} />}
+      {snakeActive && <SnakeGame onExit={() => setSnakeActive(false)} />}
     </div>
   );
 }

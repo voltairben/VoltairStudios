@@ -2508,6 +2508,59 @@ body {
   background: #000;
   cursor: pointer; /* any click dismisses it — see MatrixOverlay.tsx */
 }
+
+/* `snake` hidden easter egg — see SnakeGame.tsx's own comment on why
+   it's undocumented. Same z-index tier as .matrix-overlay (both are
+   full takeovers a terminal command triggers; they're never shown
+   together). Cell size is one clamp()-driven token so the whole 20×10
+   grid scales as one unit and can never overflow even at the 320px
+   floor: 20 cells × the clamp's own minimum (12px) is 240px, well
+   under any real viewport width this system supports. */
+.snake-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  --snake-cell: clamp(12px, 4dvmin, 24px);
+}
+.snake-hud {
+  display: flex;
+  gap: var(--space-4);
+  color: var(--color-amber-dim);
+  font-size: var(--fs-status);
+  letter-spacing: 0.04em;
+}
+.snake-grid {
+  display: grid;
+  width: calc(var(--snake-cell) * 20);
+  height: calc(var(--snake-cell) * 10);
+  gap: 1px;
+  background: var(--color-pane-bg);
+  border: 1px solid var(--color-ui-muted);
+}
+.snake-cell {
+  background: rgba(255, 255, 255, 0.03); /* faint grid texture at rest,
+    not fully invisible cells — reads as a real bounded board, not just
+    the snake/food floating on black */
+}
+.snake-cell-body,
+.snake-cell-head {
+  background: var(--color-amber-bright);
+}
+.snake-cell-food {
+  background: var(--color-cursor-flash);
+}
+.snake-gameover {
+  text-align: center;
+  color: var(--color-cursor-flash);
+  font-size: var(--fs-status);
+  line-height: var(--lh-tight);
+}
 body:not([data-crt="off"])::after {
   content: "";
   position: fixed;
