@@ -102,6 +102,12 @@ const DICT = {
     en: "→ matrix effect skipped (reduced motion)",
     nl: "→ matrix-effect overgeslagen (verminderde beweging)",
   },
+  "terminal.statusUsage": {
+    en: "status is only available for: soldnb",
+    nl: "status is alleen beschikbaar voor: soldnb",
+  },
+  "terminal.statusChecking": { en: "→ checking soldnb.com...", nl: "→ soldnb.com controleren..." },
+  "terminal.statusUnreachable": { en: "soldnb.com unreachable", nl: "soldnb.com onbereikbaar" },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
 } as const;

@@ -985,6 +985,34 @@ body {
 .terminal-systeminfo-value {
   color: var(--color-amber-dim);
 }
+/* `status soldnb`'s own LED — see StatusLED.tsx for the two-variant
+   reasoning (muted vs. accent, no revived green). Sized off the log
+   line's own font-size (1em), not a fixed px value, so it scales with
+   this system's fluid type instead of drifting from it at extreme
+   viewport sizes. */
+.status-led {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  margin-right: var(--space-1);
+  animation: status-led-pulse 1.6s ease-in-out infinite;
+}
+.status-led-muted {
+  background: var(--color-ui-muted);
+}
+.status-led-accent {
+  background: var(--color-amber-bright);
+}
+@keyframes status-led-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 
 /* Project reel — direct pivot: a statically locked showcase of the 2
    real, finished case studies (KrachtigFit, SOL_DNB), not a
@@ -1569,6 +1597,10 @@ body {
      entrance is JS-driven (ScrambleText.tsx), which checks this same
      media query itself and skips straight to final text. */
   .cursor {
+    animation: none;
+    opacity: 1;
+  }
+  .status-led {
     animation: none;
     opacity: 1;
   }

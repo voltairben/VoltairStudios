@@ -18,6 +18,7 @@ import {
 import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import MatrixOverlay from "./MatrixOverlay";
+import StatusLED, { type LEDVariant } from "./StatusLED";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
@@ -36,6 +37,7 @@ const COMMANDS = [
   "work",
   "man",
   "matrix",
+  "status soldnb",
   "systeminfo",
   "lang",
   "lang en",
@@ -123,7 +125,10 @@ function bootLines(lang: Lang) {
 }
 const BOOT_LINE_DELAY_MS = 120;
 
-type LogLine = { id: number; text: string };
+// `led` is optional and only ever set by `status soldnb`'s async
+// result (see runCommand's own "status" case) — every other pushLog()
+// call omits it and renders exactly as before.
+type LogLine = { id: number; text: string; led?: LEDVariant };
 
 // Best-effort real UA parse for systeminfo's "engine" row — checked in
 // order of specificity (Edge's UA also contains "Chrome/", Chrome's
@@ -252,7 +257,7 @@ export default function TerminalInput() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function pushLog(text: string) {
+  function pushLog(text: string, led?: LEDVariant) {
     // Snapshot the id into a local const *before* the updater closure —
     // a command like `xyz` calls pushLog twice synchronously (the echoed
     // "xyz" line, then "command not found"), and React doesn't run
@@ -263,7 +268,7 @@ export default function TerminalInput() {
     // real duplicate-key bug (confirmed via React's own warning plus
     // corrupted log output), not a display quirk.
     const id = ++logIdRef.current;
-    setLog((prev) => [...prev, { id, text }].slice(-LOG_LIMIT));
+    setLog((prev) => [...prev, { id, text, led }].slice(-LOG_LIMIT));
   }
 
   function runCommand(raw: string) {
@@ -385,6 +390,30 @@ export default function TerminalInput() {
           setMatrixActive(true);
         }
         break;
+      case "status": {
+        // Only soldnb — the only real project with a genuine live
+        // status surface to read (see route.ts's own comment: soldnb.com
+        // sends no CORS header, so this needs a real server-side proxy,
+        // this project's first-ever backend code, direct decision).
+        // Non-blocking: fires and returns to the prompt immediately: the
+        // real result lands as its own log line (with LED) once the
+        // proxy resolves, whenever that is.
+        if (arg !== "soldnb") {
+          pushLog(t(lang, "terminal.statusUsage"));
+          break;
+        }
+        pushLog(t(lang, "terminal.statusChecking"));
+        fetch("/api/soldnb-status")
+          .then((res) => res.json())
+          .then((data: { led: string; text: string }) => {
+            const variant: LEDVariant = data.led === "unknown" ? "accent" : "muted";
+            pushLog(`→ soldnb: ${data.text}`, variant);
+          })
+          .catch(() => {
+            pushLog(`→ ${t(lang, "terminal.statusUnreachable")}`, "muted");
+          });
+        break;
+      }
       case "--audio=on":
         setAudioEnabled(true);
         pushLog(t(lang, "terminal.soundOn"));
@@ -628,6 +657,7 @@ export default function TerminalInput() {
         <div className="terminal-log" role="status" aria-live="polite">
           {log.map((entry) => (
             <p key={entry.id} className="terminal-log-line">
+              {entry.led && <StatusLED variant={entry.led} />}
               {entry.text}
             </p>
           ))}
