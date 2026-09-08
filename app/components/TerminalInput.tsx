@@ -33,6 +33,7 @@ const COMMANDS = [
   "help",
   "skybox",
   "work",
+  "man",
   "systeminfo",
   "lang",
   "lang en",
@@ -149,6 +150,15 @@ export default function TerminalInput() {
   // block that replaces the regular log display while it's showing,
   // and clears on any other command (including clear itself).
   const [systemInfo, setSystemInfo] = useState<{ key: string; value: string }[] | null>(null);
+  // `man <slug>`'s own output — same reasoning and same shell as
+  // systemInfo above (a real, bounded key/value table needs more room
+  // than LOG_LIMIT's 2 lines), reuses its exact CSS classes below
+  // rather than a parallel set for what's visually the same block
+  // shape. `title` is the man page's own heading line ("man <slug>:").
+  const [manOutput, setManOutput] = useState<{
+    title: string;
+    rows: { key: string; value: string }[];
+  } | null>(null);
   const historyRef = useRef<string[]>([]);
   // null = live draft line; otherwise an index into historyRef.current.
   const historyCursorRef = useRef<number | null>(null);
@@ -265,10 +275,14 @@ export default function TerminalInput() {
     setValue("");
 
     const [name, arg] = trimmed.toLowerCase().split(/\s+/);
-    // Any command other than systeminfo itself drops back to the
-    // regular log display — systeminfo's own case below re-sets this
-    // right after, so it still wins when that's the command that ran.
+    // Any command other than systeminfo/man itself drops back to the
+    // regular log display — each one's own case below re-sets its own
+    // state right after, so it still wins when that's the command that
+    // ran. The two never show at once: whichever command runs re-sets
+    // only its own state, and it already ran after both were cleared
+    // here.
     setSystemInfo(null);
+    setManOutput(null);
     pushLog(trimmed);
 
     switch (name) {
@@ -323,6 +337,40 @@ export default function TerminalInput() {
           focusFirstProject();
         }
         break;
+      case "man": {
+        // `man <slug>` — real Project metadata only (data/projects.ts),
+        // same getProject() lookup `work <slug>` already uses above.
+        // Bare `man` lists real slugs instead of guessing one. YEAR/ROLE
+        // rows only appear when that project actually has one (never a
+        // fabricated value) — krachtig-fit has a year but no role,
+        // matching its own real, intentionally-incomplete data. When
+        // NEITHER is set (every placeholder slot, for now), one honest
+        // STATUS row replaces them — same t(lang, "work.comingSoon")
+        // string the case-study page's own Visit tag already uses for
+        // exactly this situation, not a new one invented for this.
+        if (!arg) {
+          pushLog(`→ ${t(lang, "terminal.projectsLabel")}: ${PROJECTS.map((p) => p.slug).join(", ")}`);
+          break;
+        }
+        const project = getProject(arg);
+        if (!project) {
+          pushLog(`${t(lang, "terminal.projectNotFound")} ${arg}`);
+          break;
+        }
+        // Real-project signal is field presence, not the display name —
+        // placeholder projects' own `name` is itself literally "Coming
+        // Soon" now (see projects.ts), so comparing against that string
+        // would either double up or silently break once translated.
+        const isRealProject = Boolean(
+          project.year || project.role || project.url || project.description,
+        );
+        const rows = [{ key: "NAME", value: project.name }];
+        if (project.year) rows.push({ key: "YEAR", value: project.year });
+        if (project.role) rows.push({ key: "ROLE", value: project.role });
+        if (!isRealProject) rows.push({ key: "STATUS", value: t(lang, "work.comingSoon") });
+        setManOutput({ title: project.slug, rows });
+        break;
+      }
       case "--audio=on":
         setAudioEnabled(true);
         pushLog(t(lang, "terminal.soundOn"));
@@ -533,7 +581,21 @@ export default function TerminalInput() {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
       />
-      {systemInfo ? (
+      {manOutput ? (
+        // Same shell/classes as systemInfo below — see manOutput's own
+        // state comment for why. NAME/YEAR/ROLE/STATUS keys are all
+        // well under terminal-systeminfo-key's 8ch column width, so the
+        // existing alignment just works, no new CSS.
+        <div className="terminal-systeminfo" role="status" aria-live="polite">
+          <p className="terminal-log-line">man {manOutput.title}:</p>
+          {manOutput.rows.map((row) => (
+            <div key={row.key} className="terminal-systeminfo-row">
+              <span className="terminal-systeminfo-key">{row.key}</span>
+              <span className="terminal-systeminfo-value">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : systemInfo ? (
         // Its own fully-sized block, not the LOG_LIMIT-capped log below
         // — a real ~8-row table needs more than the 2 lines that cap
         // was deliberately set to (see LOG_LIMIT's comment), and every
