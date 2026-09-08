@@ -1009,8 +1009,12 @@ body {
    the narrow layout stays the single-column hero it already was. */
 .project-reel {
   display: none;
-  width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
-    20dvw, 320px) — direct request */
+  width: clamp(240px, 28dvw, 460px); /* broadened again — direct
+    request ("make them a bit bigger"), from clamp(200px, 24dvw,
+    380px). Each card's width comes straight from this box's own width
+    (.project-reel-item is width:100%), so widening the reel is what
+    actually grows the cards — height follows for free via their own
+    aspect-ratio: 4/3. */
   margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
     .project-index after it, same flex row) right of where the shared
     .hero-row gap alone put it — direct request, on top of that gap
@@ -1039,6 +1043,10 @@ body {
   justify-content: center; /* centers the 2-card stack in the reel's
     full-height box rather than pinning it to the top — the stack's
     own aspect-ratio-derived height rarely fills .project-reel exactly */
+  gap: var(--space-3); /* direct request ("split the 2 cards up") —
+    they used to sit flush, separated only by each tile's own 1px
+    border. A real gap reads as two distinct case studies instead of
+    one continuous strip. */
   width: 100%;
 }
 .project-reel-item {
