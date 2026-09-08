@@ -443,6 +443,11 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  margin-left: auto; /* keeps this pinned right whether or not the
+    wordmark beside it renders (home-only now, see ChromeBar.tsx) —
+    .chrome-bar's own justify-content: space-between only holds a
+    2-item layout apart; a lone flex child there just sits at the
+    start instead, which this overrides regardless of sibling count */
 }
 .chrome-logo-link {
   /* Real navigation now (direct request) — padding + a fully-canceling

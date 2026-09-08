@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Link } from "next-view-transitions";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import LangToggle from "./LangToggle";
@@ -39,6 +40,18 @@ function prefetchLogoModel() {
 export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLang();
+  // Direct request: the wordmark only belongs on the landing page now
+  // — /about and /work/[slug] already carry their own "← Voltair_Studio"
+  // back link near the top of their own content (.about-back/
+  // .case-study-back), so it was a real duplicate there, not a lost
+  // affordance once hidden. ChromeBar itself stays mounted everywhere
+  // (nav/flags/skybox switcher are still shared site-wide, unchanged);
+  // only this one element becomes home-only. .chrome-nav's own
+  // margin-left: auto keeps it pinned to the right whether or not the
+  // wordmark renders beside it, instead of relying on this row's
+  // justify-content: space-between, which only works with 2 items.
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   // Copy-to-clipboard is a courtesy alongside the real mailto link, not
   // instead of it — e.preventDefault() is never called, so the mail
@@ -76,9 +89,11 @@ export default function ChromeBar() {
           which reads as a return trip from anywhere deeper in the site
           (About, a case study), the same convention every other
           back-link already uses. */}
-      <TransitionLink href="/" className="wordmark" direction="back">
-        {STUDIO_HANDLE}
-      </TransitionLink>
+      {isHome && (
+        <TransitionLink href="/" className="wordmark" direction="back">
+          {STUDIO_HANDLE}
+        </TransitionLink>
+      )}
       <nav className="chrome-nav" aria-label="Site">
         {/* Same real-link treatment as the wordmark above — direct
             request named "the logo and the top-left brand name" as a
