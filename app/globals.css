@@ -1042,7 +1042,14 @@ body {
   flex-direction: column;
   justify-content: center; /* centers the 2-card stack in the reel's
     full-height box rather than pinning it to the top — the stack's
-    own aspect-ratio-derived height rarely fills .project-reel exactly */
+    own aspect-ratio-derived height rarely fills .project-reel exactly.
+    Was a no-op without the height rule below: .project-reel is a plain
+    block container (see its own comment), so this flex child's height
+    defaulted to its content's own size with zero extra space to center
+    into, leaving the stack flush against the top of the row instead —
+    direct report, "id like the two cards lower and more in the
+    center of the line they are on now". */
+  height: 100%;
   gap: var(--space-3); /* direct request ("split the 2 cards up") —
     they used to sit flush, separated only by each tile's own 1px
     border. A real gap reads as two distinct case studies instead of
