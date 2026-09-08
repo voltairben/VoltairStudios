@@ -2459,6 +2459,23 @@ body {
    explicitly turned off," matching the same on-by-default shape the
    attribute's absence (before any JS has run, or with JS disabled)
    already implies. */
+/* `matrix` terminal command overlay — direct request. z-index 60: above
+   the page-transition overlay (50, see its own comment for the full
+   stack) since this is a deliberate full takeover the user triggered,
+   below the CRT scanline/vignette layer (100) — the CRT glass stays in
+   front of the cascade too, same "everything is viewed through one
+   continuous CRT" framing every other layer already commits to.
+   Opaque black background, not transparent: MatrixOverlay.tsx's own
+   canvas paint is a translucent fade-trail effect layered ON TOP of
+   this, not a from-scratch clear — without a real backdrop the skybox
+   would still show through for the first several frames. */
+.matrix-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  cursor: pointer; /* any click dismisses it — see MatrixOverlay.tsx */
+}
 body:not([data-crt="off"])::after {
   content: "";
   position: fixed;

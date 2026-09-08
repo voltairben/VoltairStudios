@@ -17,6 +17,7 @@ import {
 } from "../data/palette";
 import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
+import MatrixOverlay from "./MatrixOverlay";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
@@ -34,6 +35,7 @@ const COMMANDS = [
   "skybox",
   "work",
   "man",
+  "matrix",
   "systeminfo",
   "lang",
   "lang en",
@@ -159,6 +161,7 @@ export default function TerminalInput() {
     title: string;
     rows: { key: string; value: string }[];
   } | null>(null);
+  const [matrixActive, setMatrixActive] = useState(false);
   const historyRef = useRef<string[]>([]);
   // null = live draft line; otherwise an index into historyRef.current.
   const historyCursorRef = useRef<number | null>(null);
@@ -371,6 +374,17 @@ export default function TerminalInput() {
         setManOutput({ title: project.slug, rows });
         break;
       }
+      case "matrix":
+        // Purely decorative motion, nothing here is essential
+        // information — same reduced-motion policy the boot sequence
+        // already follows (skipped entirely, not a token static
+        // version): see LoadingScreen/this file's own boot-lines effect.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          pushLog(t(lang, "terminal.matrixReducedMotion"));
+        } else {
+          setMatrixActive(true);
+        }
+        break;
       case "--audio=on":
         setAudioEnabled(true);
         pushLog(t(lang, "terminal.soundOn"));
@@ -623,6 +637,7 @@ export default function TerminalInput() {
           `contact` command's only way of triggering a real mailto:
           navigation (see runCommand above). */}
       <a ref={mailtoLinkRef} href={`mailto:${CONTACT_EMAIL}`} hidden aria-hidden="true" tabIndex={-1} />
+      {matrixActive && <MatrixOverlay onDismiss={() => setMatrixActive(false)} />}
     </div>
   );
 }

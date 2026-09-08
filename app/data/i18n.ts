@@ -98,6 +98,10 @@ const DICT = {
   // OS's own "language changed" confirmation.
   "terminal.langSet": { en: "→ language: English", nl: "→ taal: Nederlands" },
   "terminal.invalidLang": { en: "invalid language. try:", nl: "ongeldige taal. probeer:" },
+  "terminal.matrixReducedMotion": {
+    en: "→ matrix effect skipped (reduced motion)",
+    nl: "→ matrix-effect overgeslagen (verminderde beweging)",
+  },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
 } as const;
