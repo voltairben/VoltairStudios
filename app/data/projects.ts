@@ -35,9 +35,19 @@ export type Project = {
 
 const PLACEHOLDER_COUNT = 6;
 
+// `name` is real, user-facing copy — it's the case-study page's own H1
+// (see work/[slug]/page.tsx) and the "Next Project" infobar label, both
+// reachable by a real visitor via that infobar's real link, not just
+// internal bookkeeping. "Placeholder N" read as a broken dev leftover
+// there (caught in a real screenshot during a pre-launch audit) — "Coming
+// Soon" matches the honest voice the rest of that page already uses
+// (case-study-body's own "Case study in progress", the Visit tag's
+// "Coming soon"). `slug` stays internal/unique (`placeholder-3` etc. —
+// never rendered) for ProjectIndex's own numbered "[ SLOT_03 // COMING
+// SOON ]" placeholders, which read their own number from `i`, not `name`.
 export const PROJECTS: Project[] = Array.from({ length: PLACEHOLDER_COUNT }, (_, i) => ({
   slug: `placeholder-${i + 1}`,
-  name: `Placeholder ${i + 1}`,
+  name: "Coming Soon",
 }));
 
 // First real project — direct request, replaces slot 1.
