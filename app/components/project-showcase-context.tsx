@@ -1,20 +1,21 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
-// Binds ProjectReel (the auto-looping center showcase) and ProjectIndex
-// (the right-hand nav list) together — same minimal Context pattern
+// Binds ProjectReel (the static 2-card showcase) and ProjectIndex (the
+// right-hand nav list) together — same minimal Context pattern
 // skybox-context.tsx already uses for a cross-component synced value.
 //
-// Simplified down from an earlier version that also carried a
-// scroll-target request (click an index item, reel scrolls to match):
-// the reel is a continuous, non-interactive CSS auto-loop now (direct,
-// repeated request — "it keeps scrolling through every placeholder and
-// doesn't stop," matching the reference exactly), so there's no real
-// scroll position left to request a jump to. Both components now derive
-// activeIndex from the same shared elapsed-time formula in
-// ProjectReel.tsx instead, so they stay genuinely in lockstep with the
-// CSS loop rather than needing a two-way request/response.
+// Simplified twice now. First pass: dropped a scroll-target request
+// (click an index item, reel scrolls to match) once the reel became a
+// continuous auto-loop with no real scroll position to jump to — that
+// version derived an `activeIndex` from the loop's own elapsed-time
+// formula instead. Second pass, this one: the reel itself went fully
+// static (2 real case studies, no more loop — direct request, "pivot
+// homepage showcase... to a premium, statically locked showcase"), so
+// there's no ambient "currently showing" position left to track at
+// all — `activeIndex`/`reportActiveIndex` are gone. Only the
+// pointer-driven state below is still real.
 //
 // Also used to carry a card-to-page view-transition-name morph gate
 // (morphSource) — retired once the page-transition overlay took over
@@ -24,15 +25,13 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 // header before the transition finishes" bug (see ProjectReel.tsx and
 // ProjectIndex.tsx's own comments).
 type ProjectShowcaseContextValue = {
-  activeIndex: number;
-  reportActiveIndex: (i: number) => void;
   /** The project (by slug) the pointer is currently over, on *either*
    *  surface — direct request for a bidirectional hover: hover a reel
    *  tile, the matching index entry highlights; hover an index entry,
-   *  the matching reel tile(s) get their own hover pop. Deliberately a
-   *  separate value from activeIndex above: that's the reel's ambient
-   *  auto-loop position (always-on, nothing to do with the pointer),
-   *  this is engagement-driven and null the rest of the time. */
+   *  the matching reel tile gets its own hover pop. Null the rest of
+   *  the time. Only ever set for the 2 real projects — ProjectIndex's
+   *  4 "coming soon" placeholder slots are non-interactive and never
+   *  touch this. */
   hoveredSlug: string | null;
   setHoveredSlug: (slug: string | null) => void;
 };
@@ -40,22 +39,10 @@ type ProjectShowcaseContextValue = {
 const ProjectShowcaseContext = createContext<ProjectShowcaseContextValue | null>(null);
 
 export function ProjectShowcaseProvider({ children }: { children: ReactNode }) {
-  const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredSlug, setHoveredSlug] = useState<string | null>(null);
 
-  const reportActiveIndex = useCallback((i: number) => {
-    setActiveIndex(i);
-  }, []);
-
   return (
-    <ProjectShowcaseContext.Provider
-      value={{
-        activeIndex,
-        reportActiveIndex,
-        hoveredSlug,
-        setHoveredSlug,
-      }}
-    >
+    <ProjectShowcaseContext.Provider value={{ hoveredSlug, setHoveredSlug }}>
       {children}
     </ProjectShowcaseContext.Provider>
   );

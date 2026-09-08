@@ -986,93 +986,51 @@ body {
   color: var(--color-amber-dim);
 }
 
-/* Project reel — a vertically auto-looping column of project thumbnails,
-   sitting beside the hero text in the open sky space. Placeholders only
-   (see ProjectReel.tsx) until real project screenshots exist.
+/* Project reel — direct pivot: a statically locked showcase of the 2
+   real, finished case studies (KrachtigFit, SOL_DNB), not a
+   placeholder-filled auto-loop anymore.
 
    This has been through several states — a CSS auto-loop, a plain
    user-scroll region, a scroll-snap carousel with an
-   IntersectionObserver/keyboard/drag, a version of that carousel that
-   auto-wrapped at the end, a pure CSS auto-loop with no interaction at
-   all (matching the reference exactly — checked directly, its own image
-   column has no CSS animation, no scrollable container, and doesn't
-   respond to any input at all, near-certainly canvas/WebGL-rendered), a
-   version that layered native `overflow-y: auto` on top of that CSS
-   loop (composed for free, but had a real bug: the animation's own
-   translateY range and a real scrollTop are two independent, unbounded
-   offsets, and their combined worst case could exceed the track's
-   actual duplicated height — a hard cutoff, not a smooth fade,
-   screenshotted directly by the user) — before landing here: the
-   `transform` is now set entirely by JS (see ProjectReel.tsx), which
-   owns one position for auto-advance, wheel, and drag alike and keeps
-   it safely wrapped, so there's no more CSS `animation` on the track at
-   all. Hidden below 700px — the same tier the headline's dvw formula
-   switches on — there isn't real room for a second column next to the
-   hero text at narrower widths without either one breaking the
-   zero-scroll fit budget, so the narrow layout stays the single-column
-   hero it already was rather than risking a new clip class of bug. */
+   IntersectionObserver/keyboard/drag, a version with native
+   `overflow-y: auto` layered on the loop (a real bug: the animation's
+   own translateY range and a real scrollTop are two independent,
+   unbounded offsets whose combined worst case could exceed the
+   track's duplicated height), then a JS-owned position unifying
+   auto-advance/wheel/drag into one safely-wrapped value (see git
+   history for all of that) — before landing here: real content
+   exists now, so the whole "loop placeholders forever" premise is
+   gone. No more duplication, no more JS-driven transform, no more
+   wheel/drag input; .project-reel-track just lays out 2 real tiles
+   (see ProjectReel.tsx) and lets them sit. Still hidden below 700px —
+   the same tier the headline's dvw formula switches on — there isn't
+   real room for a second column next to the hero text at narrower
+   widths without either one breaking the zero-scroll fit budget, so
+   the narrow layout stays the single-column hero it already was. */
 .project-reel {
   display: none;
-  width: clamp(200px, 24dvw, 380px); /* broadened from clamp(160px,
-    20dvw, 320px) — direct request */
+  width: clamp(240px, 28dvw, 460px); /* broadened again — direct
+    request ("make them a bit bigger"), from clamp(200px, 24dvw,
+    380px). Each card's width comes straight from this box's own width
+    (.project-reel-item is width:100%), so widening the reel is what
+    actually grows the cards — height follows for free via their own
+    aspect-ratio: 4/3. */
   margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
     .project-index after it, same flex row) right of where the shared
     .hero-row gap alone put it — direct request, on top of that gap
     rather than replacing it */
   height: 100%;
-  overflow-y: clip; /* was overflow-y: hidden — clip behaves the same
-    for hiding the duplicated copies above/below the visible window
-    (still the load-bearing reason this axis clips at all; nothing here
-    ever calls .scrollTop on this element, so losing hidden's implicit
-    "still programmatically scrollable" isn't a real loss), but unlike
-    hidden it can be paired with overflow-clip-margin below to give a
-    hovered/scaled tile real room to bleed past this box's own edge
-    instead of a hard cut right at the boundary — direct report, "it
-    scopes out", screenshotted mid-hover. The margin is comfortably
-    less than one tile's own height at every width the reel renders at
-    (700px floor: ~150px tall), so it can't bleed far enough to reveal
-    a genuinely different, still-hidden duplicate copy — only gives the
-    tile nearest the edge room to actually pop past it. */
-  overflow-clip-margin: 110px;
+  overflow-y: clip; /* safety net, not load-bearing anymore now that
+    there's no duplicated loop content to hide — kept in case a very
+    short viewport ever makes the 2-card stack taller than this box */
+  overflow-clip-margin: 110px; /* still real: the hover-pop below
+    (transform: scale(1.6)) needs room to bleed past this box's own
+    edge instead of a hard cut right at the boundary — direct report,
+    "it scopes out", screenshotted mid-hover, from when this was still
+    a loop; the same tile-popping behavior still applies to the 2 real
+    tiles now. */
   overflow-x: visible;
-  touch-action: none; /* stops the browser's own touch-pan/scroll from
-    fighting the manual pointer-drag handling below */
-  cursor: grab;
   flex-shrink: 0;
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    black 10%,
-    black 90%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    black 10%,
-    black 90%,
-    transparent 100%
-  ); /* fades the loop's cut edges instead of a hard clip line, so it
-    reads as a continuous reel rather than a truncated frame */
-}
-.project-reel:has(.project-reel-item:hover),
-.project-reel:has(.project-reel-item:focus-visible),
-.project-reel:has(.project-reel-item.is-cross-hovered) {
-  /* The fade mask above is alpha, not clipping — it applies to
-     everything painted in this box regardless of overflow-clip-margin,
-     so a tile popping past the edge into the mask's own 10% fade zone
-     was rendering half-transparent right where it should be breaking
-     loose (the actual cause of "it scopes out", not the clip itself).
-     Dropped only while something's actually hovered/focused — the rest
-     of the time the loop-fade still does its job on the resting reel.
-     is-cross-hovered included: a tile popped by hovering its Index
-     entry instead of the tile itself needs the same real room to break
-     loose into, or it'd get clipped only in that one trigger path. */
-  -webkit-mask-image: none;
-  mask-image: none;
-}
-.project-reel:active {
-  cursor: grabbing;
 }
 @media (min-width: 700px) {
   .project-reel {
@@ -1082,10 +1040,21 @@ body {
 .project-reel-track {
   display: flex;
   flex-direction: column;
+  justify-content: center; /* centers the 2-card stack in the reel's
+    full-height box rather than pinning it to the top — the stack's
+    own aspect-ratio-derived height rarely fills .project-reel exactly.
+    Was a no-op without the height rule below: .project-reel is a plain
+    block container (see its own comment), so this flex child's height
+    defaulted to its content's own size with zero extra space to center
+    into, leaving the stack flush against the top of the row instead —
+    direct report, "id like the two cards lower and more in the
+    center of the line they are on now". */
+  height: 100%;
+  gap: var(--space-3); /* direct request ("split the 2 cards up") —
+    they used to sit flush, separated only by each tile's own 1px
+    border. A real gap reads as two distinct case studies instead of
+    one continuous strip. */
   width: 100%;
-  will-change: transform; /* JS updates this every frame during
-    auto-advance/drag — hints the browser to keep it on its own
-    compositor layer rather than re-evaluating layout each time */
 }
 .project-reel-item {
   /* a real next/link <a> — each tile is a real link to its /work/[slug]
@@ -1285,20 +1254,13 @@ body {
   transition: color 300ms ease, font-weight 200ms ease, background-color 120ms ease,
     box-shadow 120ms ease, transform 200ms ease, opacity 200ms ease;
 }
-.project-index-item.is-active {
-  color: var(--color-cursor-flash);
-  font-weight: 600;
-}
 .project-index-item.is-cross-hovered {
   /* Bidirectional hover, direct request — hovering this project's reel
-     tile highlights this entry back. Deliberately not the same look
-     as .is-active (color+weight only, the reel's ambient "currently
-     showing" signal): a thin inset left border reads as "the pointer
-     picked this one" without being confused for the loop's own state,
-     and stays a precise color/border swap, not a background wash or
-     anything glow/gradient-shaped. inset box-shadow, not a real
-     border — doesn't reserve/shift any layout width the way border-left
-     would need padding compensation for.
+     tile highlights this entry back. A thin inset left border reads
+     as "the pointer picked this one" — a precise color/border swap,
+     not a background wash or anything glow/gradient-shaped. inset
+     box-shadow, not a real border — doesn't reserve/shift any layout
+     width the way border-left would need padding compensation for.
 
      Also now this list's "kinetic hover expansion" target — direct
      request: weight up along the real variable axis (IBM Plex Mono
@@ -1343,6 +1305,19 @@ body {
 }
 .project-index-item:active {
   background-color: var(--color-amber-tint-14);
+}
+.project-index-item-placeholder {
+  /* Direct request: slots 3-6 stay in the list for composition/grid
+     balance but read as inert structural anchors, not real entries —
+     muted color, no pointer reaction at all. pointer-events: none is
+     the actual mechanism (blocks hover/click/cursor changes outright);
+     tabIndex={-1} in ProjectIndex.tsx is the keyboard half of the same
+     "no interaction" ask. A plain <span> (not an <a>) already can't
+     participate in :hover/:focus-visible/:active above — this class
+     doesn't need to override them, there's nothing to override. */
+  color: var(--color-ui-muted);
+  cursor: default;
+  pointer-events: none;
 }
 
 /* 5.3 Status bar */
@@ -1604,18 +1579,19 @@ body {
     opacity: 1;
     transform: none;
   }
-  /* .project-reel-track needs no entry here anymore — there's no CSS
-     animation on it to cancel; ProjectReel.tsx checks this same media
-     query itself and skips starting the rAF loop that drives
-     auto-advance, leaving wheel/drag still fully functional. */
+  /* .project-reel-track needs no entry here anymore — the reel is
+     fully static now (2 real case studies, no loop, no JS-driven
+     transform at all — see ProjectReel.tsx), so there was never any
+     motion here to cancel in the first place. */
   .project-index-item {
-    /* .is-active alone really was just a color/font-weight toggle (see
-       the stale version of this comment) — the kinetic hover-expansion
-       feature is the part that actually animates now (scaleX, opacity,
-       font-weight all transition). Instant snap instead, not disabled
-       outright: the dim/expand effect itself isn't the kind of ambient
-       motion reduced-motion targets, only the animated transition
-       between states is. */
+    /* The kinetic hover-expansion feature is what actually animates
+       here (scaleX, opacity, font-weight all transition on
+       is-cross-hovered). Instant snap instead, not disabled outright:
+       the dim/expand effect itself isn't the kind of ambient motion
+       reduced-motion targets, only the animated transition between
+       states is. Placeholder slots (.project-index-item-placeholder)
+       never gain is-cross-hovered at all — pointer-events: none rules
+       them out structurally, so this rule is a no-op for them either way. */
     transition: none;
   }
 }
