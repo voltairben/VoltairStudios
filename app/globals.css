@@ -425,12 +425,13 @@ body {
     look this had as a plain div */
   transition: color 120ms ease;
 }
-.wordmark:hover,
-.wordmark:focus-visible {
+.wordmark:hover {
   color: var(--color-amber-bright); /* same hover accent every other
     interactive chrome element already uses */
 }
 .wordmark:focus-visible {
+  color: var(--color-amber-bright); /* same hover accent every other
+    interactive chrome element already uses */
   outline: var(--focus-outline-w) solid var(--color-amber-bright);
   outline-offset: var(--focus-outline-offset);
 }
