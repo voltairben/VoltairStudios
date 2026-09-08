@@ -17,6 +17,9 @@ import {
 } from "../data/palette";
 import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
+import MatrixOverlay from "./MatrixOverlay";
+import StatusLED, { type LEDVariant } from "./StatusLED";
+import SnakeGame from "./SnakeGame";
 
 // Real, functional command line — direct request ("Terminal Command
 // History & Auto-Completion"). No parser library: commands are a fixed
@@ -33,6 +36,9 @@ const COMMANDS = [
   "help",
   "skybox",
   "work",
+  "man",
+  "matrix",
+  "status soldnb",
   "systeminfo",
   "lang",
   "lang en",
@@ -120,7 +126,10 @@ function bootLines(lang: Lang) {
 }
 const BOOT_LINE_DELAY_MS = 120;
 
-type LogLine = { id: number; text: string };
+// `led` is optional and only ever set by `status soldnb`'s async
+// result (see runCommand's own "status" case) — every other pushLog()
+// call omits it and renders exactly as before.
+type LogLine = { id: number; text: string; led?: LEDVariant };
 
 // Best-effort real UA parse for systeminfo's "engine" row — checked in
 // order of specificity (Edge's UA also contains "Chrome/", Chrome's
@@ -149,6 +158,23 @@ export default function TerminalInput() {
   // block that replaces the regular log display while it's showing,
   // and clears on any other command (including clear itself).
   const [systemInfo, setSystemInfo] = useState<{ key: string; value: string }[] | null>(null);
+  // `man <slug>`'s own output — same reasoning and same shell as
+  // systemInfo above (a real, bounded key/value table needs more room
+  // than LOG_LIMIT's 2 lines), reuses its exact CSS classes below
+  // rather than a parallel set for what's visually the same block
+  // shape. `title` is the man page's own heading line ("man <slug>:").
+  const [manOutput, setManOutput] = useState<{
+    title: string;
+    rows: { key: string; value: string }[];
+  } | null>(null);
+  const [matrixActive, setMatrixActive] = useState(false);
+  // Hidden easter egg (direct request) — no COMMANDS entry, so it
+  // never appears in `help` or Tab-completion; typing "snake" and
+  // hitting Enter still runs it, the switch below doesn't check
+  // COMMANDS membership at all. See handleKeyDown's own guard for how
+  // this keeps WASD/arrows from also triggering command history while
+  // the game owns the keyboard.
+  const [snakeActive, setSnakeActive] = useState(false);
   const historyRef = useRef<string[]>([]);
   // null = live draft line; otherwise an index into historyRef.current.
   const historyCursorRef = useRef<number | null>(null);
@@ -239,7 +265,7 @@ export default function TerminalInput() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function pushLog(text: string) {
+  function pushLog(text: string, led?: LEDVariant) {
     // Snapshot the id into a local const *before* the updater closure —
     // a command like `xyz` calls pushLog twice synchronously (the echoed
     // "xyz" line, then "command not found"), and React doesn't run
@@ -250,7 +276,7 @@ export default function TerminalInput() {
     // real duplicate-key bug (confirmed via React's own warning plus
     // corrupted log output), not a display quirk.
     const id = ++logIdRef.current;
-    setLog((prev) => [...prev, { id, text }].slice(-LOG_LIMIT));
+    setLog((prev) => [...prev, { id, text, led }].slice(-LOG_LIMIT));
   }
 
   function runCommand(raw: string) {
@@ -265,10 +291,14 @@ export default function TerminalInput() {
     setValue("");
 
     const [name, arg] = trimmed.toLowerCase().split(/\s+/);
-    // Any command other than systeminfo itself drops back to the
-    // regular log display — systeminfo's own case below re-sets this
-    // right after, so it still wins when that's the command that ran.
+    // Any command other than systeminfo/man itself drops back to the
+    // regular log display — each one's own case below re-sets its own
+    // state right after, so it still wins when that's the command that
+    // ran. The two never show at once: whichever command runs re-sets
+    // only its own state, and it already ran after both were cleared
+    // here.
     setSystemInfo(null);
+    setManOutput(null);
     pushLog(trimmed);
 
     switch (name) {
@@ -323,6 +353,83 @@ export default function TerminalInput() {
           focusFirstProject();
         }
         break;
+      case "man": {
+        // `man <slug>` — real Project metadata only (data/projects.ts),
+        // same getProject() lookup `work <slug>` already uses above.
+        // Bare `man` lists real slugs instead of guessing one. YEAR/ROLE
+        // rows only appear when that project actually has one (never a
+        // fabricated value) — krachtig-fit has a year but no role,
+        // matching its own real, intentionally-incomplete data. When
+        // NEITHER is set (every placeholder slot, for now), one honest
+        // STATUS row replaces them — same t(lang, "work.comingSoon")
+        // string the case-study page's own Visit tag already uses for
+        // exactly this situation, not a new one invented for this.
+        if (!arg) {
+          pushLog(`→ ${t(lang, "terminal.projectsLabel")}: ${PROJECTS.map((p) => p.slug).join(", ")}`);
+          break;
+        }
+        const project = getProject(arg);
+        if (!project) {
+          pushLog(`${t(lang, "terminal.projectNotFound")} ${arg}`);
+          break;
+        }
+        // Real-project signal is field presence, not the display name —
+        // placeholder projects' own `name` is itself literally "Coming
+        // Soon" now (see projects.ts), so comparing against that string
+        // would either double up or silently break once translated.
+        const isRealProject = Boolean(
+          project.year || project.role || project.url || project.description,
+        );
+        const rows = [{ key: "NAME", value: project.name }];
+        if (project.year) rows.push({ key: "YEAR", value: project.year });
+        if (project.role) rows.push({ key: "ROLE", value: project.role });
+        if (!isRealProject) rows.push({ key: "STATUS", value: t(lang, "work.comingSoon") });
+        setManOutput({ title: project.slug, rows });
+        break;
+      }
+      case "matrix":
+        // Purely decorative motion, nothing here is essential
+        // information — same reduced-motion policy the boot sequence
+        // already follows (skipped entirely, not a token static
+        // version): see LoadingScreen/this file's own boot-lines effect.
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          pushLog(t(lang, "terminal.matrixReducedMotion"));
+        } else {
+          setMatrixActive(true);
+        }
+        break;
+      case "snake":
+        // Deliberately no reduced-motion gate here — unlike matrix,
+        // this isn't ambient decorative motion, it's a real game the
+        // player is actively controlling; skipping it under reduced-
+        // motion would remove the feature entirely rather than just
+        // trim an animation.
+        setSnakeActive(true);
+        break;
+      case "status": {
+        // Only soldnb — the only real project with a genuine live
+        // status surface to read (see route.ts's own comment: soldnb.com
+        // sends no CORS header, so this needs a real server-side proxy,
+        // this project's first-ever backend code, direct decision).
+        // Non-blocking: fires and returns to the prompt immediately: the
+        // real result lands as its own log line (with LED) once the
+        // proxy resolves, whenever that is.
+        if (arg !== "soldnb") {
+          pushLog(t(lang, "terminal.statusUsage"));
+          break;
+        }
+        pushLog(t(lang, "terminal.statusChecking"));
+        fetch("/api/soldnb-status")
+          .then((res) => res.json())
+          .then((data: { led: string; text: string }) => {
+            const variant: LEDVariant = data.led === "unknown" ? "accent" : "muted";
+            pushLog(`→ soldnb: ${data.text}`, variant);
+          })
+          .catch(() => {
+            pushLog(`→ ${t(lang, "terminal.statusUnreachable")}`, "muted");
+          });
+        break;
+      }
       case "--audio=on":
         setAudioEnabled(true);
         pushLog(t(lang, "terminal.soundOn"));
@@ -403,6 +510,16 @@ export default function TerminalInput() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // SnakeGame owns all keyboard input while active (its own window-
+    // level listener, WASD/arrows included) — this is the other half
+    // of that: without it, ArrowUp/ArrowDown below would ALSO fire
+    // command-history navigation for the exact same keystroke whenever
+    // the input happens to still (or again) have focus, corrupting
+    // both the game and the input's own value at once. SnakeGame
+    // blurs this input on activate as the first line of defense; this
+    // guard is the second, in case focus ever returns to it mid-game
+    // (e.g. a stray click on the terminal row).
+    if (snakeActive) return;
     // Every real keypress gets the same mechanical click regardless of
     // what it does — a real keyboard clacks on Backspace and Enter too,
     // not just letters. No-op silently when audio is off (see
@@ -533,7 +650,21 @@ export default function TerminalInput() {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
       />
-      {systemInfo ? (
+      {manOutput ? (
+        // Same shell/classes as systemInfo below — see manOutput's own
+        // state comment for why. NAME/YEAR/ROLE/STATUS keys are all
+        // well under terminal-systeminfo-key's 8ch column width, so the
+        // existing alignment just works, no new CSS.
+        <div className="terminal-systeminfo" role="status" aria-live="polite">
+          <p className="terminal-log-line">man {manOutput.title}:</p>
+          {manOutput.rows.map((row) => (
+            <div key={row.key} className="terminal-systeminfo-row">
+              <span className="terminal-systeminfo-key">{row.key}</span>
+              <span className="terminal-systeminfo-value">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : systemInfo ? (
         // Its own fully-sized block, not the LOG_LIMIT-capped log below
         // — a real ~8-row table needs more than the 2 lines that cap
         // was deliberately set to (see LOG_LIMIT's comment), and every
@@ -552,6 +683,7 @@ export default function TerminalInput() {
         <div className="terminal-log" role="status" aria-live="polite">
           {log.map((entry) => (
             <p key={entry.id} className="terminal-log-line">
+              {entry.led && <StatusLED variant={entry.led} />}
               {entry.text}
             </p>
           ))}
@@ -561,6 +693,8 @@ export default function TerminalInput() {
           `contact` command's only way of triggering a real mailto:
           navigation (see runCommand above). */}
       <a ref={mailtoLinkRef} href={`mailto:${CONTACT_EMAIL}`} hidden aria-hidden="true" tabIndex={-1} />
+      {matrixActive && <MatrixOverlay onDismiss={() => setMatrixActive(false)} />}
+      {snakeActive && <SnakeGame onExit={() => setSnakeActive(false)} />}
     </div>
   );
 }

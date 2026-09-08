@@ -26,12 +26,14 @@ import { usePathname } from "next/navigation";
 const STORAGE_KEY = "voltair-audio-enabled";
 const CLICK_DURATION_S = 0.03;
 const SWEEP_DURATION_S = 0.4;
+const THUD_DURATION_S = 0.15;
 
 type AudioContextValue = {
   enabled: boolean;
   setEnabled: (next: boolean) => void;
   playClick: () => void;
   playSweep: () => void;
+  playThud: () => void;
 };
 
 const Ctx = createContext<AudioContextValue | null>(null);
@@ -137,6 +139,31 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [enabled]);
 
+  // `snake`'s own collision sound — direct request ("mechanical
+  // click/thud feedback"). Same synthesis technique as playClick/
+  // playSweep above (a real oscillator + gain envelope, no library, no
+  // file): a low square wave sliding further down reads as a dull
+  // thump, distinct from playClick's short high-pitched key-tap.
+  const playThud = useCallback(() => {
+    if (!enabled) return;
+    const ctx = getWebAudioCtx();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(120, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + THUD_DURATION_S);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + THUD_DURATION_S);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + THUD_DURATION_S);
+    } catch {
+      // synthesis failed on this call — not worth surfacing over gameplay
+    }
+  }, [enabled]);
+
   // Route-change sweep — usePathname() updates on any client-side
   // navigation regardless of which Link triggered it (next/link and
   // next-view-transitions' Link both go through the same App Router).
@@ -158,7 +185,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <Ctx.Provider value={{ enabled, setEnabled, playClick, playSweep }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ enabled, setEnabled, playClick, playSweep, playThud }}>
+      {children}
+    </Ctx.Provider>
   );
 }
 

@@ -28,7 +28,7 @@ export default function TerminalPane() {
             className="headline-line2"
             delayMs={150}
           />
-          <span className="cursor" aria-hidden="true">
+          <span className="cursor" aria-hidden="true" title={t(lang, "hero.cursorHint")}>
             ▌
           </span>
         </h1>

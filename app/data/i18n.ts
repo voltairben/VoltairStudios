@@ -98,6 +98,25 @@ const DICT = {
   // OS's own "language changed" confirmation.
   "terminal.langSet": { en: "→ language: English", nl: "→ taal: Nederlands" },
   "terminal.invalidLang": { en: "invalid language. try:", nl: "ongeldige taal. probeer:" },
+  "terminal.matrixReducedMotion": {
+    en: "→ matrix effect skipped (reduced motion)",
+    nl: "→ matrix-effect overgeslagen (verminderde beweging)",
+  },
+  "terminal.statusUsage": {
+    en: "status is only available for: soldnb",
+    nl: "status is alleen beschikbaar voor: soldnb",
+  },
+  "terminal.statusChecking": { en: "→ checking soldnb.com...", nl: "→ soldnb.com controleren..." },
+  "terminal.statusUnreachable": { en: "soldnb.com unreachable", nl: "soldnb.com onbereikbaar" },
+
+  // The one and only clue to the hidden `snake` command (see
+  // TerminalInput.tsx/SnakeGame.tsx) — a native browser title tooltip
+  // on the headline's blinking cursor, direct request ("a subtle nudge
+  // on the site itself"). Nowhere else references this.
+  "hero.cursorHint": {
+    en: "psst — try typing 'snake' in the terminal",
+    nl: "psst — probeer 'snake' te typen in de terminal",
+  },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
 } as const;
