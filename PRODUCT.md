@@ -50,4 +50,4 @@ WCAG 2.1 AA minimum: contrast, full keyboard operability, screen-reader-sane sem
 
 ## Open Placeholders
 
-- Contact email is `contact@voltairstudio.com`, provided directly. Not independently verified that this inbox/domain is live — confirm before launch.
+- Contact email is `contact@voltairstudio.com` (single source: `CONTACT_EMAIL` in `app/data/brand.ts`), provided directly. Confirmed via DNS during a pre-launch audit that `voltairstudio.com` does not currently resolve (NXDOMAIN) — this is not just unverified, it's a real dead address right now. Replace with a real, working email/domain before launch; it's a one-line edit in `brand.ts` once you have one.

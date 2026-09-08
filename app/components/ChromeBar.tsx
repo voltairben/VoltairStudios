@@ -6,11 +6,10 @@ import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 import LangToggle from "./LangToggle";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
-import { STUDIO_HANDLE } from "../data/brand";
+import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import TransitionLink from "./TransitionLink";
 import { LOGO_MODEL_URL } from "./SkyboxCanvas";
 
-const CONTACT_EMAIL = "contact@voltairstudio.com";
 const COPIED_MS = 1800; // how long "Email copied!" stays before reverting
 
 // Direct report: "when loading the about page the logo takes longer

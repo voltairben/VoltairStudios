@@ -3,11 +3,9 @@
 import { useLang } from "../components/lang-context";
 import { t } from "../data/i18n";
 import { ABOUT_CONTENT, ABOUT_TOOLS } from "../data/about-content";
-import { STUDIO_HANDLE } from "../data/brand";
+import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import ScrambleText from "../components/ScrambleText";
 import TransitionLink from "../components/TransitionLink";
-
-const CONTACT_EMAIL = "contact@voltairstudio.com";
 
 // Full rebuild, direct request, modeled on a reference screenshot
 // (segerman.dev's own About page): a big corner headline instead of a

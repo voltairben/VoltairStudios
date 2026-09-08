@@ -7,7 +7,7 @@ import ChromeBar from "../../components/ChromeBar";
 import StatusBar from "../../components/StatusBar";
 import T from "../../components/T";
 import Localized from "../../components/Localized";
-import { STUDIO_HANDLE } from "../../data/brand";
+import { STUDIO_HANDLE, CONTACT_EMAIL } from "../../data/brand";
 import TransitionLink from "../../components/TransitionLink";
 
 export function generateStaticParams() {
@@ -71,8 +71,8 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 <T k="work.inProgress" />
               </p>
             ) : null}
-            <a href="mailto:contact@voltairstudio.com" className="case-study-cta">
-              contact@voltairstudio.com
+            <a href={`mailto:${CONTACT_EMAIL}`} className="case-study-cta">
+              {CONTACT_EMAIL}
             </a>
           </div>
           <div className="case-study-mockup">

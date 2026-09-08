@@ -8,6 +8,7 @@ import TerminalInput from "./TerminalInput";
 import { ProjectShowcaseProvider } from "./project-showcase-context";
 import { useLang } from "./lang-context";
 import { t } from "../data/i18n";
+import { CONTACT_EMAIL } from "../data/brand";
 
 export default function TerminalPane() {
   // ScrambleText/`.position` need plain strings (not JSX), unlike the
@@ -33,8 +34,8 @@ export default function TerminalPane() {
         </h1>
         <p className="position">{t(lang, "hero.tagline")}</p>
 
-        <a href="mailto:contact@voltairstudio.com" className="cta">
-          <span className="cta-text">contact@voltairstudio.com</span>
+        <a href={`mailto:${CONTACT_EMAIL}`} className="cta">
+          <span className="cta-text">{CONTACT_EMAIL}</span>
         </a>
 
         {/* Real functional command line, direct request — reuses the
