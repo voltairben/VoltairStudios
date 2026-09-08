@@ -15,7 +15,7 @@ import {
   applyPalette,
   persistPalette,
 } from "../data/palette";
-import { STUDIO_HANDLE } from "../data/brand";
+import { STUDIO_HANDLE, CONTACT_EMAIL } from "../data/brand";
 import logo from "../../Logo/3e3c5a99-524a-4fd8-88be-d24715bbdcf5.png";
 
 // Real, functional command line — direct request ("Terminal Command
@@ -50,7 +50,6 @@ const COMMANDS = [
   "theme stealth-obsidian",
   "theme vapor-comm",
 ] as const;
-const CONTACT_EMAIL = "contact@voltairstudio.com";
 const HISTORY_LIMIT = 50;
 // Only the latest command's own output — this sits inside .content,
 // inside .page's zero-scroll grid, which the rest of this system goes
