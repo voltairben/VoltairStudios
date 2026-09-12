@@ -57,6 +57,14 @@ export default function StatusBar({
         >
           --linkedin
         </a>
+        {/* Direct request: the real intended handle (confirmed:
+            "VoltairStudio is the official instagram name"), added now
+            even though the account itself only goes live when the
+            studio does — same "real intended value, not necessarily
+            live yet" treatment CONTACT_EMAIL/BASE_URL already get. */}
+        <a href="https://instagram.com/VoltairStudio" className="flag flag-instagram">
+          --instagram
+        </a>
         {/* Real internal route (see app/privacy/page.tsx), same
             TransitionLink block-wipe every other internal navigation on
             this site already uses — a privacy policy earns a real,
