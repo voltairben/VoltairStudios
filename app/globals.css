@@ -191,7 +191,7 @@ ol {
      zero-scroll homepage grid at the shortest real phone heights
      (down to 320x568) with this taller value in place, not assumed. */
   :root {
-    --status-h: 72px;
+    --status-h: 64px;
   }
 }
 
