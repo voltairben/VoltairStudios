@@ -3,6 +3,7 @@ import SkyboxSwitcher from "./SkyboxSwitcher";
 import AudioToggle from "./AudioToggle";
 import CrtToggle from "./CrtToggle";
 import T from "./T";
+import TransitionLink from "./TransitionLink";
 
 export default function StatusBar({
   left,
@@ -49,6 +50,17 @@ export default function StatusBar({
         >
           --linkedin
         </a>
+        {/* Real internal route (see app/privacy/page.tsx), same
+            TransitionLink block-wipe every other internal navigation on
+            this site already uses — a privacy policy earns a real,
+            site-wide link, not just a URL nobody would ever find. Same
+            progressive-disclosure tier as --github/--x in globals.css
+            (.flag-privacy), not always-visible: the narrowest floor
+            (320-380px) is already budgeted down to just the skybox
+            switcher, a hard-won fix documented on that same rule. */}
+        <TransitionLink href="/privacy" className="flag flag-privacy">
+          --privacy
+        </TransitionLink>
       </div>
     </footer>
   );
