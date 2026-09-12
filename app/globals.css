@@ -1376,7 +1376,8 @@ body {
 .status-copyright,
 .flag-linkedin,
 .flag-github,
-.flag-x {
+.flag-portal,
+.flag-privacy {
   display: none;
 }
 @media (min-width: 380px) {
@@ -1384,12 +1385,20 @@ body {
      footer text read as "really small") made the previous 320px
      content set (switcher + github + x) overflow the row, invisible
      to a scrollbar check since .page's overflow:hidden clips it
-     silently. github/x now join the same progressive-disclosure
-     ladder tz/copyright/linkedin already used — narrowest phones show
-     only the functional skybox switcher, verified with real
-     getBoundingClientRect checks down to 320px. */
+     silently. github/x joined the same progressive-disclosure ladder
+     tz/copyright/linkedin already used — narrowest phones show only
+     the functional skybox switcher, verified with real
+     getBoundingClientRect checks down to 320px. --privacy joined at
+     the same tier later (a legal link doesn't need to outrank social
+     links for the tightest floor's scarce space); --x was later
+     dropped (direct request, unused) and replaced by --portal (the
+     real client portal, portalvoltairstudio.vercel.app) at this exact
+     same tier/slot, so the row's own item count and overflow budget
+     stay exactly what was already re-verified at 320px, not a new
+     unverified count. */
   .flag-github,
-  .flag-x {
+  .flag-portal,
+  .flag-privacy {
     display: inline;
   }
 }
@@ -1970,6 +1979,108 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* /privacy — direct request ("we need to have everything legal, make
+   the policy"). Real long-form content, same .scroll-page-chrome/
+   .scroll-page-footer shell /about and /work/[slug] already share
+   (see privacy/page.tsx) — this page's own .legal-page just needs the
+   same fixed-chrome padding reservation .case-study already
+   established, centered into one readable column instead of
+   .case-study's left/right split (nothing here needs a second column). */
+.legal-page {
+  position: relative; /* beat the fixed skybox canvas — same fix
+    .case-study/.page use for the identical reason, see .case-study's
+    own comment */
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  padding: calc(var(--chrome-h) + var(--space-5)) var(--space-4)
+    calc(var(--status-h) + var(--space-5));
+}
+.legal-page-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 68ch; /* a real reading measure — this is the one page on
+    the site meant to be read start to finish, not skimmed */
+}
+.legal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.legal-title {
+  color: var(--color-amber-bright);
+  font-size: clamp(1.75rem, 5dvw, 3rem);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  text-shadow: var(--text-halo);
+}
+.legal-updated {
+  color: var(--color-ui-muted);
+  font-size: var(--fs-status);
+  text-shadow: var(--text-halo-small);
+}
+.legal-section-title {
+  color: var(--color-amber-bright);
+  font-size: var(--fs-chrome);
+  font-weight: 700;
+  margin-top: var(--space-2);
+  text-shadow: var(--text-halo-small);
+}
+.legal-body {
+  color: var(--color-amber-dim);
+  font-size: var(--fs-position);
+  line-height: var(--lh-relaxed); /* legal text needs real reading
+    comfort — this system's usual --lh-tight is tuned for short
+    headline/label text, not paragraphs meant to be actually read */
+  text-shadow: var(--text-halo-small);
+}
+.legal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: 1.4em;
+  color: var(--color-amber-dim);
+  font-size: var(--fs-position);
+  line-height: var(--lh-relaxed);
+  text-shadow: var(--text-halo-small);
+}
+.legal-list li {
+  list-style: disc; /* the global reset above sets ul,ol{list-style:none}
+    site-wide — a real legal list specifically benefits from visible
+    bullets for scanability, opted back in here rather than site-wide */
+}
+.legal-link {
+  color: var(--color-cursor-flash);
+  text-decoration: underline;
+  text-decoration-color: var(--color-underline-rest);
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+}
+.legal-link:hover,
+.legal-link:focus-visible {
+  color: var(--color-amber-bright);
+  text-decoration-color: var(--color-amber-bright);
+}
+.legal-link:focus-visible {
+  outline: var(--focus-outline-w) solid var(--color-amber-bright);
+  outline-offset: var(--focus-outline-offset);
+}
+@media (max-width: 480px) {
+  /* Tightened, same real-height-pressure reasoning .about-bio-paragraph's
+     own mobile rule already documents — a real multi-section policy is
+     much longer than the About bio it was tuned for, so this gets its
+     own narrower pass rather than assuming that fix's numbers still
+     hold here. */
+  .legal-title {
+    font-size: clamp(1.5rem, 8dvw, 2.25rem);
+  }
+  .legal-body,
+  .legal-list {
+    line-height: var(--lh-tight);
+  }
 }
 
 /* Mockup carousel (EstrelaCardViewer.tsx) — real screenshots of the
