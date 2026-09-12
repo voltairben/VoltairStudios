@@ -80,6 +80,23 @@ const LOGO_TARGET_RADIUS = 18; // half-extent after normalizing the
   // has to clip into). --text-halo is what keeps the paragraph legible
   // over it at this size, the same mechanism
   // already carrying every other piece of text on the open sky.
+const LOGO_TARGET_RADIUS_NARROW = 11; // direct report ("the text on
+  // the about page is squished"): .about-page is a fixed 100dvh box
+  // (see globals.css) already at zero spare vertical margin on real
+  // phones (that rule's own comment documents landing flush against
+  // the footer with no margin, before this even existed) — the
+  // logo's own full-size footprint (~55-60% of the viewport height on
+  // a real phone, checked live) was eating room the bio text needed.
+  // Direct request: shrink it specifically on narrow/short viewports,
+  // full size everywhere else. Computed once at load time from
+  // whatever the viewport is at that moment (see currentLogoRadius())
+  // — doesn't re-scale live if a visitor rotates their phone mid-visit
+  // to /about, a deliberate, minor scope limit, not an oversight.
+const NARROW_VIEWPORT_MAX = 700; // matches this system's own existing
+  // "phone/small-tablet" tier (--status-h's own 900px breakpoint is
+  // the closest sibling, chosen slightly tighter here since this is
+  // about a specific fixed-viewport page's real content pressure, not
+  // a general reflow point)
 const LOGO_SPIN_PERIOD_MS = 40_000; // its own slower drift, distinct
   // from the sky's 150s rotation so it reads as a separate floating object
 const LOGO_BOB_AMPLITUDE = 0.6;
@@ -147,7 +164,15 @@ function smoothLogoSurfaces(root: THREE.Object3D) {
   });
 }
 
-function normalizeLogo(root: THREE.Object3D): THREE.Group {
+/** Which of the two fixed radii applies right now — see
+ *  LOGO_TARGET_RADIUS_NARROW's own comment. A plain function, not a
+ *  piece of React state: called once at the moment the model finishes
+ *  loading, not something that needs to trigger a re-render itself. */
+function currentLogoRadius(): number {
+  return window.innerWidth <= NARROW_VIEWPORT_MAX ? LOGO_TARGET_RADIUS_NARROW : LOGO_TARGET_RADIUS;
+}
+
+function normalizeLogo(root: THREE.Object3D, targetRadius: number): THREE.Group {
   const box = new THREE.Box3().setFromObject(root);
   const size = new THREE.Vector3();
   box.getSize(size);
@@ -155,7 +180,7 @@ function normalizeLogo(root: THREE.Object3D): THREE.Group {
   box.getCenter(center);
   const maxDim = Math.max(size.x, size.y, size.z) || 1;
   root.position.sub(center);
-  root.scale.setScalar((LOGO_TARGET_RADIUS * 2) / maxDim);
+  root.scale.setScalar((targetRadius * 2) / maxDim);
 
   const group = new THREE.Group();
   group.add(root);
@@ -499,7 +524,7 @@ export default function SkyboxCanvas() {
           return;
         }
         smoothLogoSurfaces(gltf.scene);
-        const group = normalizeLogo(gltf.scene);
+        const group = normalizeLogo(gltf.scene, currentLogoRadius());
         // Reads the *current* pathname, not the value this effect closed
         // over when the fetch started — a visitor could have already
         // navigated away during the load.
