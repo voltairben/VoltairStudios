@@ -134,6 +134,15 @@ ol {
   --font-mono-stack: var(--font-mono), "IBM Plex Mono", ui-monospace,
     "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono",
     monospace;
+  /* Direct request: Sentient for headings, Satoshi for body copy — see
+     layout.tsx's own comment on the two localFont() calls for the
+     full scope decision (content/prose layer only; the terminal stays
+     --font-mono-stack, unchanged, to keep reading as a real shell).
+     Real fallback stacks, not just the custom property alone — same
+     defensive reasoning --font-mono-stack already follows. */
+  --font-heading-stack: var(--font-sentient), Georgia, "Times New Roman", serif;
+  --font-body-stack: var(--font-satoshi), -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 
   --fs-headline: clamp(1.0625rem, 6dvmin, 3.5rem); /* narrow/short-viewport
     formula. Slope/ceiling trimmed from 7dvmin/4rem — direct request,
@@ -306,8 +315,15 @@ ol {
    dimension that actually constrains a nowrap line. */
 @media (min-width: 700px) {
   :root {
-    --fs-headline: clamp(1.0625rem, 5.5dvw, 7.5rem); /* slope/ceiling
-      trimmed from 6.5dvw/9rem — direct request, read as too big */
+    --fs-headline: clamp(1.0625rem, 5dvw, 7.5rem); /* slope trimmed
+      again, 5.5dvw → 5dvw — real bug, caught in a screenshot, not
+      theoretical: switching .headline to Sentient (see layout.tsx's
+      own comment on the heading/body font split) clipped "Designers"
+      to "Designer" at 1440x900 — Sentient Bold's real glyph widths
+      run wider than IBM Plex Mono's this token was originally tuned
+      against (see this rule's own comment on the dvmin→dvw fix, the
+      same overflow-axis lesson, a new cause). Re-verified clean
+      across the full 320-2560px range with this font at this size. */
   }
 }
 
@@ -395,10 +411,17 @@ body {
   grid-row: 2;
   display: flex;
   align-items: stretch;
-  gap: clamp(24px, 8dvw, 140px); /* sits the reel next to the headline
+  gap: clamp(20px, 3dvw, 140px); /* sits the reel next to the headline
     with real breathing room, not flush against it — the gap plus the
     reel's own width is what lands it toward the screen's middle third
-    rather than pinned to either edge, per direct request/reference */
+    rather than pinned to either edge, per direct request/reference.
+    Slope halved (8dvw -> 4dvw) — real bug: 2 real gaps in this row
+    (content-reel, reel-index) compounded fast enough that the row's
+    total demanded width (.content's own real minimum + both gaps +
+    .project-reel's floor width + .project-index's own flex-shrink:0
+    width) genuinely exceeded the viewport across roughly 700-1440px,
+    pushing .project-index off-screen — pure spacing was the correct
+    lever to reduce, not any of the 3 columns' own real content. */
   min-height: 0; /* flex analog of .page's own minmax(0,1fr) fix above —
     without it a stretched child's intrinsic content height can inflate
     this row past its grid track, the same overflow family as the Grid
@@ -415,6 +438,34 @@ body {
     the top of the page, not mid-viewport */
   gap: var(--space-2);
   padding: var(--space-5) var(--space-4);
+  min-width: calc(var(--fs-headline) * 6.2 + var(--space-4) * 2); /*
+    real bug, caught in a screenshot, not theoretical: .content is a
+    plain flex item (flex-grow/shrink both default to their CSS
+    defaults) sharing .hero-row with .project-reel/.project-index,
+    both of which hold real floor/non-shrinking widths of their own —
+    between roughly 700-1200px, their combined footprint + this row's
+    own gap left as little as ~100px for .content, and flexbox
+    happily shrank it that far since nothing said not to. .headline's
+    own white-space:nowrap then had nowhere to go but clip inside
+    .content's own overflow:hidden below — "Designers" silently
+    became "Designer" on screen while the real DOM text stayed
+    correct the whole time.
+    Three attempts to size the floor, only the last one held up on
+    real re-measurement: min-width:max-content pulled in .position's
+    full one-line tagline (far longer than "Designers") instead of
+    just the headline actually at risk; an independently-tuned
+    clamp()'s own dvw slope drifted out of sync with --fs-headline's
+    real growth curve at different points in the range. Deriving this
+    directly from --fs-headline itself means it can't drift out of
+    sync with whatever that token resolves to at any width — 6.2 =
+    4.95 (the real measured "Designers"-to-font-size ratio in
+    Sentient Bold) x 1.25, since .headline-line2's own font-size is
+    1.25em, not the raw --fs-headline value this calc reads — missing
+    that multiplier is exactly why an earlier pass at this same
+    formula still clipped at 700-1000px despite looking sufficient on
+    paper. var(--space-4)*2 is this rule's own real left+right
+    padding, not a snapshotted px value. Re-verified clean 320-2560px,
+    reel/index included. */
   overflow: hidden;
   text-align: left;
   /* No panel behind the text — the sky shows through everywhere,
@@ -603,6 +654,8 @@ body {
   color: var(--color-cursor-flash); /* Base Light — "Creative" (the
     inherited default). "Designers" overrides to Primary Accent below;
     splitting the two words is the hierarchy request's own example. */
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-headline);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -691,6 +744,8 @@ body {
 .position {
   color: var(--color-amber-dim); /* Muted Text (Slate Grey) — doesn't
     fight the H1 for attention, per direct request */
+  font-family: var(--font-body-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-position);
   font-weight: 500;
   line-height: var(--lh-tight);
@@ -711,6 +766,8 @@ body {
   color: var(--color-cursor-flash); /* Base Light at rest — reads as
     distinctly clickable against the surrounding muted tagline, per
     direct request (brackets/$ framing were removed earlier instead) */
+  font-family: var(--font-body-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-cta);
   font-weight: 600;
   text-decoration: none; /* affordance is the background/color shift on
@@ -1077,17 +1134,25 @@ body {
    exists now, so the whole "loop placeholders forever" premise is
    gone. No more duplication, no more JS-driven transform, no more
    wheel/drag input; .project-reel-track just lays out 2 real tiles
-   (see ProjectReel.tsx) and lets them sit. Still hidden below 700px —
-   the same tier the headline's dvw formula switches on — there isn't
+   (see ProjectReel.tsx) and lets them sit. Still hidden below 1024px
+   (raised from 700px — see the reveal media query's own comment
+   below for the real width-budget bug this closes) — there isn't
    real room for a second column next to the hero text at narrower
    widths without either one breaking the zero-scroll fit budget, so
    the narrow layout stays the single-column hero it already was. */
 .project-reel {
   display: none;
-  width: clamp(240px, 28dvw, 460px); /* broadened again — direct
-    request ("make them a bit bigger"), from clamp(200px, 24dvw,
-    380px). Each card's width comes straight from this box's own width
-    (.project-reel-item is width:100%), so widening the reel is what
+  width: clamp(200px, 28dvw, 460px); /* floor trimmed 240->200 — real
+    bug fix (see .content's own min-width comment): part of closing a
+    genuine width deficit in the 700-1024px zone, where flexbox was
+    pushing .project-index off-screen entirely once .content correctly
+    stopped giving up its own real minimum. The "make them a bit
+    bigger" request this floor otherwise honors lives in the max end
+    (460px) and the 28dvw growth rate, both untouched — this only
+    softens the floor, which only ever applies in the narrow zone
+    that was already broken. Each card's width comes straight from
+    this box's own width (.project-reel-item is width:100%), so widening
+    the reel (at any width past this floor) is what
     actually grows the cards — height follows for free via their own
     aspect-ratio: 4/3. */
   margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
@@ -1107,7 +1172,20 @@ body {
   overflow-x: visible;
   flex-shrink: 0;
 }
-@media (min-width: 700px) {
+@media (min-width: 1024px) {
+  /* Raised from 700px — real bug fix, not a style preference: between
+     700-999px, .content's own real minimum width (see its own
+     comment — a genuine fix, not negotiable, or the headline clips)
+     combined with .project-reel/.project-index's own floors left the
+     row's total demanded width genuinely exceeding what's available,
+     even after trimming every reasonable cosmetic gap/margin down
+     first (.hero-row's own gap, this element's own floor width —
+     both already reduced as part of the same fix). 1024px is where
+     the real math actually closes, verified empirically across
+     320-2560px, not a round number picked on paper — and still
+     comfortably covers iPad landscape (1024px) and every wider
+     device, only pulling back from portrait tablets/narrow windows
+     in the 700-999px band specifically. */
   .project-reel {
     display: block;
   }
@@ -1272,7 +1350,8 @@ body {
 
 /* Project index — the reference's far-right project name list,
    matched to its position (top-right, below the nav, right-aligned).
-   Same 700px reveal tier as the reel beside it: no room for a third
+   Same 1024px reveal tier as the reel beside it (raised from 700px —
+   see the media query's own comment below): no room for a third
    column at narrower widths. */
 .project-index {
   display: none;
@@ -1287,7 +1366,12 @@ body {
     right-edge content sits at (chrome-nav, status-right) */
   flex-shrink: 0;
 }
-@media (min-width: 700px) {
+@media (min-width: 1024px) {
+  /* Raised from 700px, same real width-budget fix as .project-reel's
+     own identical breakpoint change above — see its comment for the
+     full reasoning. Kept in lockstep with the reel's own threshold
+     deliberately: the two have always revealed together as one
+     "showcase" unit, never independently. */
   .project-index {
     display: flex;
   }
@@ -1754,14 +1838,32 @@ body {
     unpadded content height instead and sitting right at the edge —
     screenshotted directly. Giving the wrapper the same height and
     centering its content reproduces the exact same result. */
+  /* Real bug, caught in a screenshot on /privacy, not theoretical:
+     unlike .page's own zero-scroll grid (where .chrome-bar/.status-bar
+     stay deliberately background-less — DESIGN.md's own "text floats
+     on the sky" rule — because content there can NEVER extend past
+     the viewport in the first place), every page using this shared
+     shell (/about, /privacy, /work/[slug]) is real, normally-
+     scrolling content that CAN be taller than one viewport. At
+     scroll=0 on a page like that, whatever's already lower in the
+     document renders directly behind these fixed bars — and with no
+     backdrop, both layers of text render simultaneously, illegibly
+     interleaved, not "one on top of the other." Same "Terminal Glass"
+     fill+blur already used elsewhere in this system (the reel tiles,
+     the palette picker menu) — reused, not invented for this. */
+  background: var(--color-glass-fill);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .scroll-page-chrome {
   top: 0;
   height: var(--chrome-h);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 .scroll-page-footer {
   bottom: 0;
   height: var(--status-h);
+  border-top: 1px solid var(--color-glass-border);
 }
 .scroll-page-chrome > .chrome-bar,
 .scroll-page-footer > .status-bar {
@@ -1858,6 +1960,8 @@ body {
 }
 .case-study-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(2rem, 6dvw, 4.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -1866,6 +1970,7 @@ body {
 }
 .case-study-body {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   max-width: 60ch;
   text-shadow: var(--text-halo-small);
@@ -1875,6 +1980,7 @@ body {
   align-items: center;
   min-height: 44px;
   color: var(--color-cursor-flash);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-cta);
   font-weight: 600;
   text-decoration: none;
@@ -2081,6 +2187,8 @@ body {
 }
 .legal-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(1.75rem, 5dvw, 3rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2088,11 +2196,13 @@ body {
 }
 .legal-updated {
   color: var(--color-ui-muted);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-status);
   text-shadow: var(--text-halo-small);
 }
 .legal-section-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack);
   font-size: var(--fs-chrome);
   font-weight: 700;
   margin-top: var(--space-2);
@@ -2100,6 +2210,7 @@ body {
 }
 .legal-body {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   line-height: var(--lh-relaxed); /* legal text needs real reading
     comfort — this system's usual --lh-tight is tuned for short
@@ -2112,6 +2223,7 @@ body {
   gap: var(--space-1);
   padding-left: 1.4em;
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   line-height: var(--lh-relaxed);
   text-shadow: var(--text-halo-small);
@@ -2457,6 +2569,8 @@ body {
 .about-hero-heading {
   flex-shrink: 0;
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: min(var(--fs-headline), 16dvh);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2579,6 +2693,8 @@ body {
 }
 .about-bio-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(0.9375rem, 2dvmin, 1.3rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2588,6 +2704,7 @@ body {
 }
 .about-bio-kicker {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-status);
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -2595,6 +2712,7 @@ body {
 }
 .about-bio-paragraph {
   color: var(--color-cursor-flash);
+  font-family: var(--font-body-stack);
   font-size: clamp(0.875rem, 1.75dvmin, 1.15rem); /* bumped up a notch
     from clamp(0.8125rem, 1.6dvmin, 1.05rem) — direct report, "a little
     hard to read" */

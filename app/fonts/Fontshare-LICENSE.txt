@@ -1,0 +1,19 @@
+Sentient and Satoshi — Indian Type Foundry, distributed free via Fontshare
+(https://www.fontshare.com), under the Fontshare Free Font License (FFL).
+
+This file is a summary, not the canonical license text — Fontshare's own
+license page (https://www.fontshare.com/licenses/ffl) is a JavaScript
+single-page app, so its exact legal text can't be captured as a plain
+static file the way IBM Plex's own OFL-1.1 license could be. Verify
+directly at that URL before relying on this summary for anything beyond
+this project's own internal documentation.
+
+As understood: free for personal and commercial use, including
+self-hosting in a website or app (this project's own usage) — the license
+restricts reselling or redistributing the font FILES themselves as a
+font product, not using them in a project.
+
+Font files in this directory downloaded directly from Fontshare's own CDN
+(cdn.fontshare.com) on 2026-09-12:
+  Sentient-Medium.woff2, Sentient-Bold.woff2
+  Satoshi-Regular.woff2, Satoshi-Medium.woff2, Satoshi-Bold.woff2

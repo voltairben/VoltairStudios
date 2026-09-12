@@ -34,6 +34,40 @@ const plexMono = localFont({
   display: "swap",
 });
 
+// Direct request: Sentient for headings, Satoshi for body copy — a
+// real, deliberate departure from this system's own established "one
+// monospace family everywhere" rule (see DESIGN.md's Don'ts) rather
+// than something to quietly second-guess. Scoped to the prose/content
+// layer specifically (globals.css's own --font-heading-stack/
+// --font-body-stack, applied to headline/paragraph-scale elements) —
+// the terminal itself (command input, log/systeminfo/man output)
+// stays IBM Plex Mono, confirmed directly: a real shell reading in a
+// proportional-width serif/sans wouldn't read as a shell anymore.
+// Self-hosted from Fontshare's own CDN (see Fontshare-LICENSE.txt),
+// same "no third-party runtime dependency" standard plexMono already
+// holds to — not next/font/google, since neither family is on Google
+// Fonts at all. Static per-weight files, not a variable font: neither
+// family ships one on Fontshare, and this system only ever needs the
+// 2-3 real weights actually used (500/700 for Sentient headings,
+// 400/500/700 for Satoshi body/label/emphasis).
+const sentient = localFont({
+  src: [
+    { path: "./fonts/Sentient-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Sentient-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-sentient",
+  display: "swap",
+});
+const satoshi = localFont({
+  src: [
+    { path: "./fonts/Satoshi-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Satoshi-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Satoshi-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-satoshi",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Voltair Studio",
   description:
@@ -54,7 +88,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={plexMono.variable}>
+    <html
+      lang="en"
+      className={`${plexMono.variable} ${sentient.variable} ${satoshi.variable}`}
+    >
       <body>
         {/* Skybox now lives here, not homepage-only in app/page.tsx —
             direct request to show it behind /work/[slug] case-study
