@@ -52,7 +52,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           This also replaces the one-off fixed skybox-only button from
           the previous round: StatusBar already carries that switcher,
           so a second, separate control would've just duplicated it. */}
-      <div className="scroll-page-chrome">
+      <div className="scroll-page-chrome scroll-page-glass">
         <ChromeBar />
       </div>
       <main className="case-study">
@@ -169,7 +169,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
           </div>
         </div>
       </main>
-      <div className="scroll-page-footer">
+      <div className="scroll-page-footer scroll-page-glass">
         <StatusBar />
       </div>
     </>

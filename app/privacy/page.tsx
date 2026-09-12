@@ -14,13 +14,13 @@ export const metadata: Metadata = { title: "Privacy Policy — Voltair Studio" }
 export default function PrivacyPage() {
   return (
     <>
-      <div className="scroll-page-chrome">
+      <div className="scroll-page-chrome scroll-page-glass">
         <ChromeBar />
       </div>
       <main className="legal-page">
         <PrivacyContent />
       </main>
-      <div className="scroll-page-footer">
+      <div className="scroll-page-footer scroll-page-glass">
         <StatusBar />
       </div>
     </>
