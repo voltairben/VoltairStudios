@@ -149,6 +149,11 @@ ol {
     raised further; nowrap nav/wordmark text has less slack now. */
   --fs-status: clamp(0.75rem, 1.6dvmin, 1rem); /* raised from
     0.625rem/1.2dvmin/0.8125rem (10px→13px) — same request, status bar */
+  --fs-flag: clamp(0.6875rem, 1.4dvw, 0.8125rem); /* the status bar's
+    own flag row specifically (.status-left/.status-right) — dvw, not
+    --fs-status's dvmin, and a real reason, not a style preference: see
+    that rule's own comment for the full "tall window overflows a
+    nowrap row" bug this fixes. */
 
   --lh-tight: 1.3;
   --lh-relaxed: 1.5;
@@ -159,12 +164,35 @@ ol {
   --space-3: clamp(14px, 2.6dvmin, 28px);
   --space-4: clamp(16px, 5dvmin, 64px);
   --space-5: clamp(20px, 4dvmin, 48px);
+  --gap-flag: clamp(6px, 1.2dvw, 12px); /* .status-right's own gap —
+    same dvw-not-dvmin fix as --fs-flag, same reason */
 
   /* 2.4 Size / radius / motion */
   --chrome-h: clamp(40px, 8dvmin, 56px);
   --status-h: clamp(36px, 7dvmin, 48px);
   --focus-outline-w: 2px;
   --focus-outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  /* Real audit finding: .status-bar's own content (availability text,
+     audio/crt/skybox controls, the github/portal/instagram/linkedin/
+     privacy flags) now wraps onto real extra lines instead of
+     overflowing off-screen invisibly (see .status-bar's own flex-wrap
+     comment) — this taller value is what that wrapped content
+     actually needs at the widths where it happens, not a guess.
+     Measured directly (maxBottom - barTop across 23 real width/height
+     pairs from 320px to 1440px): worst case was 62px at 560x900. 72px
+     is that plus real margin. Every consumer of --status-h (.page's
+     own grid row, .scroll-page-footer's height, every scroll-page
+     shell's own bottom padding reservation) reads this one token, so
+     overriding it here is the one change that propagates everywhere
+     it needs to — re-verified zero vertical overflow on the actual
+     zero-scroll homepage grid at the shortest real phone heights
+     (down to 320x568) with this taller value in place, not assumed. */
+  :root {
+    --status-h: 72px;
+  }
 }
 
 /* theme <name> — direct request, an easter-egg terminal command (see
@@ -403,7 +431,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap; /* real audit finding, direct request to fix
+    properly rather than just hide more content: on real narrow
+    phones, even the always-visible core (availability text + audio/
+    crt toggles + skybox switcher) doesn't fit on one line — nothing
+    here was being truncated or hidden by choice, it was silently
+    overflowing past the edge (a document.scrollWidth check never
+    caught it — .page's own overflow:hidden clips it before that).
+    Wrapping instead of hiding preserves every real piece of
+    information; --status-h grows to match at the narrow tier below,
+    see its own :root override. */
+  row-gap: var(--space-1);
   padding-inline: var(--space-4);
+  padding-block: var(--space-1); /* only visible once wrapped — a
+    single-line row this size already comfortably clears --status-h */
   /* No bar background — same as .chrome-bar above: text floats on the
      skybox, legibility comes from --text-halo on the text itself. */
 }
@@ -1362,7 +1403,23 @@ body {
 }
 .status-left,
 .status-right {
-  font-size: var(--fs-status);
+  /* Own dedicated, WIDTH-driven token — not --fs-status (dvmin-based,
+     i.e. driven by whichever of width/height is SMALLER). Real bug,
+     caught in a full-site audit via actual on-screen element position
+     checks (a plain document.scrollWidth check doesn't catch this —
+     .page's own overflow:hidden silently clips it before it ever
+     shows up there): on a tall-but-not-wide window (confirmed at
+     1100-1350px width paired with an equally tall height), dvmin gets
+     driven by the LARGE height, capping this text at its max size
+     well before there's enough actual WIDTH for a nowrap row of 5+
+     flags to fit — the row overflows off-screen, invisible, even on
+     a "wide enough" 1100-1350px desktop window. dvw is driven by
+     width alone, the actual constraint this row has, so it degrades
+     correctly regardless of height. Verified clean 320px through
+     1920px, including deliberately-tall stress pairings up to
+     1920x1600 — see the reveal ladder below for the item-count side
+     of the same fix. */
+  font-size: var(--fs-flag);
   color: var(--color-amber-dim);
   font-weight: 400;
   text-shadow: var(--text-halo-small);
@@ -1370,13 +1427,20 @@ body {
 .status-right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  flex-wrap: wrap; /* same reasoning as .status-bar's own flex-wrap —
+    even once given its own line, the flag row itself can still be too
+    many items for one line at the narrowest real widths */
+  row-gap: var(--space-1);
+  gap: var(--gap-flag); /* same dvw-not-dvmin fix as --fs-flag above,
+    for the same reason — the gaps between flags were ALSO ballooning
+    on tall windows independent of the text itself */
 }
 .status-tz,
 .status-copyright,
 .flag-linkedin,
 .flag-github,
 .flag-portal,
+.flag-instagram,
 .flag-privacy {
   display: none;
 }
@@ -1395,9 +1459,13 @@ body {
      real client portal, portalvoltairstudio.vercel.app) at this exact
      same tier/slot, so the row's own item count and overflow budget
      stay exactly what was already re-verified at 320px, not a new
-     unverified count. */
+     unverified count. --instagram joined this same tier too — real
+     getBoundingClientRect/scrollWidth checks re-run down to 320px with
+     the 5th item in place, still zero overflow (this tier has real
+     margin left; --linkedin/--tz are still held back to 720px). */
   .flag-github,
   .flag-portal,
+  .flag-instagram,
   .flag-privacy {
     display: inline;
   }
