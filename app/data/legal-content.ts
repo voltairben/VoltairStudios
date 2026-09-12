@@ -11,12 +11,15 @@
 // a closer look before this goes live given it's a legal document,
 // not just marketing copy.
 //
-// What this deliberately does NOT invent: a registered company name,
-// KVK/VAT number, or physical address — none exist anywhere in this
-// project's own real data (PRODUCT.md, brand.ts). Add them here if/when
-// real ones exist; this project's own standing rule is to flag a real
-// gap honestly (see CONTACT_EMAIL's own placeholder-domain flag in
-// PRODUCT.md) rather than fabricate specifics that look official.
+// "Who we are" section: company name is real (Voltair Studio, direct
+// confirmation). Address and KVK (Dutch Chamber of Commerce) number
+// are NOT — the address is a deliberate placeholder (the user's own,
+// not something to embed here without him actually providing it), and
+// the KVK number doesn't exist yet (registration pending, expected
+// imminently). Flagged plainly in the copy itself, not silently
+// blanked or fabricated — same standing rule CONTACT_EMAIL's own
+// placeholder-domain flag already follows in PRODUCT.md. Replace both
+// the moment real values exist.
 
 export type LegalSection = {
   title: string;
@@ -37,6 +40,15 @@ export const LEGAL_CONTENT: Record<"en" | "nl", LegalContentShape> = {
       "Voltair Studio (“we”, “us”) builds this site to be as honest about your data as it is about everything else on it. This page plainly explains what we do — and don’t do — with any information connected to you.",
     ],
     sections: [
+      {
+        title: "Who we are",
+        paragraphs: ["This site is operated by:"],
+        list: [
+          "Voltair Studio",
+          "[Address to be added]",
+          "KVK (Dutch Chamber of Commerce) number: registration pending",
+        ],
+      },
       {
         title: "The short version",
         paragraphs: [],
@@ -112,6 +124,15 @@ export const LEGAL_CONTENT: Record<"en" | "nl", LegalContentShape> = {
       "Voltair Studio (“we”, “wij”) bouwt deze site net zo eerlijk over je gegevens als over al het andere erop. Deze pagina legt gewoon uit wat we wel — en niet — doen met informatie die met jou te maken heeft.",
     ],
     sections: [
+      {
+        title: "Wie we zijn",
+        paragraphs: ["Deze site wordt beheerd door:"],
+        list: [
+          "Voltair Studio",
+          "[Adres nog toe te voegen]",
+          "KVK-nummer: registratie in aanvraag",
+        ],
+      },
       {
         title: "De korte versie",
         paragraphs: [],
