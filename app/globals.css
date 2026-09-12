@@ -134,6 +134,15 @@ ol {
   --font-mono-stack: var(--font-mono), "IBM Plex Mono", ui-monospace,
     "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono",
     monospace;
+  /* Direct request: Sentient for headings, Satoshi for body copy — see
+     layout.tsx's own comment on the two localFont() calls for the
+     full scope decision (content/prose layer only; the terminal stays
+     --font-mono-stack, unchanged, to keep reading as a real shell).
+     Real fallback stacks, not just the custom property alone — same
+     defensive reasoning --font-mono-stack already follows. */
+  --font-heading-stack: var(--font-sentient), Georgia, "Times New Roman", serif;
+  --font-body-stack: var(--font-satoshi), -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 
   --fs-headline: clamp(1.0625rem, 6dvmin, 3.5rem); /* narrow/short-viewport
     formula. Slope/ceiling trimmed from 7dvmin/4rem — direct request,
@@ -306,8 +315,15 @@ ol {
    dimension that actually constrains a nowrap line. */
 @media (min-width: 700px) {
   :root {
-    --fs-headline: clamp(1.0625rem, 5.5dvw, 7.5rem); /* slope/ceiling
-      trimmed from 6.5dvw/9rem — direct request, read as too big */
+    --fs-headline: clamp(1.0625rem, 5dvw, 7.5rem); /* slope trimmed
+      again, 5.5dvw → 5dvw — real bug, caught in a screenshot, not
+      theoretical: switching .headline to Sentient (see layout.tsx's
+      own comment on the heading/body font split) clipped "Designers"
+      to "Designer" at 1440x900 — Sentient Bold's real glyph widths
+      run wider than IBM Plex Mono's this token was originally tuned
+      against (see this rule's own comment on the dvmin→dvw fix, the
+      same overflow-axis lesson, a new cause). Re-verified clean
+      across the full 320-2560px range with this font at this size. */
   }
 }
 
@@ -603,6 +619,8 @@ body {
   color: var(--color-cursor-flash); /* Base Light — "Creative" (the
     inherited default). "Designers" overrides to Primary Accent below;
     splitting the two words is the hierarchy request's own example. */
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-headline);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -691,6 +709,8 @@ body {
 .position {
   color: var(--color-amber-dim); /* Muted Text (Slate Grey) — doesn't
     fight the H1 for attention, per direct request */
+  font-family: var(--font-body-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-position);
   font-weight: 500;
   line-height: var(--lh-tight);
@@ -711,6 +731,8 @@ body {
   color: var(--color-cursor-flash); /* Base Light at rest — reads as
     distinctly clickable against the surrounding muted tagline, per
     direct request (brackets/$ framing were removed earlier instead) */
+  font-family: var(--font-body-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: var(--fs-cta);
   font-weight: 600;
   text-decoration: none; /* affordance is the background/color shift on
@@ -1858,6 +1880,8 @@ body {
 }
 .case-study-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(2rem, 6dvw, 4.5rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -1866,6 +1890,7 @@ body {
 }
 .case-study-body {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   max-width: 60ch;
   text-shadow: var(--text-halo-small);
@@ -1875,6 +1900,7 @@ body {
   align-items: center;
   min-height: 44px;
   color: var(--color-cursor-flash);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-cta);
   font-weight: 600;
   text-decoration: none;
@@ -2081,6 +2107,8 @@ body {
 }
 .legal-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(1.75rem, 5dvw, 3rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2088,11 +2116,13 @@ body {
 }
 .legal-updated {
   color: var(--color-ui-muted);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-status);
   text-shadow: var(--text-halo-small);
 }
 .legal-section-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack);
   font-size: var(--fs-chrome);
   font-weight: 700;
   margin-top: var(--space-2);
@@ -2100,6 +2130,7 @@ body {
 }
 .legal-body {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   line-height: var(--lh-relaxed); /* legal text needs real reading
     comfort — this system's usual --lh-tight is tuned for short
@@ -2112,6 +2143,7 @@ body {
   gap: var(--space-1);
   padding-left: 1.4em;
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-position);
   line-height: var(--lh-relaxed);
   text-shadow: var(--text-halo-small);
@@ -2457,6 +2489,8 @@ body {
 .about-hero-heading {
   flex-shrink: 0;
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: min(var(--fs-headline), 16dvh);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2579,6 +2613,8 @@ body {
 }
 .about-bio-title {
   color: var(--color-amber-bright);
+  font-family: var(--font-heading-stack); /* direct request — see
+    layout.tsx's own comment on the Sentient/Satoshi split */
   font-size: clamp(0.9375rem, 2dvmin, 1.3rem);
   font-weight: 700;
   line-height: var(--lh-tight);
@@ -2588,6 +2624,7 @@ body {
 }
 .about-bio-kicker {
   color: var(--color-amber-dim);
+  font-family: var(--font-body-stack);
   font-size: var(--fs-status);
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -2595,6 +2632,7 @@ body {
 }
 .about-bio-paragraph {
   color: var(--color-cursor-flash);
+  font-family: var(--font-body-stack);
   font-size: clamp(0.875rem, 1.75dvmin, 1.15rem); /* bumped up a notch
     from clamp(0.8125rem, 1.6dvmin, 1.05rem) — direct report, "a little
     hard to read" */
