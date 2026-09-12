@@ -38,7 +38,7 @@ export default function StatusBar({
         <AudioToggle />
         <CrtToggle />
         <SkyboxSwitcher />
-        <a href="https://github.com/voltairstudio" className="flag flag-github">
+        <a href="https://github.com/voltairben" className="flag flag-github">
           --github
         </a>
         {/* Real client portal (a separate app, its own login — see
