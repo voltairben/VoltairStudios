@@ -1623,13 +1623,23 @@ body {
   background-color: var(--color-amber-tint-14);
 }
 
-.skybox-switcher {
-  background: none;
-  border: none;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
-}
+/* .skybox-switcher's own rule deleted — real bug, caught in a
+   screenshot ("--skybox=night" reading visibly smaller/dimmer than
+   every sibling flag). Every property it declared (background/border/
+   padding/font/cursor) was already an exact duplicate of .flag's own
+   reset above; .flag's comment even says as much ("Same reset
+   .skybox-switcher already carries on its own class"), a leftover
+   from before that reset was consolidated onto .flag that was never
+   removed. The duplication wasn't just inert: this rule's own
+   `font: inherit` and .flag's are equal specificity (both one class),
+   so source order decides ties per-property — this rule sits after
+   .flag, so its `font: inherit` won and silently overrode .flag's
+   explicit `font-size: var(--fs-status)` back to inheriting
+   .status-right's own font-size (--fs-flag, a narrower, width-driven
+   token meant for the row's overflow budget, not any one flag's own
+   text size) — measured 13px vs every sibling's 14.4px at 1440x900.
+   Deleting the dead rule removes the override; .flag alone already
+   covers every property .skybox-switcher needs. */
 
 /* Loading screen — see LoadingScreen.tsx for the reference and reasoning. */
 .loading-screen {
@@ -1838,19 +1848,35 @@ body {
     unpadded content height instead and sitting right at the edge —
     screenshotted directly. Giving the wrapper the same height and
     centering its content reproduces the exact same result. */
+}
+/* Corrected follow-up, caught on review: the glass background below
+   was first added to the base .scroll-page-chrome/-footer rule above,
+   which /about also uses — but /about's own comment (about/page.tsx)
+   is explicit that it "no longer scrolls past them," same one-
+   viewport fit as the homepage. /about never had the overlap bug
+   this treatment fixes, so giving it the background too just drew an
+   unwanted visible bar across a page that's supposed to mirror the
+   homepage's own bar-less "text floats on the sky" look — a real
+   regression, caught in a screenshot. Scoped to a modifier instead,
+   applied only where content can actually scroll past scroll=0
+   (privacy/page.tsx, work/[slug]/page.tsx) — /about's wrapper divs
+   keep the plain .scroll-page-chrome/-footer class alone, background-
+   less, same as home. */
+.scroll-page-chrome.scroll-page-glass,
+.scroll-page-footer.scroll-page-glass {
   /* Real bug, caught in a screenshot on /privacy, not theoretical:
      unlike .page's own zero-scroll grid (where .chrome-bar/.status-bar
      stay deliberately background-less — DESIGN.md's own "text floats
      on the sky" rule — because content there can NEVER extend past
-     the viewport in the first place), every page using this shared
-     shell (/about, /privacy, /work/[slug]) is real, normally-
-     scrolling content that CAN be taller than one viewport. At
-     scroll=0 on a page like that, whatever's already lower in the
-     document renders directly behind these fixed bars — and with no
-     backdrop, both layers of text render simultaneously, illegibly
-     interleaved, not "one on top of the other." Same "Terminal Glass"
-     fill+blur already used elsewhere in this system (the reel tiles,
-     the palette picker menu) — reused, not invented for this. */
+     the viewport in the first place), /privacy and /work/[slug] are
+     real, normally-scrolling content that CAN be taller than one
+     viewport. At scroll=0 on a page like that, whatever's already
+     lower in the document renders directly behind these fixed bars —
+     and with no backdrop, both layers of text render simultaneously,
+     illegibly interleaved, not "one on top of the other." Same
+     "Terminal Glass" fill+blur already used elsewhere in this system
+     (the reel tiles, the palette picker menu) — reused, not invented
+     for this. */
   background: var(--color-glass-fill);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -1858,11 +1884,15 @@ body {
 .scroll-page-chrome {
   top: 0;
   height: var(--chrome-h);
+}
+.scroll-page-chrome.scroll-page-glass {
   border-bottom: 1px solid var(--color-glass-border);
 }
 .scroll-page-footer {
   bottom: 0;
   height: var(--status-h);
+}
+.scroll-page-footer.scroll-page-glass {
   border-top: 1px solid var(--color-glass-border);
 }
 .scroll-page-chrome > .chrome-bar,
