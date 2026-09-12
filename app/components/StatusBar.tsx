@@ -41,8 +41,15 @@ export default function StatusBar({
         <a href="https://github.com/voltairstudio" className="flag flag-github">
           --github
         </a>
-        <a href="https://x.com/voltairstudio" className="flag flag-x">
-          --x
+        {/* Real client portal (a separate app, its own login — see
+            globals.css's own comment on .flag-portal) — direct
+            request, replacing --x (not used). No custom domain yet,
+            just its real Vercel deployment URL, same "real over
+            placeholder" standard every other link on this site holds
+            to; swap in a custom domain here the same way CONTACT_EMAIL
+            gets swapped once one exists. */}
+        <a href="https://portalvoltairstudio.vercel.app/" className="flag flag-portal">
+          --portal
         </a>
         <a
           href="https://linkedin.com/company/voltairstudio"

@@ -1376,7 +1376,7 @@ body {
 .status-copyright,
 .flag-linkedin,
 .flag-github,
-.flag-x,
+.flag-portal,
 .flag-privacy {
   display: none;
 }
@@ -1385,15 +1385,19 @@ body {
      footer text read as "really small") made the previous 320px
      content set (switcher + github + x) overflow the row, invisible
      to a scrollbar check since .page's overflow:hidden clips it
-     silently. github/x now join the same progressive-disclosure
-     ladder tz/copyright/linkedin already used — narrowest phones show
-     only the functional skybox switcher, verified with real
-     getBoundingClientRect checks down to 320px. --privacy joins them
-     at the same tier (added later, same reasoning: a legal link
-     doesn't need to outrank social links for the tightest floor's
-     scarce space) — re-verified zero overflow at 320px with it added. */
+     silently. github/x joined the same progressive-disclosure ladder
+     tz/copyright/linkedin already used — narrowest phones show only
+     the functional skybox switcher, verified with real
+     getBoundingClientRect checks down to 320px. --privacy joined at
+     the same tier later (a legal link doesn't need to outrank social
+     links for the tightest floor's scarce space); --x was later
+     dropped (direct request, unused) and replaced by --portal (the
+     real client portal, portalvoltairstudio.vercel.app) at this exact
+     same tier/slot, so the row's own item count and overflow budget
+     stay exactly what was already re-verified at 320px, not a new
+     unverified count. */
   .flag-github,
-  .flag-x,
+  .flag-portal,
   .flag-privacy {
     display: inline;
   }
