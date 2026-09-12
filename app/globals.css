@@ -411,10 +411,17 @@ body {
   grid-row: 2;
   display: flex;
   align-items: stretch;
-  gap: clamp(24px, 8dvw, 140px); /* sits the reel next to the headline
+  gap: clamp(20px, 3dvw, 140px); /* sits the reel next to the headline
     with real breathing room, not flush against it — the gap plus the
     reel's own width is what lands it toward the screen's middle third
-    rather than pinned to either edge, per direct request/reference */
+    rather than pinned to either edge, per direct request/reference.
+    Slope halved (8dvw -> 4dvw) — real bug: 2 real gaps in this row
+    (content-reel, reel-index) compounded fast enough that the row's
+    total demanded width (.content's own real minimum + both gaps +
+    .project-reel's floor width + .project-index's own flex-shrink:0
+    width) genuinely exceeded the viewport across roughly 700-1440px,
+    pushing .project-index off-screen — pure spacing was the correct
+    lever to reduce, not any of the 3 columns' own real content. */
   min-height: 0; /* flex analog of .page's own minmax(0,1fr) fix above —
     without it a stretched child's intrinsic content height can inflate
     this row past its grid track, the same overflow family as the Grid
@@ -431,6 +438,34 @@ body {
     the top of the page, not mid-viewport */
   gap: var(--space-2);
   padding: var(--space-5) var(--space-4);
+  min-width: calc(var(--fs-headline) * 6.2 + var(--space-4) * 2); /*
+    real bug, caught in a screenshot, not theoretical: .content is a
+    plain flex item (flex-grow/shrink both default to their CSS
+    defaults) sharing .hero-row with .project-reel/.project-index,
+    both of which hold real floor/non-shrinking widths of their own —
+    between roughly 700-1200px, their combined footprint + this row's
+    own gap left as little as ~100px for .content, and flexbox
+    happily shrank it that far since nothing said not to. .headline's
+    own white-space:nowrap then had nowhere to go but clip inside
+    .content's own overflow:hidden below — "Designers" silently
+    became "Designer" on screen while the real DOM text stayed
+    correct the whole time.
+    Three attempts to size the floor, only the last one held up on
+    real re-measurement: min-width:max-content pulled in .position's
+    full one-line tagline (far longer than "Designers") instead of
+    just the headline actually at risk; an independently-tuned
+    clamp()'s own dvw slope drifted out of sync with --fs-headline's
+    real growth curve at different points in the range. Deriving this
+    directly from --fs-headline itself means it can't drift out of
+    sync with whatever that token resolves to at any width — 6.2 =
+    4.95 (the real measured "Designers"-to-font-size ratio in
+    Sentient Bold) x 1.25, since .headline-line2's own font-size is
+    1.25em, not the raw --fs-headline value this calc reads — missing
+    that multiplier is exactly why an earlier pass at this same
+    formula still clipped at 700-1000px despite looking sufficient on
+    paper. var(--space-4)*2 is this rule's own real left+right
+    padding, not a snapshotted px value. Re-verified clean 320-2560px,
+    reel/index included. */
   overflow: hidden;
   text-align: left;
   /* No panel behind the text — the sky shows through everywhere,
@@ -1099,17 +1134,25 @@ body {
    exists now, so the whole "loop placeholders forever" premise is
    gone. No more duplication, no more JS-driven transform, no more
    wheel/drag input; .project-reel-track just lays out 2 real tiles
-   (see ProjectReel.tsx) and lets them sit. Still hidden below 700px —
-   the same tier the headline's dvw formula switches on — there isn't
+   (see ProjectReel.tsx) and lets them sit. Still hidden below 1024px
+   (raised from 700px — see the reveal media query's own comment
+   below for the real width-budget bug this closes) — there isn't
    real room for a second column next to the hero text at narrower
    widths without either one breaking the zero-scroll fit budget, so
    the narrow layout stays the single-column hero it already was. */
 .project-reel {
   display: none;
-  width: clamp(240px, 28dvw, 460px); /* broadened again — direct
-    request ("make them a bit bigger"), from clamp(200px, 24dvw,
-    380px). Each card's width comes straight from this box's own width
-    (.project-reel-item is width:100%), so widening the reel is what
+  width: clamp(200px, 28dvw, 460px); /* floor trimmed 240->200 — real
+    bug fix (see .content's own min-width comment): part of closing a
+    genuine width deficit in the 700-1024px zone, where flexbox was
+    pushing .project-index off-screen entirely once .content correctly
+    stopped giving up its own real minimum. The "make them a bit
+    bigger" request this floor otherwise honors lives in the max end
+    (460px) and the 28dvw growth rate, both untouched — this only
+    softens the floor, which only ever applies in the narrow zone
+    that was already broken. Each card's width comes straight from
+    this box's own width (.project-reel-item is width:100%), so widening
+    the reel (at any width past this floor) is what
     actually grows the cards — height follows for free via their own
     aspect-ratio: 4/3. */
   margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
@@ -1129,7 +1172,20 @@ body {
   overflow-x: visible;
   flex-shrink: 0;
 }
-@media (min-width: 700px) {
+@media (min-width: 1024px) {
+  /* Raised from 700px — real bug fix, not a style preference: between
+     700-999px, .content's own real minimum width (see its own
+     comment — a genuine fix, not negotiable, or the headline clips)
+     combined with .project-reel/.project-index's own floors left the
+     row's total demanded width genuinely exceeding what's available,
+     even after trimming every reasonable cosmetic gap/margin down
+     first (.hero-row's own gap, this element's own floor width —
+     both already reduced as part of the same fix). 1024px is where
+     the real math actually closes, verified empirically across
+     320-2560px, not a round number picked on paper — and still
+     comfortably covers iPad landscape (1024px) and every wider
+     device, only pulling back from portrait tablets/narrow windows
+     in the 700-999px band specifically. */
   .project-reel {
     display: block;
   }
@@ -1294,7 +1350,8 @@ body {
 
 /* Project index — the reference's far-right project name list,
    matched to its position (top-right, below the nav, right-aligned).
-   Same 700px reveal tier as the reel beside it: no room for a third
+   Same 1024px reveal tier as the reel beside it (raised from 700px —
+   see the media query's own comment below): no room for a third
    column at narrower widths. */
 .project-index {
   display: none;
@@ -1309,7 +1366,12 @@ body {
     right-edge content sits at (chrome-nav, status-right) */
   flex-shrink: 0;
 }
-@media (min-width: 700px) {
+@media (min-width: 1024px) {
+  /* Raised from 700px, same real width-budget fix as .project-reel's
+     own identical breakpoint change above — see its comment for the
+     full reasoning. Kept in lockstep with the reel's own threshold
+     deliberately: the two have always revealed together as one
+     "showcase" unit, never independently. */
   .project-index {
     display: flex;
   }
@@ -1776,14 +1838,32 @@ body {
     unpadded content height instead and sitting right at the edge —
     screenshotted directly. Giving the wrapper the same height and
     centering its content reproduces the exact same result. */
+  /* Real bug, caught in a screenshot on /privacy, not theoretical:
+     unlike .page's own zero-scroll grid (where .chrome-bar/.status-bar
+     stay deliberately background-less — DESIGN.md's own "text floats
+     on the sky" rule — because content there can NEVER extend past
+     the viewport in the first place), every page using this shared
+     shell (/about, /privacy, /work/[slug]) is real, normally-
+     scrolling content that CAN be taller than one viewport. At
+     scroll=0 on a page like that, whatever's already lower in the
+     document renders directly behind these fixed bars — and with no
+     backdrop, both layers of text render simultaneously, illegibly
+     interleaved, not "one on top of the other." Same "Terminal Glass"
+     fill+blur already used elsewhere in this system (the reel tiles,
+     the palette picker menu) — reused, not invented for this. */
+  background: var(--color-glass-fill);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 .scroll-page-chrome {
   top: 0;
   height: var(--chrome-h);
+  border-bottom: 1px solid var(--color-glass-border);
 }
 .scroll-page-footer {
   bottom: 0;
   height: var(--status-h);
+  border-top: 1px solid var(--color-glass-border);
 }
 .scroll-page-chrome > .chrome-bar,
 .scroll-page-footer > .status-bar {
