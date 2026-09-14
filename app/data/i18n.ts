@@ -119,14 +119,6 @@ const DICT = {
   },
   "terminal.on": { en: "on", nl: "aan" },
   "terminal.off": { en: "off", nl: "uit" },
-
-  // /coming-soon — direct request, gates every route until launch (see
-  // middleware.ts). Prose around a boot-sequence framing, not real
-  // command tokens, so bilingual like every other page's own copy.
-  "comingSoon.line1": { en: "compiling brand", nl: "brand compileren" },
-  "comingSoon.line2": { en: "provisioning launch", nl: "lancering voorbereiden" },
-  "comingSoon.line3": { en: "standing by", nl: "in wachtstand" },
-  "comingSoon.heading": { en: "Something is being built.", nl: "Er wordt iets gebouwd." },
 } as const;
 
 export type TKey = keyof typeof DICT;
