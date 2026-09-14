@@ -68,11 +68,11 @@ export default function AboutContent() {
       <div className="about-bottom-row">
         {/* Left, direct request — no separate "exit" link here (the
             old 3-column layout's own — see its removal in this same
-            change) — the masthead's "← Voltair_Studio" above is
+            change) — the masthead's "← Voltair Studio" above is
             already the one real way back, and a second one reads as
             clutter now that this page is this short. */}
         <div className="about-bio">
-          {/* Direct request: "About Voltair_Studio" / "This Is
+          {/* Direct request: "About Voltair Studio" / "This Is
               Voltair, by Bennie" above the bio text — the old H1 +
               kicker pair from before the ABOUT/scramble headline took
               over that role, now reintroduced as a smaller title/
@@ -80,7 +80,7 @@ export default function AboutContent() {
               Only "About" itself routes through t() — reuses
               about.heading, the exact same EN/NL pair the page's own
               big scramble headline already uses, so the two "About"s
-              on this page can't drift apart. Voltair_Studio stays
+              on this page can't drift apart. Voltair Studio stays
               literal: that handle never translates anywhere on this
               site (masthead back link, chrome wordmark, this tag all
               show it identically in both languages), capitalized V/S

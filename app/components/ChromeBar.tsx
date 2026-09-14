@@ -41,7 +41,7 @@ export default function ChromeBar() {
   const [copied, setCopied] = useState(false);
   const { lang } = useLang();
   // Direct request: the wordmark only belongs on the landing page now
-  // — /about and /work/[slug] already carry their own "← Voltair_Studio"
+  // — /about and /work/[slug] already carry their own "← Voltair Studio"
   // back link near the top of their own content (.about-back/
   // .case-study-back), so it was a real duplicate there, not a lost
   // affordance once hidden. ChromeBar itself stays mounted everywhere
