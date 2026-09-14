@@ -72,7 +72,7 @@ export default function AboutContent() {
             already the one real way back, and a second one reads as
             clutter now that this page is this short. */}
         <div className="about-bio">
-          {/* Direct request: "About --Voltair_Studio" / "This Is
+          {/* Direct request: "About Voltair_Studio" / "This Is
               Voltair, by Bennie" above the bio text — the old H1 +
               kicker pair from before the ABOUT/scramble headline took
               over that role, now reintroduced as a smaller title/
@@ -80,17 +80,19 @@ export default function AboutContent() {
               Only "About" itself routes through t() — reuses
               about.heading, the exact same EN/NL pair the page's own
               big scramble headline already uses, so the two "About"s
-              on this page can't drift apart. --Voltair_Studio stays
+              on this page can't drift apart. Voltair_Studio stays
               literal: that handle never translates anywhere on this
-              site (masthead back link, chrome wordmark, this dash-
-              prefixed tag all show it identically in both languages),
-              capitalized V/S per the site-wide casing follow-up. Direct
+              site (masthead back link, chrome wordmark, this tag all
+              show it identically in both languages), capitalized V/S
+              per the site-wide casing follow-up. Direct request: the
+              leading "--" this line used to carry is gone site-wide,
+              same as every footer flag (see StatusBar.tsx). Direct
               report: the NL toggle wasn't touching this line at all
               (still read "About" in Dutch) — this hardcoded word is
               why. */}
           <div className="about-bio-heading">
             <h2 className="about-bio-title">
-              {t(lang, "about.heading")} --{STUDIO_HANDLE}
+              {t(lang, "about.heading")} {STUDIO_HANDLE}
             </h2>
             <p className="about-bio-kicker">{c.kicker}</p>
           </div>

@@ -1142,6 +1142,25 @@ body {
    the narrow layout stays the single-column hero it already was. */
 .project-reel {
   display: none;
+  margin-left: auto; /* Real bug, direct report ("the two images...are
+    locked to the creative designer text they move with it"): this
+    used to be a fixed clamp() margin on top of .hero-row's own shared
+    gap, so the reel sat snug right after .content — any change in
+    .content's own rendered width (the headline/tagline's fluid
+    clamp() sizing) directly dragged the reel's on-screen position
+    along with it. auto absorbs ALL of the row's free space before the
+    reel instead, anchoring the reel+index pair to the row's right
+    edge as a unit — as long as there's slack, moving .content doesn't
+    move them at all, they "just stay there." Still a real flex
+    sibling, not pulled out of the flow (an absolutely-positioned
+    version of this was tried and reverted: it let .content grow wide
+    enough at 1024-1150px to render underneath the reel, a real
+    overlap caught in a screenshot, once nothing was left to force
+    .content to wrap). This keeps every width-budget protection
+    already verified 320-2560px fully intact — when .content actually
+    needs the space (its own min-width floor above), flexbox shrinks
+    this auto margin toward 0 exactly like before, not a new failure
+    mode. */
   width: clamp(200px, 28dvw, 460px); /* floor trimmed 240->200 — real
     bug fix (see .content's own min-width comment): part of closing a
     genuine width deficit in the 700-1024px zone, where flexbox was
@@ -1155,10 +1174,6 @@ body {
     the reel (at any width past this floor) is what
     actually grows the cards — height follows for free via their own
     aspect-ratio: 4/3. */
-  margin-left: clamp(16px, 3dvw, 56px); /* nudges the reel (and
-    .project-index after it, same flex row) right of where the shared
-    .hero-row gap alone put it — direct request, on top of that gap
-    rather than replacing it */
   height: 100%;
   overflow-y: clip; /* safety net, not load-bearing anymore now that
     there's no duplicated loop content to hide — kept in case a very
@@ -1360,10 +1375,10 @@ body {
   justify-content: center; /* vertically centered in the row — direct
     request, was top-aligned (padding-top) to sit under the nav like
     the reference; now centered in the right-middle of the page instead */
-  margin-left: auto; /* pushes it to the row's far edge, same technique
-    the reel used before it was moved inward */
   margin-right: var(--space-4); /* matches the inset every other bar's
-    right-edge content sits at (chrome-nav, status-right) */
+    right-edge content sits at (chrome-nav, status-right) — the auto
+    margin that pushes this pair to the row's edge now lives on
+    .project-reel instead, see its own comment */
   flex-shrink: 0;
 }
 @media (min-width: 1024px) {
@@ -2707,7 +2722,7 @@ body {
   max-width: 30rem;
   text-align: left;
 }
-/* "About --Voltair_Studio" / kicker byline, direct request — the old
+/* "About Voltair_Studio" / kicker byline, direct request — the old
    H1+kicker pair from before the big ABOUT headline existed,
    reintroduced as a smaller heading for this column rather than a
    second page-wide hero. Stacked, not inline like .about-hero-heading
@@ -2991,4 +3006,3 @@ body:not([data-crt="off"])::after {
     opacity: 1;
   }
 }
-

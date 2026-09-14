@@ -39,7 +39,7 @@ export default function StatusBar({
         <CrtToggle />
         <SkyboxSwitcher />
         <a href="https://github.com/voltairben" className="flag flag-github">
-          --github
+          github
         </a>
         {/* Real client portal (a separate app, its own login — see
             globals.css's own comment on .flag-portal) — direct
@@ -49,13 +49,13 @@ export default function StatusBar({
             to; swap in a custom domain here the same way CONTACT_EMAIL
             gets swapped once one exists. */}
         <a href="https://portalvoltairstudio.vercel.app/" className="flag flag-portal">
-          --portal
+          portal
         </a>
         <a
           href="https://linkedin.com/company/voltairstudio"
           className="flag flag-linkedin"
         >
-          --linkedin
+          linkedin
         </a>
         {/* Direct request: the real intended handle (confirmed:
             "VoltairStudio is the official instagram name"), added now
@@ -63,18 +63,22 @@ export default function StatusBar({
             studio does — same "real intended value, not necessarily
             live yet" treatment CONTACT_EMAIL/BASE_URL already get. */}
         <a href="https://instagram.com/VoltairStudio" className="flag flag-instagram">
-          --instagram
+          instagram
         </a>
         {/* Real internal route (see app/privacy/page.tsx), same
             TransitionLink block-wipe every other internal navigation on
             this site already uses — a privacy policy earns a real,
             site-wide link, not just a URL nobody would ever find. Same
-            progressive-disclosure tier as --github/--x in globals.css
+            progressive-disclosure tier as github/x in globals.css
             (.flag-privacy), not always-visible: the narrowest floor
             (320-380px) is already budgeted down to just the skybox
-            switcher, a hard-won fix documented on that same rule. */}
+            switcher, a hard-won fix documented on that same rule.
+            Direct request: the leading "--" prefix every flag used to
+            carry (audio=/crt=/skybox=/github/portal/linkedin/
+            instagram/privacy) is gone site-wide — plain words now, see
+            each flag's own component for the matching change. */}
         <TransitionLink href="/privacy" className="flag flag-privacy">
-          --privacy
+          privacy
         </TransitionLink>
       </div>
     </footer>

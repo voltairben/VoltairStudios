@@ -14,7 +14,7 @@ export default function AudioToggle() {
         enabled ? "off" : "on"
       }.`}
     >
-      --audio={enabled ? "on" : "off"}
+      audio={enabled ? "on" : "off"}
     </button>
   );
 }
