@@ -14,7 +14,7 @@ export default function CrtToggle() {
         enabled ? "off" : "on"
       }.`}
     >
-      --crt={enabled ? "on" : "off"}
+      crt={enabled ? "on" : "off"}
     </button>
   );
 }

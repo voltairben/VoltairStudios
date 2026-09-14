@@ -11,7 +11,7 @@ export default function SkyboxSwitcher() {
       onClick={next}
       aria-label={`Skybox: ${active}. Activate to switch to the next one.`}
     >
-      --skybox={active}
+      skybox={active}
     </button>
   );
 }
