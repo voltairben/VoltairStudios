@@ -9,7 +9,7 @@ import TransitionLink from "../components/TransitionLink";
 // piece of motion on this site is a deliberate flourish on marketing
 // copy; a legal document is exactly the content that shouldn't compete
 // with its own presentation. Shares .case-study-back's exact look (see
-// globals.css) for the same "← Voltair_Studio" return link every other
+// globals.css) for the same "← Voltair Studio" return link every other
 // non-home page already has — no new back-link style invented for a
 // third page.
 export default function PrivacyContent() {

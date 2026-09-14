@@ -6,7 +6,18 @@
 // on review: the "Capitalize Voltair_Studio site-wide" change had to
 // hand-edit the casing separately in 5 places with no compiler/lint
 // signal for one missed.
-export const STUDIO_HANDLE = "Voltair_Studio";
+//
+// Direct request: the underscore is gone ("Voltair Studio", not
+// "Voltair_Studio") — but this is a real space (U+00A0), not a plain
+// one. Only .wordmark (ChromeBar) has its own explicit white-space:
+// nowrap; the back links (.case-study-back/.about-back) and
+// .about-bio-title don't, so a plain space risked this name wrapping
+// mid-word at narrow widths — the exact thing the old underscore
+// prevented as a side effect everywhere it rendered. A non-breaking
+// space reads and renders identically to a normal one in every font
+// this site uses, but keeps "Voltair Studio" one unbreakable visual
+// unit at all 6 render sites without auditing/patching CSS at each one.
+export const STUDIO_HANDLE = "Voltair Studio";
 
 // Same reasoning as STUDIO_HANDLE above — was hand-duplicated as a raw
 // string literal in 5 places (ChromeBar's Contact link, TerminalInput's
