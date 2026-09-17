@@ -3006,3 +3006,397 @@ body:not([data-crt="off"])::after {
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   Invoice / Quote templates (/invoice, /quote) — §11
+   A deliberately separate light theme, scoped entirely under
+   .doc-page rather than added to :root — these are real business
+   documents printed on white paper for a client to read, not more
+   dark-terminal chrome, and nothing here should be able to leak into
+   or collide with the rest of the site's own dark tokens above.
+   Headings use --font-heading-stack (Sentient) and body/data use
+   --font-body-stack (Satoshi) exactly like the rest of the site
+   already does — no separate @font-face needed, both are already
+   self-hosted and loaded in layout.tsx.
+   ========================================================================== */
+.doc-page {
+  position: relative;
+  z-index: 1; /* clears .skybox-canvas's z-index:0, same mechanism
+    .page/.scroll-page-chrome already use elsewhere in this file */
+  --doc-accent: #ff4f00; /* Electric Persimmon, direct spec — a
+    distinct literal from the site's own --color-amber-bright
+    (#ff5a36) on purpose: this is the client-facing document brand,
+    given as an exact hex in the brief, not the dark-theme token */
+  --doc-heading: #111827;
+  --doc-body: #374151;
+  --doc-border: #e5e7eb;
+  --doc-fill: #f9fafb;
+  max-width: 210mm; /* A4 portrait width on screen too, so the
+    on-screen preview already reads as "a real page," not a random
+    web layout that happens to print correctly */
+  margin: 24px auto;
+  padding: 20mm;
+  background: #ffffff;
+  color: var(--doc-body);
+  font-family: var(--font-body-stack);
+  font-size: 10pt;
+  line-height: 1.5;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding-bottom: 6mm;
+  border-bottom: 1px solid var(--doc-border);
+}
+.doc-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+}
+.doc-logo {
+  width: 9mm;
+  height: 9mm;
+  object-fit: contain;
+}
+.doc-studio-name {
+  font-family: var(--font-heading-stack);
+  font-weight: 700;
+  font-size: 12pt;
+  color: var(--doc-heading);
+}
+.doc-header-meta {
+  text-align: right;
+}
+.doc-title {
+  font-family: var(--font-heading-stack);
+  font-weight: 700;
+  font-size: 22pt;
+  color: var(--doc-accent);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.doc-number {
+  font-weight: 600;
+  color: var(--doc-heading);
+  margin-top: 1mm;
+}
+.doc-dates {
+  margin: 2mm 0 0;
+}
+.doc-date-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2mm;
+  font-size: 9pt;
+  color: var(--doc-body);
+}
+.doc-date-row dt {
+  color: #6b7280;
+}
+.doc-date-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+  display: inline-block;
+  margin-top: 2mm;
+  padding: 0.6mm 2.4mm;
+  border-radius: 3px;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.status-badge-draft {
+  background: var(--doc-fill);
+  color: #6b7280;
+}
+.status-badge-sent {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.status-badge-paid {
+  background: #ecfdf5;
+  color: #047857;
+}
+.status-badge-overdue {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.doc-parties {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: 8mm;
+}
+.client-card {
+  flex: 1;
+}
+.client-card-label {
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--doc-accent);
+  margin-bottom: 1.5mm;
+}
+.client-card-name {
+  font-weight: 700;
+  color: var(--doc-heading);
+}
+.client-card-company,
+.client-card-line {
+  font-size: 9.5pt;
+  color: var(--doc-body);
+}
+.client-card-kvk {
+  color: #6b7280;
+  font-size: 8.5pt;
+}
+
+.itemized-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8mm;
+  font-size: 9.5pt;
+}
+.itemized-table th {
+  text-align: left;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  border-bottom: 1px solid var(--doc-border);
+  padding-bottom: 2mm;
+}
+.itemized-table td {
+  padding: 2.4mm 0;
+  border-bottom: 1px solid var(--doc-border);
+  color: var(--doc-body);
+  vertical-align: top;
+}
+.col-qty,
+.col-rate,
+.col-total,
+.itemized-table th.col-qty,
+.itemized-table th.col-rate,
+.itemized-table th.col-total {
+  text-align: right;
+  width: 20mm;
+}
+.col-total {
+  font-weight: 600;
+  color: var(--doc-heading);
+}
+.phase-row td {
+  padding-top: 5mm;
+  font-family: var(--font-heading-stack);
+  font-weight: 700;
+  font-size: 10.5pt;
+  color: var(--doc-heading);
+  border-bottom: none;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.totals-breakdown {
+  margin-top: 6mm;
+  margin-left: auto;
+  width: 70mm;
+}
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.6mm 0;
+  font-size: 9.5pt;
+  color: var(--doc-body);
+}
+.totals-row-milestone {
+  color: #6b7280;
+}
+.totals-row-grand {
+  margin-top: 1mm;
+  padding-top: 2.5mm;
+  border-top: 2px solid var(--doc-heading);
+  font-family: var(--font-heading-stack);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--doc-accent);
+}
+
+.notes-terms {
+  margin-top: 10mm;
+  padding-top: 5mm;
+  border-top: 1px solid var(--doc-border);
+}
+.notes-text {
+  font-size: 9pt;
+  color: #6b7280;
+  margin: 0 0 4mm;
+}
+.notes-list-label {
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--doc-heading);
+  margin-bottom: 1.5mm;
+}
+.notes-list-line {
+  font-size: 9pt;
+  color: var(--doc-body);
+}
+
+.signoff {
+  margin-top: 12mm;
+  padding-top: 6mm;
+  border-top: 1px solid var(--doc-border);
+}
+.signoff-title {
+  font-family: var(--font-heading-stack);
+  font-weight: 700;
+  font-size: 11pt;
+  color: var(--doc-heading);
+  margin-bottom: 2mm;
+}
+.signoff-text {
+  font-size: 9pt;
+  color: var(--doc-body);
+  max-width: 120mm;
+}
+.signoff-lines {
+  display: flex;
+  gap: 16mm;
+  margin-top: 10mm;
+}
+.signoff-line {
+  display: flex;
+  flex-direction: column;
+  width: 55mm;
+}
+.signoff-line-fill {
+  border-bottom: 1px solid #9ca3af;
+  height: 8mm;
+}
+.signoff-line-label {
+  font-size: 8pt;
+  color: #6b7280;
+  margin-top: 1mm;
+}
+
+.print-button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  padding: 10px 18px;
+  background: var(--doc-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-body-stack);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.print-button:hover {
+  filter: brightness(1.08);
+}
+
+/* Print pipeline -- the brief's whole "export to PDF" story: every
+   browser's native Print dialog already offers "Save as PDF," so
+   there's no heavyweight export library here, just correct @media
+   print rules. @page margin:0 + the sheet's own 20mm padding (set
+   above, unchanged here) is more predictable across browsers/print
+   drivers than leaning on @page's own margin box. */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+@media print {
+  .no-print,
+  .print-button,
+  .skybox-canvas,
+  .loading-screen,
+  .page-transition-overlay {
+    display: none !important;
+  }
+  .doc-page {
+    margin: 0;
+    max-width: none;
+    width: 210mm;
+    box-shadow: none;
+  }
+  .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* Real bug, caught in a screenshot: .doc-page's own sizing is in mm/pt
+   throughout (load-bearing for print fidelity — that's the whole
+   point), but those are absolute units, so on a phone viewport the
+   OUTER box correctly shrinks to fit (max-width alone isn't a floor)
+   while the INNER padding/column widths/font-sizes stayed print-sized
+   and didn't — currency figures ran into each other with no gap. This
+   is a screen-only override (print's own rules above are untouched);
+   it reflows the layout, it doesn't just shrink text further. */
+@media screen and (max-width: 480px) {
+  .doc-page {
+    padding: 6mm 5mm;
+    font-size: 9pt;
+    margin: 16px auto;
+  }
+  .doc-header {
+    flex-direction: column;
+    gap: 4mm;
+  }
+  .doc-header-meta,
+  .doc-date-row {
+    text-align: left;
+    justify-content: flex-start;
+  }
+  .doc-parties {
+    flex-direction: column;
+    gap: 5mm;
+  }
+  .itemized-table {
+    font-size: 8pt;
+    table-layout: fixed;
+  }
+  .col-description {
+    width: auto;
+  }
+  .col-qty,
+  .itemized-table th.col-qty {
+    width: 14mm;
+  }
+  .col-rate,
+  .col-total,
+  .itemized-table th.col-rate,
+  .itemized-table th.col-total {
+    width: 20mm;
+    padding-left: 2mm;
+  }
+  .totals-breakdown {
+    width: 100%;
+  }
+  .signoff-lines {
+    flex-direction: column;
+    gap: 6mm;
+  }
+  .print-button {
+    top: 8px;
+    right: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+}
