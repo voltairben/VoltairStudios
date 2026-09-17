@@ -80,6 +80,13 @@ export default function StatusBar({
         <TransitionLink href="/privacy" className="flag flag-privacy">
           privacy
         </TransitionLink>
+        {/* Real internal route (see app/algemene-voorwaarden/page.tsx),
+            same treatment as --privacy right above — a terms page earns
+            the same real, site-wide link. Direct request, added
+            2026-09-17 alongside a full Algemene Voorwaarden rewrite. */}
+        <TransitionLink href="/algemene-voorwaarden" className="flag flag-terms">
+          terms
+        </TransitionLink>
       </div>
     </footer>
   );
