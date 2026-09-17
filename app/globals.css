@@ -1540,7 +1540,8 @@ body {
 .flag-github,
 .flag-portal,
 .flag-instagram,
-.flag-privacy {
+.flag-privacy,
+.flag-terms {
   display: none;
 }
 @media (min-width: 380px) {
@@ -1579,6 +1580,14 @@ body {
     display: inline;
   }
   .flag-linkedin {
+    display: inline;
+  }
+  /* --terms joins here, not the tighter 380px tier above — that
+     tier's item count/overflow budget was already hard-won and
+     re-verified down to 320px (see its own comment); a second legal
+     link is the least essential item in the row, so it gets the next
+     tier up instead of re-risking that verified floor. */
+  .flag-terms {
     display: inline;
   }
 }
