@@ -7,47 +7,12 @@ import TransitionLink from "../components/TransitionLink";
 
 // Same plain, unanimated presentation as PrivacyContent.tsx (see that
 // file's own comment) — reuses every .legal-* class as-is, no new
-// styles. Dutch-only for now (see terms-content.ts's own comment on
-// why an English machine translation wasn't attempted for a binding
-// legal document) — the `en` branch below is a short, honest note
-// instead of silently falling back to Dutch text under an "EN" label,
-// or a blank page. Swap in TERMS_CONTENT.en once the user supplies a
-// real translation; this component already reads from that slot.
+// styles. Both languages are now real content the user supplied
+// himself (see terms-content.ts's own comment) — same single-path
+// render PrivacyContent.tsx uses, no per-language branching needed.
 export default function TermsContent() {
   const { lang } = useLang();
-  const c = lang === "en" ? TERMS_CONTENT.en : TERMS_CONTENT.nl;
-
-  if (!c) {
-    return (
-      <div className="legal-page-inner">
-        <TransitionLink href="/" className="case-study-back" direction="back">
-          ← {STUDIO_HANDLE}
-        </TransitionLink>
-        <div className="legal-content">
-          <h1 className="legal-title">Terms &amp; Conditions</h1>
-          <p className="legal-body">
-            Our Terms &amp; Conditions (Algemene Voorwaarden) are currently only available in Dutch — the legally
-            governing version, under Dutch law. An English translation isn’t published yet.
-          </p>
-          <p className="legal-body">
-            <TransitionLink href="/algemene-voorwaarden" className="legal-link">
-              Bekijk de Nederlandse versie →
-            </TransitionLink>
-          </p>
-          <section>
-            <h2 className="legal-section-title">Contact</h2>
-            <p className="legal-body">
-              Questions about these terms? Email{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
-                {CONTACT_EMAIL}
-              </a>
-              .
-            </p>
-          </section>
-        </div>
-      </div>
-    );
-  }
+  const c = TERMS_CONTENT[lang];
 
   return (
     <div className="legal-page-inner">
@@ -55,7 +20,7 @@ export default function TermsContent() {
         ← {STUDIO_HANDLE}
       </TransitionLink>
       <div className="legal-content">
-        <h1 className="legal-title">Algemene Voorwaarden</h1>
+        <h1 className="legal-title">{lang === "nl" ? "Algemene Voorwaarden" : "General Terms and Conditions"}</h1>
         {c.letterhead.map((line, i) => (
           <p key={i} className="legal-body">
             {line}
@@ -82,7 +47,7 @@ export default function TermsContent() {
         <section>
           <h2 className="legal-section-title">Contact</h2>
           <p className="legal-body">
-            Vragen over deze algemene voorwaarden? Mail{" "}
+            {lang === "nl" ? "Vragen over deze algemene voorwaarden? Mail " : "Questions about these terms? Email "}
             <a href={`mailto:${CONTACT_EMAIL}`} className="legal-link">
               {CONTACT_EMAIL}
             </a>

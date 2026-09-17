@@ -1,24 +1,29 @@
-// Algemene Voorwaarden (Terms & Conditions) — direct request, full text
-// supplied by the user as a finished legal document (September 2026
-// version), transcribed verbatim below, not summarized or edited.
-// Dutch-law-specific (cites BW articles, AVG) — English translation
-// deliberately not attempted here (see TermsContent.tsx's own
-// comment): the user will supply that himself rather than risk a
-// machine mistranslation of binding contract terms, same standard
-// LEGAL_CONTENT's own placeholder discipline already holds to for
-// facts (never fabricate what isn't real yet).
+// Algemene Voorwaarden / General Terms and Conditions — direct
+// request, both the Dutch original and the English version supplied
+// by the user as finished legal documents (September 2026), each
+// transcribed verbatim below, not summarized or edited. The English
+// version is the user's own real translation, not a machine one (an
+// earlier pass deliberately held off on auto-translating this exact
+// document — see the terms-page memory note — precisely so this real
+// version could replace a guess instead of fighting one). It is its
+// own independent transcription, not forced to mirror the Dutch
+// clause-for-clause: e.g. Dutch Artikel 7.3/7.4 split business-client
+// vs. consumer collection-cost rules differently than English Article
+// 7.3/7.4 does — both are transcribed exactly as their own source
+// document reads, not harmonized against each other.
 //
 // Shape differs from legal-content.ts's LegalContentShape on purpose:
 // Privacy is flat paragraphs + one trailing list per section: this
-// document is numbered clauses (1., 2., 3.) with two clauses (Artikel
-// 3.4, Artikel 6.5) carrying their own lettered a/b/c sub-list
-// mid-flow. Forcing that into LegalSection's shape would mean either
-// losing the sub-lists or bolting on complexity Privacy doesn't need
-// — a small parallel type is the honest fit. Rendering reuses every
-// existing .legal-* CSS class as-is (see globals.css) — no new styles.
-// Letterhead placeholders ("[KvK-nummer]" etc.) are copied verbatim
-// from the source document, not reworded to match legal-content.ts's
-// own placeholder phrasing — this is the user's own legal text.
+// document is numbered clauses (1., 2., 3.) with several clauses per
+// language carrying their own lettered a/b/c sub-list mid-flow.
+// Forcing that into LegalSection's shape would mean either losing the
+// sub-lists or bolting on complexity Privacy doesn't need — a small
+// parallel type is the honest fit. Rendering reuses every existing
+// .legal-* CSS class as-is (see globals.css) — no new styles.
+// Letterhead placeholders ("[KvK-nummer]"/"[KvK-number]" etc.) are
+// copied verbatim from each source document, not reworded to match
+// legal-content.ts's own placeholder phrasing — this is the user's own
+// legal text in both languages.
 
 export type TermsClause = {
   text: string;
@@ -36,7 +41,7 @@ export type TermsContentShape = {
   sections: TermsSection[];
 };
 
-export const TERMS_CONTENT: { nl: TermsContentShape; en?: TermsContentShape } = {
+export const TERMS_CONTENT: { nl: TermsContentShape; en: TermsContentShape } = {
   nl: {
     updated: "Versie: september 2026",
     letterhead: [
@@ -373,6 +378,346 @@ export const TERMS_CONTENT: { nl: TermsContentShape; en?: TermsContentShape } = 
           { text: "2. Partijen zullen, indien nodig, de betreffende bepaling vervangen door een rechtsgeldige bepaling die de bedoeling van de oorspronkelijke bepaling zo veel mogelijk benadert." },
           { text: "3. De administratie van Voltair Studio geldt uitsluitend ten aanzien van zakelijke opdrachtgevers, behoudens tegenbewijs, als bewijs van de door haar verrichte werkzaamheden, betalingen en communicatie, voor zover wettelijk toegestaan. Voor consumenten is deze bepaling niet van toepassing overeenkomstig artikel 6:237 BW." },
           { text: "4. Deze algemene voorwaarden zijn vastgesteld in september 2026 en gelden voor offertes en overeenkomsten waarop deze versie van toepassing is." },
+        ],
+      },
+    ],
+  },
+  en: {
+    updated: "Version: September 2026",
+    letterhead: [
+      "Voltair Studio",
+      "Email: contact@voltairstudio.com",
+      "Chamber of Commerce (KvK): [KvK-number]",
+      "VAT Identification Number: [VAT-number]",
+      "Established in: [Place], The Netherlands",
+    ],
+    sections: [
+      {
+        title: "Article 1. Definitions",
+        clauses: [
+          { text: "1. Voltair Studio: Voltair Studio, user of these general terms and conditions and service provider/contractor." },
+          { text: "2. Client: Any natural person or legal entity that enters into an agreement with Voltair Studio or to whom Voltair Studio submits an offer or proposal." },
+          { text: "3. Consumer: A natural person not acting in the course of a profession or business." },
+          { text: "4. Business Client: A client acting in the course of a profession or business." },
+          { text: "5. Agreement: Any agreement between Voltair Studio and Client regarding the provision of services, including web design, UI/UX design, web development, software development, technical consulting, hosting, domain registration, maintenance, support, and related services." },
+          { text: "6. Quotation: The written or digital proposal from Voltair Studio describing the work, price, schedule, and any additional conditions." },
+          { text: "7. Work: All activities performed by Voltair Studio pursuant to the Agreement." },
+          { text: "8. Deliverables: The results specifically developed and agreed upon for Client, including designs, web pages, graphic elements, documentation, and custom code." },
+          { text: "9. Additional Work: Work or functionalities falling outside the originally agreed scope or resulting from modified instructions after prior approval." },
+          { text: "10. Third Party: Any external supplier or service provider whose products, software, infrastructure, hosting, APIs, licenses, or other services are used in executing the Agreement." },
+        ],
+      },
+      {
+        title: "Article 2. Applicability & Provision",
+        clauses: [
+          { text: "1. These general terms and conditions apply to all quotations, offers, agreements, work, and services of Voltair Studio, unless explicitly deviated from in writing or digitally." },
+          { text: "2. The applicability of any purchase or other terms and conditions of Client is explicitly rejected, unless Voltair Studio has explicitly accepted them in writing in advance." },
+          { text: "3. Deviations from these general terms and conditions are valid only if agreed upon in writing or via email by both parties." },
+          { text: "4. Voltair Studio makes these general terms and conditions available digitally to Client prior to or at the latest upon conclusion of the Agreement in a manner allowing them to be stored and accessed for future reference." },
+          { text: "5. In agreements with consumers, mandatory statutory provisions prevail if a provision in these terms and conditions conflicts with them." },
+          { text: "6. If any provision of these general terms and conditions proves to be void or is annulled, the remaining provisions remain in full force and effect. Parties shall replace the provision in question with a valid provision that approximates the original intent as closely as possible." },
+        ],
+      },
+      {
+        title: "Article 3. Quotations and Conclusion of the Agreement",
+        clauses: [
+          { text: "1. Every quotation from Voltair Studio is non-binding, unless explicitly stated otherwise in the quotation." },
+          { text: "2. A quotation is valid for 30 calendar days from the date of issuance, unless a different term is stated in the quotation." },
+          { text: "3. For business clients, prices are displayed excluding VAT. For consumers, prices are displayed including statutory VAT and any identifiable additional costs in advance." },
+          {
+            text: "4. The Agreement is concluded as soon as:",
+            subItems: [
+              "a. Client accepts the quotation in writing or digitally;",
+              "b. Client otherwise explicitly agrees to the work; or",
+              "c. Voltair Studio actually commences execution with the consent of Client.",
+            ],
+          },
+          { text: "5. If Client agrees to a quotation only partially, no agreement is concluded unless Voltair Studio confirms in writing that it agrees to the modified assignment." },
+          { text: "6. A composite price quote does not obligate Voltair Studio to perform only a portion of the assignment for a proportionate share of the quoted price." },
+          { text: "7. Obvious mistakes, typographical errors, or calculation errors in quotations do not bind Voltair Studio." },
+        ],
+      },
+      {
+        title: "Article 4. Execution of the Assignment",
+        clauses: [
+          { text: "1. Voltair Studio shall execute the work to the best of its knowledge and ability and in accordance with the requirements of good workmanship." },
+          { text: "2. Voltair Studio has an obligation of effort in executing the work, unless a concrete result or result obligation is explicitly and in writing established in the Agreement." },
+          { text: "3. Stated lead times and delivery dates are indicative and do not constitute strict deadlines, unless explicitly agreed otherwise in writing by the parties." },
+          { text: "4. Voltair Studio is entitled to make use of third parties, cloud platforms, hosting providers, APIs, and open-source software in executing the work." },
+          { text: "5. If circumstances beyond the control of Voltair Studio or delays on Client's part lead to a delay, the schedule shall be reasonably adjusted." },
+        ],
+      },
+      {
+        title: "Article 5. Client Obligations (Client Dependencies)",
+        clauses: [
+          { text: "1. Client ensures the timely, complete, and correct delivery of all data, text, imagery, brand elements, logos, translations, and any necessary external API keys and access rights in the format requested by Voltair Studio." },
+          { text: "2. In the event of an existing domain name or domain transfer to Voltair Studio management, Client is responsible for timely providing the correct authorization code (EPP token) and necessary DNS rights." },
+          { text: "3. Unless a different response period is established in the quotation, a maximum period of 5 working days for business clients and 10 working days for consumers applies for providing necessary content and feedback following a written request by Voltair Studio." },
+          { text: "4. If the required data or feedback is not provided in a timely manner, Voltair Studio has the right to suspend execution. The schedule shifts reasonably, and demonstrable extra work or reserved capacity may, insofar as foreseeable and reasonable, be charged at the agreed hourly rate." },
+          { text: "5. Client warrants the accuracy and legality of materials provided. Insofar as legally permitted, Client indemnifies Voltair Studio against third-party claims directly arising from the lack of required rights, licenses, or consent for materials or data provided by Client." },
+        ],
+      },
+      {
+        title: "Article 6. Scope, Revisions, Phase Approval, and Additional Work",
+        clauses: [
+          { text: "1. The scope of work is limited to what is explicitly described in the quotation or order confirmation." },
+          { text: "2. Unless explicitly agreed otherwise, each defined project phase includes a maximum of two (2) revision rounds within the framework of the original brief." },
+          { text: "3. A revision round consists of the single processing of bundled, clear, and concrete feedback on the work presented at that time." },
+          { text: "4. Phase approval: approval of an intermediate phase, such as wireframes or UI design, constitutes agreement on that phase. Subsequent change requests may be marked as Additional Work, unless it concerns a defect or deviation from agreed specifications." },
+          {
+            text: "5. Additional Work shall also include:",
+            subItems: [
+              "a. new functionalities or modules not included in the quotation;",
+              "b. expansion of the agreed number of screens or templates;",
+              "c. adjustments resulting from changes in external APIs or third-party platforms;",
+              "d. revisions beyond the two included revision rounds.",
+            ],
+          },
+          { text: "6. Additional Work will be reported in advance in writing or digitally with a reasonable cost estimate and, if relevant, the schedule impact. For consumers, additional work will only be performed after explicit prior agreement." },
+          { text: "7. Additional Work is invoiced at the hourly rate stated in the quotation. If no specific rate is agreed, the standard hourly rate of €85 excluding VAT applies to business clients." },
+        ],
+      },
+      {
+        title: "Article 7. Payment and Invoicing",
+        clauses: [
+          { text: "1. Invoices must be paid within 14 days of the invoice date via bank transfer or the payment method offered by Voltair Studio, unless otherwise agreed in writing." },
+          {
+            text: "2. For projects, Voltair Studio applies the following standard milestone payments:",
+            subItems: [
+              "a. 50% advance payment upon acceptance of the quotation;",
+              "b. 25% upon written approval of the final UI design or delivery to the staging environment;",
+              "c. 25% upon final completion, prior to delivery and transfer of DNS/files, unless agreed otherwise.",
+            ],
+          },
+          { text: "3. Upon non-payment or late payment, the business client is in default by operation of law from the due date, without any notice of default being required. From that moment, the business client owes statutory commercial interest. Furthermore, the business client is bound to compensate all extrajudicial collection costs, calculated in accordance with the Dutch Extrajudicial Collection Costs Decree (Besluit vergoeding voor buitengerechtelijke incassokosten), with a minimum of €40." },
+          { text: "4. For consumers, collection costs are only charged after all statutory requirements have been met, including, if required, a notice without cost with a payment term of at least 14 days." },
+          { text: "5. In the event of non-payment, Voltair Studio has the right, insofar as legally permitted, to suspend its work, including temporarily blocking staging environments. Taking a live website offline or restricting access to customer data will only occur insofar as legally and contractually permitted and taking Client's interests into account." },
+        ],
+      },
+      {
+        title: "Article 8. Cancellation, Right of Withdrawal, and Early Termination",
+        clauses: [
+          { text: "1. A business client may cancel a project prior to completion with written consent from Voltair Studio, unless the Agreement or law grants another right. Upon termination, work already performed, non-cancellable costs incurred, and external costs entered into are due." },
+          { text: "2. For consumers, statutory rights and any clearly agreed conditions apply to cancellation and termination." },
+          { text: "3. For distance contracts with consumers, a statutory cooling-off period of 14 calendar days applies insofar as legally applicable." },
+          { text: "4. If a consumer explicitly requests performance of a service to begin during the cooling-off period, Voltair Studio may obtain the required information and consent prior to commencement." },
+          { text: "5. If the consumer legally revokes during the cooling-off period after service performance has begun at their explicit request, the consumer may owe a proportionate amount for the portion already performed, insofar as legally permitted." },
+          { text: "6. If a service is fully performed during the cooling-off period, the statutory right of withdrawal can only lapse if all statutory conditions for lapse are met, including required explicit prior consent and acknowledgement of consequences." },
+          { text: "7. For digital content not delivered on a tangible medium, the specific statutory regime applies. The right of withdrawal lapses only if all statutory conditions are met." },
+          { text: "8. Voltair Studio shall inform consumers prior to entering into an agreement if and why the right of withdrawal does not apply." },
+          { text: "9. Nothing in these general terms and conditions restricts a consumer's statutory right of withdrawal." },
+        ],
+      },
+      {
+        title: "Article 9. Delivery, Acceptance, and Browser Compatibility",
+        clauses: [
+          { text: "1. Voltair Studio delivers Deliverables via a secure staging environment, agreed repository, or other agreed method." },
+          { text: "2. Unless agreed otherwise, an acceptance period of 10 working days applies following the official completion notice for business clients, and 14 calendar days for consumers." },
+          {
+            text: "3. A Deliverable is deemed accepted if:",
+            subItems: [
+              "a. Client approves it in writing or digitally;",
+              "b. Client puts the Deliverable into public or operational use; or",
+              "c. Client does not report concrete and sufficiently substantiated defects within the acceptance period.",
+            ],
+          },
+          { text: "4. Acceptance leaves statutory rights of consumers and the right to report hidden defects or deviations not reasonably discoverable upon acceptance unaffected." },
+          { text: "5. Minor deviations that do not substantially affect agreed functionality do not constitute grounds for withholding acceptance." },
+          { text: "6. Browser and platform support: Deliverables are optimized for and tested on the two most recent stable major versions of common modern desktop and mobile browsers (Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge) on or around the delivery date. Support for outdated browsers or legacy devices falls outside standard scope, unless agreed in writing." },
+          { text: "7. Third-party content, embedded services, and functionalities depending on external platforms may function differently if the respective vendor introduces changes." },
+        ],
+      },
+      {
+        title: "Article 10. Commercial Bug Fix Period and Statutory Rights",
+        clauses: [
+          { text: "1. A bug is a demonstrable and reproducible technical error in custom code developed by Voltair Studio causing the system not to function in accordance with written agreed specifications." },
+          { text: "2. Technical bugs reported in writing within 14 calendar days after delivery will be repaired free of charge by Voltair Studio within a reasonable period, provided the cause is directly attributable to Voltair Studio's own work." },
+          {
+            text: "3. Excluded from this commercial bug fix scheme are:",
+            subItems: [
+              "a. errors or conflicts caused by modifications by Client or third parties;",
+              "b. issues due to outages, API changes, or policy changes at external providers;",
+              "c. browsers, operating systems, or external software released after delivery;",
+              "d. new functionalities or changes to original specifications.",
+            ],
+          },
+          { text: "4. After the commercial bug fix period, maintenance and repair work will be performed under a maintenance agreement or at the regular hourly rate, unless statutory rights dictate otherwise." },
+          { text: "5. The commercial bug fix period does not limit or exclude statutory consumer rights." },
+        ],
+      },
+      {
+        title: "Article 11. Intellectual Property and Licenses",
+        clauses: [
+          { text: "1. Intellectual property rights belonging to Voltair Studio prior to the Agreement, including generic software, frameworks, components, templates, methods, techniques, know-how, tooling, and development solutions, remain with Voltair Studio or the respective rights holder." },
+          { text: "2. For Deliverables specifically created for Client, Client obtains a perpetual, non-exclusive license upon full payment to use, publish, and exploit them for the purpose for which they were developed, unless agreed otherwise in writing." },
+          { text: "3. The license does not include the right to sell, sublicense, or make available to third parties generic Voltair Studio components, frameworks, templates, libraries, tooling, or development methods as a separate product." },
+          { text: "4. If parties explicitly agree on a full transfer of copyrights, such transfer shall take place exclusively after full payment and by separate deed in writing, insofar as legally required and insofar as transferable." },
+          { text: "5. Unused concepts, designs, and alternative proposals remain with Voltair Studio, unless agreed otherwise in writing." },
+          { text: "6. Third-party software, fonts, images, libraries, APIs, frameworks, and open-source components remain subject to applicable license terms of the respective rights holders." },
+          { text: "7. Voltair Studio retains the right to reuse general knowledge, skills, techniques, ideas, and non-client-specific solutions developed or used during the assignment." },
+          { text: "8. Voltair Studio may use completed projects for portfolio and marketing purposes, unless written confidentiality is agreed or Voltair Studio pledged in writing not to make the project public. For consumers, prior consent will be requested if the project or consumer identity is used as a reference." },
+        ],
+      },
+      {
+        title: "Article 12. Source Code, Repositories, and Access",
+        clauses: [
+          { text: "1. If source code forms part of agreed Deliverables, it will be made available upon full payment insofar as permitted under applicable licenses and the Agreement." },
+          { text: "2. Open-source or third-party source code is not owned by Voltair Studio and remains subject to applicable license terms." },
+          { text: "3. Unless agreed otherwise, generic Voltair Studio boilerplates, component libraries, deployment scripts, and development tools remain part of Voltair Studio's own development environment." },
+          { text: "4. Access to a Git repository, hosting environment, deployment environment, database, or other technical environment is provided according to agreements in the quotation or contract." },
+          { text: "5. API keys, passwords, environment variables, and other secret credentials are not delivered as general source code and are transferred only if necessary, secure, and agreed in writing." },
+          { text: "6. If complete transfer of a project or repository is agreed, the scope and method of transfer will be recorded in writing in advance." },
+        ],
+      },
+      {
+        title: "Article 13. Hosting, Domain Names, and Retention Rights",
+        clauses: [
+          { text: "1. Voltair Studio can supply web hosting and domain registration/management via its hosting packages and infrastructure partners, conform quotation specifications and rates." },
+          { text: "2. Unless agreed otherwise in writing, hosting and domain agreements are entered into for an initial period of one (1) year. For Business Clients, these can be extended in accordance with agreed terms. For Consumers, after the first fixed period, if continued, an indefinite agreement applies with a maximum notice period of one month." },
+          { text: "3. Voltair Studio strives for maximum availability and security, but does not guarantee uninterrupted availability unless an SLA or result obligation is agreed upon." },
+          { text: "4. Insofar as legally permitted, Voltair Studio is not liable for downtime or outages caused entirely by external datacenter, cloud, network, DNS, hosting, or infrastructure providers." },
+          { text: "5. A domain name registered on Client's behalf is registered in Client's name unless agreed otherwise in writing. Registration remains subject to the conditions of the relevant registrar and registry." },
+          { text: "6. Upon termination, Voltair Studio will, insofar as reasonable and technically feasible, cooperate with domain and file transfer, taking outstanding payment obligations and legal rights into account." },
+          { text: "7. Insofar as legally permitted, Voltair Studio may exercise retention rights by suspending work, access to managed environments, or transfer of company files. This leaves Client's ownership and registration rights to its own domain unaffected." },
+          { text: "8. After termination of hosting or maintenance, Voltair Studio retains files, databases, and backups for a maximum of 30 calendar days, unless a longer retention period is legally required or necessary for legal claims. Thereafter, they are deleted insofar as legally permitted." },
+          { text: "9. Client is responsible for timely securing data if no separate backup service is agreed upon." },
+        ],
+      },
+      {
+        title: "Article 14. Hosting, Maintenance, and Periodic Services",
+        clauses: [
+          { text: "1. Maintenance, updates, support, and periodic work are included only if explicitly specified in the quotation or agreement." },
+          { text: "2. Without a maintenance agreement, Voltair Studio is not obliged to process future updates, security updates, framework changes, browser changes, or third-party API changes free of charge." },
+          { text: "3. For consumers, an initial fixed duration of maximum one year applies, unless law permits otherwise. Thereafter, if continued, the agreement continues indefinitely with a maximum notice period of one month." },
+          { text: "4. For business clients, agreed terms and notice periods from the quotation or contract apply." },
+          { text: "5. If periodic rates can be adjusted, applicable adjustment authority and cancellation options will be clearly recorded in advance." },
+        ],
+      },
+      {
+        title: "Article 15. External Services, Tools, and APIs",
+        clauses: [
+          { text: "1. Voltair Studio may use third-party services and APIs during development, including payment providers, external databases, cloud platforms, map services, analytics, SaaS services, and software libraries." },
+          { text: "2. Costs for external services not explicitly included in quoted prices are borne by Client if made known in advance or reasonably necessary for Client's requested use." },
+          { text: "3. Insofar as legally permitted, Voltair Studio is not liable for damage, delays, or outages directly resulting from changes, outages, termination, restrictions, or price changes at external suppliers." },
+          { text: "4. Necessary adjustments due to third-party provider changes may be executed as Additional Work after informing Client." },
+          { text: "5. Client is responsible for timely paying subscription costs and complying with terms of external services registered in Client's name." },
+        ],
+      },
+      {
+        title: "Article 16. Privacy and Data Processing (GDPR)",
+        clauses: [
+          { text: "1. Parties act in accordance with applicable privacy legislation, including the GDPR, when processing personal data." },
+          { text: "2. Client is responsible for the lawfulness of personal data collected via the developed website or application, unless agreed otherwise in writing." },
+          { text: "3. If Voltair Studio processes personal data on Client's behalf as a data processor under the GDPR, parties enter into a data processing agreement containing required statutory provisions." },
+          { text: "4. If a separate data processing agreement applies, it prevails over these terms in case of conflict regarding personal data processing." },
+          { text: "5. Voltair Studio may use sub-processors or external service providers insofar as lawful and necessary." },
+          { text: "6. Client remains responsible for the content and lawfulness of its privacy statement, cookie policy, cookie consent, and other legal texts, unless drafting or legally reviewing them is explicitly agreed as a separate assignment." },
+          { text: "7. Voltair Studio does not provide legal advice and does not guarantee that a website fully complies with all applicable laws and regulations, unless a separate advisory assignment is explicitly agreed." },
+        ],
+      },
+      {
+        title: "Article 17. Security",
+        clauses: [
+          { text: "1. Voltair Studio takes reasonable technical measures within the agreed scope to adequately secure systems and data under its management." },
+          { text: "2. No system can be guaranteed completely free of security risks." },
+          { text: "3. Client is responsible for carefully handling passwords, accounts, API keys, and access credentials on its side." },
+          { text: "4. If a security incident arises wholly or partially from acts or omissions of Client or a third party engaged by Client, Voltair Studio is not liable insofar as legally permitted." },
+        ],
+      },
+      {
+        title: "Article 18. Liability",
+        clauses: [
+          { text: "1. Voltair Studio is exclusively liable for direct damage resulting directly from an attributable failure in executing the Agreement, insofar as liability is not legally excluded or limited." },
+          { text: "2. For business clients, total liability for direct damage per event or series of connected events is limited to a maximum of the invoice value agreed for the specific assignment concerned / actually paid by the client for that specific assignment." },
+          { text: "3. Voltair Studio is explicitly not liable to business clients, insofar as legally permitted, for indirect damage, including but not limited to consequential damage, lost profits, missed savings, loss of data, loss of goodwill, reputational damage, reduced revenue, and business interruption, except in cases of intent or deliberate recklessness by Voltair Studio." },
+          { text: "4. Voltair Studio is not liable, insofar as legally permitted, for damage resulting solely from outages, errors, or changes at external suppliers or third-party services chosen by Client." },
+          { text: "5. Voltair Studio is not liable for damage arising from inaccurate or incomplete information provided by Client or from modifications made to the website, code, server environment, or configuration by Client or third parties without Voltair Studio's consent." },
+          { text: "6. For consumers, statutory liability rules apply, and provisions in this article cannot restrict statutory consumer rights." },
+          { text: "7. Limitations of liability do not apply if and insofar as restriction thereof is not permitted under mandatory law, including in cases of intent or deliberate recklessness on the part of Voltair Studio." },
+          { text: "8. Client must report damage in writing as soon as possible after discovery. Late reporting does not automatically lead to forfeiture of rights; statutory rules and reasonable interests of both parties remain applicable." },
+        ],
+      },
+      {
+        title: "Article 19. Force Majeure",
+        clauses: [
+          { text: "1. Voltair Studio is not bound to fulfill any obligation if prevented from doing so by a circumstance not reasonably attributable to it." },
+          { text: "2. Force majeure includes: disruptions in internet or telecommunications networks, power outages, large-scale DDoS or cyber attacks, government measures, illness of crucial personnel, and defaults by engaged suppliers or upstream cloud providers." },
+          { text: "3. If force majeure continues for more than 60 consecutive calendar days, parties have the right to terminate the agreement in writing, insofar as law permits, without obligation to pay damages." },
+          { text: "4. Work already performed and non-cancellable costs incurred remain due insofar as legally permitted." },
+        ],
+      },
+      {
+        title: "Article 20. Confidentiality",
+        clauses: [
+          { text: "1. Parties undertake to maintain confidentiality regarding all confidential information obtained in the context of the quotation or collaboration." },
+          { text: "2. Information is deemed confidential if explicitly communicated or reasonably apparent from the nature of the information." },
+          { text: "3. Confidentiality obligations do not apply to information already public, lawfully obtained from a third party, independently developed, or required to be disclosed by law." },
+          { text: "4. This obligation remains in force after termination of the Agreement for as long as reasonably necessary." },
+        ],
+      },
+      {
+        title: "Article 21. Complaints",
+        clauses: [
+          { text: "1. Complaints about work, services, or invoices may be submitted in writing or via email to Voltair Studio." },
+          { text: "2. Client must report complaints as soon as possible after discovery to enable Voltair Studio to investigate and, where applicable, remedy the issue in a timely manner." },
+          { text: "3. A complaint must contain sufficient information to enable Voltair Studio to assess it." },
+          { text: "4. Voltair Studio will respond to a complaint within a reasonable period and seek a solution with Client where possible." },
+          { text: "5. Submitting a complaint does not automatically suspend payment obligations." },
+          { text: "6. Statutory rights of consumers remain fully applicable." },
+        ],
+      },
+      {
+        title: "Article 22. Portfolio and Publicity",
+        clauses: [
+          { text: "1. Voltair Studio may use completed projects as references in accordance with Article 11." },
+          { text: "2. Voltair Studio will not publish confidential information in doing so." },
+          { text: "3. If agreed in writing in advance that a project will be treated confidentially or not made public, Voltair Studio will abide by that agreement." },
+        ],
+      },
+      {
+        title: "Article 23. Amendments to the General Terms and Conditions",
+        clauses: [
+          { text: "1. For new agreements, Voltair Studio may amend or supplement these general terms and conditions." },
+          { text: "2. For ongoing agreements, amendments will be announced in writing or digitally at least 30 days prior to taking effect. If the amendment is to the disadvantage of Client, Client has the right to object or to terminate the agreement as of the date the amendment takes effect." },
+          { text: "3. For consumers, amendments to ongoing agreements are implemented only insofar as legally permitted, not unreasonably onerous, and complying with any information and cancellation requirements." },
+          { text: "4. An amended version will be made available to Client in a timely manner when required by law or agreement." },
+        ],
+      },
+      {
+        title: "Article 24. Duration and Termination of Business Agreements",
+        clauses: [
+          { text: "1. The duration of a business agreement is determined in the quotation or agreement." },
+          { text: "2. An agreement for a fixed period ends on the agreed end date, unless parties agree otherwise or the agreement is lawfully extended." },
+          { text: "3. If automatic extension of a business agreement is agreed, termination must take place with due observance of a notice period of 1 month before the end of the current term, unless specified otherwise in quotation or agreement." },
+          { text: "4. An agreement for an indefinite period may be terminated by either party with due observance of the agreed notice period." },
+          { text: "5. In the event of a serious failure, the other party may terminate the agreement after giving the defaulting party a reasonable opportunity to remedy the failure, unless remedy cannot reasonably be demanded." },
+        ],
+      },
+      {
+        title: "Article 25. Suspension",
+        clauses: [
+          { text: "1. Voltair Studio may, insofar as legally permitted, suspend its work if client substantially fails to meet a payment or cooperation obligation." },
+          { text: "2. Voltair Studio will inform Client in advance about suspension where reasonably possible." },
+          { text: "3. Suspension leaves already accrued payment obligations unaffected." },
+          { text: "4. Suspension will not be applied in a manner conflicting with mandatory consumer law or unnecessarily preventing access to legally protected personal data." },
+        ],
+      },
+      {
+        title: "Article 26. Applicable Law and Competent Court",
+        clauses: [
+          { text: "1. Dutch law applies to all legal relationships between Voltair Studio and Client." },
+          { text: "2. Disputes that cannot be resolved amicably may be submitted to the court having jurisdiction under the law." },
+          { text: "3. For business clients, insofar as legally permitted, disputes may be submitted to the competent court in the district where Voltair Studio is officially established." },
+          { text: "4. Consumers are not restricted in their right to submit a dispute to the court having mandatory jurisdiction under the law." },
+        ],
+      },
+      {
+        title: "Article 27. Final Provisions",
+        clauses: [
+          { text: "1. If any provision of these general terms and conditions proves invalid, void, or voidable, the remaining provisions remain in full force and effect." },
+          { text: "2. Parties shall, if necessary, replace the provision in question with a valid provision approximating the intent of the original provision as much as possible." },
+          { text: "3. Voltair Studio's records serve, exclusively with respect to business clients, subject to proof to the contrary, as proof of work performed, payments, and communications, insofar as legally permitted. For consumers, this provision does not apply in accordance with Article 6:237 of the Dutch Civil Code (BW)." },
+          { text: "4. These general terms and conditions were established in September 2026 and apply to quotations and agreements to which this version is applicable." },
         ],
       },
     ],
