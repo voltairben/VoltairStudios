@@ -1909,15 +1909,9 @@ body {
   top: 0;
   height: var(--chrome-h);
 }
-.scroll-page-chrome.scroll-page-glass {
-  border-bottom: 1px solid var(--color-glass-border);
-}
 .scroll-page-footer {
   bottom: 0;
   height: var(--status-h);
-}
-.scroll-page-footer.scroll-page-glass {
-  border-top: 1px solid var(--color-glass-border);
 }
 .scroll-page-chrome > .chrome-bar,
 .scroll-page-footer > .status-bar {
